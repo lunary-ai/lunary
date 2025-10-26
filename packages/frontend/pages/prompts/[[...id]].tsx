@@ -781,7 +781,9 @@ function Playground() {
           style={{
             borderRight: "1px solid rgba(120, 120, 120, 0.1)",
             height: "100vh",
-            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
           }}
         >
           <TemplateList

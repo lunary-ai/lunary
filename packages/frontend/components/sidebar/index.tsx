@@ -16,7 +16,6 @@ import {
 } from "@mantine/core";
 
 import {
-  IconActivity,
   IconBell,
   IconBinaryTree2,
   IconChecklist,
@@ -25,11 +24,9 @@ import {
   IconDatabase,
   IconFilterCog,
   IconFlask2,
-  IconHelpOctagon,
   IconHelpSmall,
   IconListSearch,
   IconLogout,
-  IconMessage2,
   IconMessages,
   IconMoon,
   IconNotebook,
@@ -56,7 +53,6 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
 import { useViews } from "@/utils/dataHooks/views";
-import { show } from "@intercom/messenger-js-sdk";
 import { useDisclosure, useFocusTrap, useLocalStorage } from "@mantine/hooks";
 import { useCallback, useEffect, useState } from "react";
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
@@ -494,42 +490,17 @@ export default function Sidebar() {
                   </Anchor>
                 </Notification>
               )}
-              <Menu>
-                <Menu.Target>
-                  <ActionIcon
-                    variant="outline"
-                    color="gray"
-                    radius="xl"
-                    size={26}
-                  >
-                    <IconHelpSmall size={60} stroke={1.5} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={<IconMessage2 size={14} />}
-                    onClick={() => {
-                      config.IS_CLOUD && show();
-                    }}
-                  >
-                    Feedback
-                  </Menu.Item>
-                  <Menu.Item
-                    component="a"
-                    href="https://lunary.ai/docs"
-                    leftSection={<IconHelpOctagon size={14} />}
-                  >
-                    Documentation
-                  </Menu.Item>
-                  <Menu.Item
-                    component="a"
-                    href="https://lunary.ai/changelog"
-                    leftSection={<IconActivity size={14} />}
-                  >
-                    Changelog
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
+              <ActionIcon
+                component="a"
+                href="https://lunary.ai/docs"
+                target="_blank"
+                variant="outline"
+                color="gray"
+                radius="xl"
+                size={26}
+              >
+                <IconHelpSmall size={60} stroke={1.5} />
+              </ActionIcon>
 
               <Menu closeOnItemClick={false}>
                 <Menu.Target data-testid="account-sidebar-item">

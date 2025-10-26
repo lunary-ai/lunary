@@ -1,13 +1,13 @@
 import {
   ActionIcon,
+  Box,
   Badge,
-  Divider,
   FocusTrap,
   Group,
-  Loader,
   Menu,
   NavLink,
   ScrollArea,
+  Skeleton,
   Text,
   TextInput,
 } from "@mantine/core";
@@ -154,8 +154,14 @@ function TemplateListItem({
       data-testid={`template-navlink-${template.slug}`}
       data-template-slug={template.slug}
       data-template-active={active ? "true" : "false"}
+      disableRightSectionRotation
       onDoubleClick={() => {
         setRename(template.id);
+      }}
+      styles={{
+        children: {
+          paddingInlineStart: 0,
+        },
       }}
       label={
         rename === template.id ? (
@@ -183,19 +189,29 @@ function TemplateListItem({
         whiteSpace: "nowrap",
         paddingInlineStart: "2px",
       }}
-      leftSection={
+      rightSection={
         (hasAccess(user.role, "prompts", "create") ||
           hasAccess(user.role, "prompts", "update") ||
           hasAccess(user.role, "prompts", "delete")) && (
-          <Menu>
+          <Menu withinPortal position="right-start">
             <Menu.Target>
-              {active || hovered ? (
-                <ActionIcon size="sm" radius="sm" variant="subtle">
-                  <IconDotsVertical size={12} />
-                </ActionIcon>
-              ) : (
-                <span />
-              )}
+              <div
+                data-template-menu-trigger="true"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                {active || hovered ? (
+                  <ActionIcon
+                    size="sm"
+                    radius="sm"
+                    variant="subtle"
+                    data-template-menu-trigger="true"
+                  >
+                    <IconDotsVertical size={12} />
+                  </ActionIcon>
+                ) : (
+                  <span />
+                )}
+              </div>
             </Menu.Target>
             <Menu.Dropdown>
               {hasAccess(user.role, "prompts", "update") && (
@@ -235,9 +251,15 @@ function TemplateListItem({
           </Menu>
         )
       }
-      onClick={() => {
-        if (sortedVersions[0])
+      onClick={(event) => {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest("[data-template-menu-trigger='true']")) {
+          return;
+        }
+
+        if (sortedVersions[0]) {
           switchTemplateVersion(template, sortedVersions[0]);
+        }
       }}
     >
       <ScrollArea.Autosize mah="200px">
@@ -245,7 +267,7 @@ function TemplateListItem({
           <NavLink
             key={i}
             pl={20}
-            py={4}
+            // py={4}
             active={activeVersion?.id === version?.id}
             label={
               <Group gap={8}>
@@ -289,21 +311,37 @@ function TemplateList({
   const { user } = useUser();
 
   const [filter, setFilter] = useState("");
-  const [filteredTemplates, setFilteredTemplates] = useState(templates);
+  const [filteredTemplates, setFilteredTemplates] = useState(templates ?? []);
 
   useEffect(() => {
-    if (templates) {
-      setFilteredTemplates(
-        templates.filter((t) => t.slug.includes(filter.toLowerCase())),
-      );
+    if (!templates) {
+      setFilteredTemplates([]);
+      return;
     }
+
+    setFilteredTemplates(
+      templates.filter((t) => t.slug.includes(filter.toLowerCase())),
+    );
   }, [filter, templates]);
 
-  if (loading) return <Loader />;
+  const skeletonWidths = [72, 60, 66, 54, 68, 58];
 
   return (
-    <ScrollArea h="100%">
-      <div style={{ height: "63px", display: "flex", alignItems: "center" }}>
+    <Box
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+      }}
+    >
+      <Box
+        style={{
+          height: "63px",
+          display: "flex",
+          alignItems: "center",
+          borderBottom: "1px solid rgba(120, 120, 120, 0.1)",
+        }}
+      >
         <NavLink
           p="md"
           label="Prompt directory"
@@ -325,32 +363,64 @@ function TemplateList({
             )
           }
         />
-      </div>
+      </Box>
 
-      <Divider />
-
-      <SearchBar
-        placeholder="Filter..."
-        query={filter}
-        setQuery={setFilter}
-        size="xs"
-        w="fit-content"
-        mx="md"
-        my="xs"
-      />
-
-      {filteredTemplates?.map((template, index) => (
-        <TemplateListItem
-          key={index}
-          template={template}
-          activeTemplate={activeTemplate}
-          activeVersion={activeVersion}
-          rename={rename}
-          setRename={setRename}
-          switchTemplateVersion={switchTemplateVersion}
+      <Box px="md" py="xs">
+        <SearchBar
+          placeholder="Filter..."
+          query={filter}
+          setQuery={setFilter}
+          size="xs"
+          w="100%"
         />
-      ))}
-    </ScrollArea>
+      </Box>
+
+      <ScrollArea
+        style={{ flex: 1 }}
+        offsetScrollbars
+        type="auto"
+        scrollbarSize={6}
+      >
+        {loading ? (
+          <Box
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+              padding: "12px 10px",
+            }}
+          >
+            {skeletonWidths.map((width, index) => (
+              <Box
+                key={index}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  backgroundColor: "rgba(120, 120, 120, 0.06)",
+                }}
+              >
+                <Group justify="space-between" align="center" gap="xs">
+                  <Skeleton height={14} width={`${width}%`} radius="sm" />
+                  <Skeleton height={18} width={18} radius="xl" />
+                </Group>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          filteredTemplates?.map((template, index) => (
+            <TemplateListItem
+              key={index}
+              template={template}
+              activeTemplate={activeTemplate}
+              activeVersion={activeVersion}
+              rename={rename}
+              setRename={setRename}
+              switchTemplateVersion={switchTemplateVersion}
+            />
+          ))
+        )}
+      </ScrollArea>
+    </Box>
   );
 }
 
