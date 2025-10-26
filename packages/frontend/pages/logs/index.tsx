@@ -16,6 +16,7 @@ import {
   Group,
   Loader,
   Menu,
+  SegmentedControl,
   Select,
   Stack,
   Text,
@@ -93,6 +94,24 @@ import IconPicker from "@/components/blocks/IconPicker";
 import { useEvaluators } from "@/utils/dataHooks/evaluators";
 import { useSortParams } from "@/utils/hooks";
 import { deserializeLogic, serializeLogic } from "shared";
+
+const LOG_TYPES = ["llm", "tool", "retriever"] as const;
+const SUPPORTED_TYPES = [...LOG_TYPES, "trace", "thread"] as const;
+type LogType = (typeof LOG_TYPES)[number];
+type SupportedType = (typeof SUPPORTED_TYPES)[number];
+
+const LOG_TYPE_SEGMENT_OPTIONS = [
+  { label: "LLM", value: "llm" },
+  { label: "Tools", value: "tool" },
+  { label: "Retrievers", value: "retriever" },
+] as const;
+
+const isLogType = (value: string): value is LogType =>
+  (LOG_TYPES as readonly string[]).includes(value);
+
+const isSupportedType = (value: string): value is SupportedType =>
+  (SUPPORTED_TYPES as readonly string[]).includes(value);
+
 export const defaultColumns = {
   llm: [
     timeColumn("createdAt"),
@@ -113,6 +132,48 @@ export const defaultColumns = {
     tagsColumn(),
     feedbackColumn("llm"),
     templateColumn(),
+  ],
+  tool: [
+    timeColumn("createdAt"),
+    nameColumn("Tool"),
+    durationColumn(),
+    userColumn(),
+    {
+      ...inputColumn("Input"),
+      id: "tool-input",
+      size: 220,
+      minSize: 160,
+      maxSize: 320,
+    },
+    {
+      ...outputColumn("Output"),
+      id: "tool-output",
+      size: 260,
+      minSize: 200,
+      maxSize: 380,
+    },
+    tagsColumn(),
+  ],
+  retriever: [
+    timeColumn("createdAt"),
+    nameColumn("Name"),
+    durationColumn(),
+    userColumn(),
+    {
+      ...inputColumn("Query"),
+      id: "retriever-query",
+      size: 200,
+      minSize: 150,
+      maxSize: 260,
+    },
+    {
+      ...outputColumn("Documents"),
+      id: "retriever-documents",
+      size: 360,
+      minSize: 240,
+      maxSize: 480,
+    },
+    tagsColumn(),
   ],
   trace: [
     timeColumn("createdAt", "Time"),
@@ -153,6 +214,26 @@ export const CHECKS_BY_TYPE = {
     "toxicity",
     "pii",
   ],
+  tool: [
+    "date",
+    "tools",
+    "tags",
+    "users",
+    "status",
+    "metadata",
+    "feedback",
+    "duration",
+  ],
+  retriever: [
+    "date",
+    "retrievers",
+    "tags",
+    "users",
+    "status",
+    "metadata",
+    "feedback",
+    "duration",
+  ],
   trace: [
     "date",
     "tags",
@@ -168,6 +249,8 @@ export const CHECKS_BY_TYPE = {
 
 const VIEW_ICONS = {
   llm: "IconBrandOpenai",
+  tool: "IconTool",
+  retriever: "IconCloudDownload",
   thread: "IconMessages",
   trace: "IconBinaryTree2",
 };
@@ -209,13 +292,16 @@ export default function Logs() {
   );
 
   const checksByType = useMemo(() => {
-    const base = {
-      llm: [...CHECKS_BY_TYPE.llm],
-      trace: [...CHECKS_BY_TYPE.trace],
-      thread: [...CHECKS_BY_TYPE.thread],
-    };
+    const base = Object.fromEntries(
+      Object.entries(CHECKS_BY_TYPE).map(([key, value]) => [key, [...value]]),
+    ) as Record<string, string[]>;
 
-    if (org?.beta && hasIntentEvaluator && !base.thread.includes("intents")) {
+    if (
+      org?.beta &&
+      hasIntentEvaluator &&
+      Array.isArray(base.thread) &&
+      !base.thread.includes("intents")
+    ) {
       base.thread.push("intents");
     }
 
@@ -244,9 +330,9 @@ export default function Logs() {
     parseAsString,
   );
 
-  const [type, setType] = useQueryState<string>(
+  const [type, setType] = useQueryState<SupportedType>(
     "type",
-    parseAsStringEnum(["llm", "trace", "thread"]).withDefault("llm"),
+    parseAsStringEnum(SUPPORTED_TYPES).withDefault("llm"),
   );
 
   const [checks, setChecks] = useQueryState(
@@ -290,6 +376,8 @@ export default function Logs() {
   const [searchValue, setSearchValue] = useState("");
   const { applyAiFilter, isAiFilterLoading } = useAiFilter({ projectId });
   const aiLoading = isAiFilterLoading();
+  const shouldShowTypeSwitcher = isLogType(type);
+  const allowedFilters = checksByType[type] ?? [];
 
   useEffect(() => {
     setSearchValue(query ?? "");
@@ -324,40 +412,40 @@ export default function Logs() {
     return <Loader />;
   }
 
-  const sameCols = (a, b) =>
-    a.length === b.length && a.every((c, i) => c.id === b[i].id);
+  const sameCols = (a = [], b = []) =>
+    a.length === b.length && a.every((c, i) => c.id === b[i]?.id);
 
   useEffect(() => {
     setAllColumns((prev) => {
-      const next: typeof prev = {
-        llm: [...prev.llm],
-        trace: [...prev.trace],
-        thread: [...prev.thread],
-      };
+      const next = Object.fromEntries(
+        Object.entries(prev ?? {}).map(([key, cols]) => [key, [...cols]]),
+      ) as typeof prev;
 
-      next.llm = next.llm.filter(
-        (col) =>
-          !(type === "llm" && col.accessorKey?.startsWith("enrichment-")),
-      );
+      if (type === "llm" && Array.isArray(next.llm)) {
+        next.llm = next.llm.filter(
+          (col) => !col.accessorKey?.startsWith("enrichment-"),
+        );
+      }
 
-      next.thread = next.thread.filter(
-        (col) => !(type === "thread" && col.id?.startsWith("enrichment-")),
-      );
+      if (type === "thread" && Array.isArray(next.thread)) {
+        next.thread = next.thread.filter(
+          (col) => !col.id?.startsWith("enrichment-"),
+        );
+      }
 
       if (Array.isArray(evaluators)) {
-        if (type === "llm") {
-          evaluators
-            .filter((ev) => ev.type !== "intent")
-            .forEach((ev) => {
-              next.llm.push(
-                ev.type === "toxicity"
-                  ? toxicityColumn(ev.id)
-                  : enrichmentColumn(ev.name, ev.id, ev.type),
-              );
-            });
+        if (type === "llm" && Array.isArray(next.llm)) {
+          evaluators.forEach((ev) => {
+            if (!org?.beta && ev.type === "intent") return;
+            next.llm.push(
+              ev.type === "toxicity"
+                ? toxicityColumn(ev.id)
+                : enrichmentColumn(ev.name, ev.id, ev.type),
+            );
+          });
         }
 
-        if (type === "thread" && org?.beta) {
+        if (type === "thread" && org?.beta && Array.isArray(next.thread)) {
           evaluators
             .filter((ev) => ev.type === "intent")
             .forEach((ev) => {
@@ -366,16 +454,17 @@ export default function Logs() {
         }
       }
 
-      if (type === "llm" && next.llm[0]?.id === "select") {
-        next.llm.shift();
+      if (isLogType(type) && Array.isArray(next[type])) {
+        next[type] = next[type].filter((col) => col.id !== "select");
       }
 
-      const unchanged =
-        sameCols(prev.llm, next.llm) && sameCols(prev.thread, next.thread);
+      const unchanged = Object.keys(next).every((key) =>
+        sameCols(prev[key], next[key]),
+      );
 
       return unchanged ? prev : next;
     });
-  }, [type, evaluators, org?.beta, setAllColumns]);
+  }, [type, evaluators, org?.beta]);
 
   useEffect(() => {
     setAllColumns((prev) => {
@@ -394,11 +483,13 @@ export default function Logs() {
     if (!Array.isArray(metadataKeys)) return;
 
     setAllColumns((prev) => {
-      const next: typeof prev = {
-        llm: [...prev.llm],
-        trace: [...prev.trace],
-        thread: [...prev.thread],
-      };
+      const next = Object.fromEntries(
+        Object.entries(prev ?? {}).map(([key, cols]) => [key, [...cols]]),
+      ) as typeof prev;
+
+      if (!Array.isArray(next.thread)) {
+        return prev;
+      }
 
       next.thread = next.thread.filter(
         (col) => !col.id?.startsWith("metadata-"),
@@ -485,7 +576,9 @@ export default function Logs() {
   useEffect(() => {
     if (!view) return;
 
-    setType(view.type || "llm");
+    const nextType =
+      view.type && isSupportedType(view.type) ? view.type : "llm";
+    void setType(nextType);
     setChecks(view.data || []);
     setVisibleColumns(view.columns);
     setSearchValue("");
@@ -522,9 +615,9 @@ export default function Logs() {
         if (
           inferredType &&
           inferredType !== type &&
-          ["llm", "trace", "thread"].includes(inferredType)
+          isSupportedType(inferredType)
         ) {
-          setType(inferredType);
+          void setType(inferredType);
         }
 
         const unmatched = Array.isArray(result.debug?.unmatched)
@@ -708,7 +801,55 @@ export default function Logs() {
     <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
       <NextSeo title="Logs - Lunary" />
 
-      <Stack>
+      <Stack gap="md">
+        {view && (
+          <Group justify="space-between" align="center" wrap="wrap">
+            <Group gap="xs" wrap="wrap">
+              <IconPicker
+                size={26}
+                variant="light"
+                value={view.icon}
+                onChange={(icon) => {
+                  updateView({
+                    icon,
+                  });
+                }}
+              />
+              <RenamableField
+                defaultValue={view.name}
+                onRename={(newName) => {
+                  updateView({
+                    name: newName,
+                  });
+                }}
+              />
+            </Group>
+
+            <Menu position="bottom-end">
+              <Menu.Target>
+                <ActionIcon variant="subtle">
+                  <IconDotsVertical size={12} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<IconStackPop size={16} />}
+                  onClick={() => duplicateView()}
+                >
+                  Duplicate
+                </Menu.Item>
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
+                  onClick={() => deleteView()}
+                >
+                  Delete
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
+        )}
+
         <Card withBorder p={2} px="sm">
           <Stack gap="xs">
             <Flex justify="space-between" align="center" gap="sm" wrap="wrap">
@@ -790,49 +931,18 @@ export default function Logs() {
 
         <Group justify="space-between" align="center">
           <Group>
-            {view && (
-              <Group gap="xs">
-                <IconPicker
-                  size={26}
-                  variant="light"
-                  value={view.icon}
-                  onChange={(icon) => {
-                    updateView({
-                      icon,
-                    });
-                  }}
-                />
-                <RenamableField
-                  defaultValue={view.name}
-                  onRename={(newName) => {
-                    updateView({
-                      name: newName,
-                    });
-                  }}
-                />
-                <Menu position="bottom-end">
-                  <Menu.Target>
-                    <ActionIcon variant="subtle">
-                      <IconDotsVertical size={12} />
-                    </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item
-                      leftSection={<IconStackPop size={16} />}
-                      onClick={() => duplicateView()}
-                    >
-                      Duplicate
-                    </Menu.Item>
-                    <Menu.Item
-                      color="red"
-                      leftSection={<IconTrash size={16} />}
-                      onClick={() => deleteView()}
-                    >
-                      Delete
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </Group>
+            {shouldShowTypeSwitcher && (
+              <SegmentedControl
+                size="sm"
+                value={type}
+                data={LOG_TYPE_SEGMENT_OPTIONS}
+                onChange={(value) => {
+                  if (value !== type && isSupportedType(value)) {
+                    void setType(value);
+                    setColumnsTouched(true);
+                  }
+                }}
+              />
             )}
 
             {aiLoading ? (
@@ -844,7 +954,7 @@ export default function Logs() {
                 onChange={(value) => {
                   setChecks(value);
                 }}
-                restrictTo={(f) => checksByType[type].includes(f.id)}
+                restrictTo={(f) => allowedFilters.includes(f.id)}
                 aiFilter={{
                   onSubmit: applyNaturalLanguageFilters,
                   loading: aiLoading,
@@ -926,12 +1036,12 @@ export default function Logs() {
           <Loader />
         ) : (
           <>
-            {selectedRun?.type === "llm" && (
+            {selectedRun && isLogType(selectedRun.type) && (
               <RunInputOutput
                 initialRun={selectedRun}
                 withFeedback={true}
-                withPlayground={true}
-                withImportToDataset={true}
+                withPlayground={selectedRun.type === "llm"}
+                withImportToDataset={selectedRun.type === "llm"}
                 withOpenTrace={true}
                 withShare={true}
                 mutateLogs={mutateLogs}

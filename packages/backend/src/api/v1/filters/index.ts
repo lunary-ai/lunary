@@ -273,7 +273,7 @@ filters.get("/topics", async (ctx) => {
 
 const naturalLanguageFiltersBodySchema = z.object({
   text: z.string().min(1),
-  type: z.enum(["llm", "trace", "thread"]).optional(),
+  type: z.enum(["llm", "trace", "thread", "tool", "retriever"]).optional(),
 });
 
 filters.post("/natural-language", async (ctx: Context) => {

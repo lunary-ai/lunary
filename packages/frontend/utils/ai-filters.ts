@@ -4,7 +4,7 @@ import { ProjectContext } from "./context";
 import { generateKey } from "./dataHooks";
 import { fetcher } from "./fetcher";
 
-export type RunType = "llm" | "trace" | "thread";
+export type RunType = "llm" | "trace" | "thread" | "tool" | "retriever";
 
 export type NaturalLanguageFilterOptions = {
   type?: RunType;

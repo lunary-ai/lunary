@@ -38,6 +38,7 @@ import {
   IconMessages,
   IconTool,
   IconTools,
+  IconCloudDownload,
   IconUser,
   IconUserCheck,
   IconWorldWww,
@@ -65,6 +66,10 @@ const CHECKS_UI_DATA: ChecksUIData = {
   tools: {
     icon: IconTool,
     color: "gray",
+  },
+  retrievers: {
+    icon: IconCloudDownload,
+    color: "teal",
   },
   tags: {
     icon: IconTag,

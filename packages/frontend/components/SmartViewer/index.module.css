@@ -123,9 +123,15 @@
 .pre {
   white-space: pre-wrap;
   margin: 0;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 
   pre {
     white-space: pre-wrap;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -135,6 +141,9 @@
   overflow: hidden;
   max-height: 700px;
   overflow-y: auto;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .pre.compact {
@@ -142,17 +151,24 @@
   overflow: hidden;
   width: 100%;
   white-space: pre-wrap;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 
   border-radius: 6px;
 
   pre {
     padding-top: 4px;
     line-height: 1.2;
+    max-width: 100%;
   }
 }
 
 .pre.compact code {
   overflow: hidden;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* Fixes for json-view-lite */

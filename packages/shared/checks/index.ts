@@ -82,6 +82,23 @@ export const CHECKS: Check[] = [
     ],
   },
   {
+    id: "retrievers",
+    name: "Retriever name",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Retriever name is",
+      },
+      {
+        type: "text",
+        id: "retrieverName",
+        placeholder: "value",
+      },
+    ],
+  },
+  {
     id: "type",
     name: "Type",
     uiType: "basic",
