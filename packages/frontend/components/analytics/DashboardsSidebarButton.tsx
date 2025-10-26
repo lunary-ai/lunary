@@ -13,7 +13,7 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useRef } from "react";
-import { NavbarLink } from "../layout/Sidebar";
+import { SidebarLink } from "../sidebar/sidebar-link";
 
 export default function DashboardsSidebarButton() {
   const { project } = useProject();
@@ -74,7 +74,7 @@ export default function DashboardsSidebarButton() {
 
   return (
     <Group>
-      <NavbarLink
+      <SidebarLink
         onClick={(event) => {
           const target = event.target as HTMLElement;
           if (menuTargetRef.current?.contains(target)) {

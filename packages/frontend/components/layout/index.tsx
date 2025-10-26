@@ -11,7 +11,7 @@ import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/router";
 
 import Navbar from "./Navbar";
-import Sidebar from "./Sidebar";
+import Sidebar from "../sidebar";
 import BillingDelinquentBanner from "./billing-delinquent-banner";
 
 import analytics from "@/utils/analytics";

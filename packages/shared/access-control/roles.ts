@@ -27,7 +27,8 @@ export type ResourceName =
   | "charts"
   | "auditLogs"
   | "guardrails"
-  | "jobs";
+  | "jobs"
+  | "tests"; // TODO: add tests resource permissions
 
 export type Action =
   | "create"
