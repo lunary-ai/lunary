@@ -15,4 +15,3 @@ insert into _db_migration_async (name, operation, statement) values
     on run (project_id, created_at desc)
     where type = 'retriever' and is_deleted = false$$
   );
-r
