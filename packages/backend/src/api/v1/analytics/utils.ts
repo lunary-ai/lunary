@@ -1,20 +1,65 @@
 import { convertChecksToSQL } from "@/src/utils/checks";
 import sql from "@/src/utils/db";
 import { DateTime } from "luxon";
-import { deserializeLogic, LogicNode } from "shared";
+import { deserializeLogic, LogicData, LogicElement, LogicNode } from "shared";
 import { z } from "zod";
 
+function filterChecks(
+  logic: LogicNode | null | undefined,
+  predicate: (logicData: LogicData) => boolean,
+): LogicNode | null {
+  if (!logic?.length) {
+    return null;
+  }
+
+  const operator = logic[0];
+  const filteredChildren: LogicElement[] = [];
+
+  for (const element of logic.slice(1)) {
+    if (Array.isArray(element)) {
+      const filteredChild = filterChecks(element as LogicNode, predicate);
+      if (filteredChild) {
+        filteredChildren.push(filteredChild);
+      }
+    } else if (predicate(element as LogicData)) {
+      filteredChildren.push(element);
+    }
+  }
+
+  if (filteredChildren.length === 0) {
+    return null;
+  }
+
+  return [operator, ...filteredChildren] as LogicNode;
+}
+
 export function buildFiltersQuery(deserializedChecks: LogicNode) {
-  return deserializedChecks?.length && deserializedChecks.length > 1
-    ? convertChecksToSQL(deserializedChecks)
+  const runChecks = filterChecks(
+    deserializedChecks,
+    (logicData) => logicData.id !== "user-props",
+  );
+
+  return runChecks?.length && runChecks.length > 1
+    ? convertChecksToSQL(runChecks)
     : sql`1 = 1`;
+}
+
+export function buildUserPropsFiltersQuery(deserializedChecks: LogicNode) {
+  const userChecks = filterChecks(
+    deserializedChecks,
+    (logicData) => logicData.id === "user-props",
+  );
+
+  return userChecks?.length && userChecks.length > 1
+    ? convertChecksToSQL(userChecks)
+    : sql`true`;
 }
 
 export function parseQuery(projectId: string, queryString: string, query: any) {
   const checks = deserializeLogic(queryString);
   const deserializedChecks = deserializeLogic(queryString);
 
-  const enricherFilters = ["languages", "pii", "topics", "toxicity"];
+  const enricherFilters = ["languages", "pii", "topics", "toxicity", "intents"];
 
   const mainChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
@@ -63,25 +108,50 @@ export function parseQuery(projectId: string, queryString: string, query: any) {
         hourly: "1 hour",
         daily: "1 day",
         weekly: "7 days",
+        monthly: "1 month",
       };
       const localCreatedAtMap = {
         hourly: sql`date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
         daily: sql`date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
-        weekly: sql`date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
+        weekly: sql`date_trunc('week', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
         monthly: sql`date_trunc('month', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
       };
       const interval = granularityToIntervalMap[granularity];
       const localCreatedAt = localCreatedAtMap[granularity];
 
+      //   const datesQuery = sql`
+      //   select date_trunc('day', gs)::timestamp as date
+      //   from   generate_series(
+      //            ${startUtc}::timestamptz,
+      //            ${endUtc}  ::timestamptz,
+      //            ${interval}::interval
+      //          ) gs
+      //   where  gs <= current_timestamp
+      // `;
+      //
+      const truncUnit =
+        granularity === "hourly"
+          ? sql`'hour'`
+          : granularity === "weekly"
+            ? sql`'week'`
+            : granularity === "monthly"
+              ? sql`'month'`
+              : sql`'day'`;
       const datesQuery = sql`
-      select date_trunc('day', gs at time zone ${timeZone})::timestamp as date          
-      from   generate_series(
-               ${startUtc}::timestamptz,
-               ${endUtc}  ::timestamptz,
-               ${interval}::interval
-             ) gs
-      where  gs <= current_timestamp                      
-    `;
+        with series as (
+          select generate_series(
+                   ${startUtc}::timestamptz,
+                   ${endUtc}  ::timestamptz,
+                   ${interval}::interval
+                 ) as ts
+        )
+        select
+          date_trunc(${truncUnit}, ts at time zone ${timeZone})::timestamp                                       as date,
+          (date_trunc(${truncUnit}, ts at time zone ${timeZone}) at time zone ${timeZone})::timestamptz          as start_utc,
+          ((date_trunc(${truncUnit}, ts at time zone ${timeZone}) + ${interval}::interval) at time zone ${timeZone})::timestamptz as end_utc
+        from series
+        where ts <= current_timestamp
+      `;
 
       const filteredRunsQuery = sql`
       select

@@ -1928,33 +1928,35 @@ analytics.get("/topics/top", async (ctx: Context) => {
   );
 
   const data = await sql`
-      with dates as (
-        ${datesQuery}
-      ),
-      filtered_runs as (
-        ${filteredRunsQuery}
-      )
-      select
-        t.topic,
-        count(*) as count
-      from
-        dates d
-        left join filtered_runs r on d.date = r.local_created_at
-        join evaluation_result_v2 er on r.id = er.run_id
-        join evaluator e on er.evaluator_id = e.id
-        cross join lateral (
-          select distinct
-            elem #>> '{}' as topic
-          from
-            jsonb_array_elements(jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic')) as elem
-        ) t
-      where
-        e.type = 'topics'
-        and t.topic is not null
-      group by
-        t.topic
-      order by
-        count desc;
+    with dates as (
+      ${datesQuery}
+    ),
+    filtered_runs as (
+      ${filteredRunsQuery}
+    )
+    select
+      t.topic,
+      count(*) as count
+    from
+      dates d
+      left join filtered_runs r
+        on r.created_at >= d.start_utc
+       and r.created_at  <  d.end_utc
+      join evaluation_result_v2 er on r.id = er.run_id
+      join evaluator e on er.evaluator_id = e.id and e.type = 'topics'
+      cross join lateral (
+        select distinct elem #>> '{}' as topic
+        from jsonb_array_elements(
+               jsonb_path_query_array(er.result, '$.input[*].topic')
+               || jsonb_path_query_array(er.result, '$.output[*].topic')
+             ) as elem
+      ) t
+    where
+      t.topic is not null
+    group by
+      t.topic
+    order by
+      count desc;
       ;`;
 
   ctx.body = { data };
