@@ -11,10 +11,10 @@ import classes from "./index.module.css";
 import SmartCheckSelect from "./SmartSelectInput";
 
 import { DateTimePicker } from "@mantine/dates";
-import { useEffect } from "react";
-import UserSelectInput from "./UserSelectInput";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { useEffect } from "react";
+import UserSelectInput from "./UserSelectInput";
 
 dayjs.extend(customParseFormat);
 

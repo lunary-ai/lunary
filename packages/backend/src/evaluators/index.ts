@@ -12,6 +12,7 @@ import * as gleu from "./gleu";
 import * as rouge from "./rouge";
 import * as cosine from "./cosine";
 import * as fuzzy from "./fuzzy";
+import * as intent from "./intent";
 
 const evaluators = {
   pii,
@@ -28,6 +29,7 @@ const evaluators = {
   rouge,
   cosine,
   fuzzy,
+  intent,
 };
 
 export default evaluators;

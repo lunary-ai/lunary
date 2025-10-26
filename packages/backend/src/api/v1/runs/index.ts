@@ -14,6 +14,11 @@ import Context from "@/src/utils/koa";
 import crypto from "crypto";
 import { recordAuditLog } from "../audit-logs/utils";
 import { getRelatedRuns } from "./queries";
+import type { EvaluatorIntentMapping } from "@/src/evaluators/intent-mapping";
+import {
+  getIntentMappingsForProject,
+  normalizeIntentAlias,
+} from "@/src/evaluators/intent-mapping";
 
 /**
  * @openapi
@@ -179,7 +184,16 @@ function processParams(params: any) {
   return params;
 }
 
-export function formatRun(run: any, excludeEnrichments = false) {
+function cleanIntentLabel(label: string | undefined) {
+  if (!label) return "";
+  return label.trim().replace(/\s+/g, " ");
+}
+
+export function formatRun(
+  run: any,
+  excludeEnrichments = false,
+  intentMappings?: Map<string, EvaluatorIntentMapping>,
+) {
   const formattedRun = {
     id: run.id,
     projectId: run.projectId,
@@ -275,6 +289,66 @@ export function formatRun(run: any, excludeEnrichments = false) {
           continue;
         }
 
+        if (evaluatorType === "intent" && intentMappings) {
+          const mapping = intentMappings.get(evaluatorId);
+
+          const remapBucket = (bucket: any) => {
+            if (!Array.isArray(bucket)) {
+              return bucket;
+            }
+
+            return bucket.map((entry: any) => {
+              if (
+                entry &&
+                typeof entry === "object" &&
+                Array.isArray(entry.intents)
+              ) {
+                const intents = entry.intents.map((intent: any) => {
+                  if (!intent || typeof intent !== "object") return intent;
+
+                  const originalLabel =
+                    typeof intent.label === "string" ? intent.label : "";
+                  const aliasLabel = cleanIntentLabel(originalLabel) || originalLabel;
+                  const mapEntry =
+                    aliasLabel && mapping
+                      ? mapping.aliasMap.get(normalizeIntentAlias(aliasLabel))
+                      : undefined;
+
+                  const canonicalLabel =
+                    mapEntry?.canonicalLabel || aliasLabel || originalLabel;
+                  const displayLabel = mapEntry
+                    ? mapEntry.isOther
+                      ? "Other"
+                      : mapEntry.canonicalLabel
+                    : canonicalLabel;
+
+                  return {
+                    ...intent,
+                    originalLabel,
+                    aliasLabel,
+                    canonicalLabel,
+                    clusterId: mapEntry?.clusterId ?? null,
+                    occurrences: mapEntry?.occurrences ?? null,
+                    isOther: mapEntry?.isOther ?? false,
+                    label: displayLabel,
+                  };
+                });
+
+                return {
+                  ...entry,
+                  intents,
+                };
+              }
+
+              return entry;
+            });
+          };
+
+          result.input = remapBucket(result.input);
+          result.output = remapBucket(result.output);
+          result.error = remapBucket(result.error);
+        }
+
         if (Array.isArray(formattedRun.input)) {
           for (let i = 0; i < formattedRun.input.length; i++) {
             const message = formattedRun.input[i];
@@ -348,7 +422,7 @@ function getRunQuery(ctx: Context, isExport = false) {
   const queryString = ctx.querystring;
   const deserializedChecks = deserializeLogic(queryString);
 
-  const enricherFilters = ["languages", "pii", "topics"];
+  const enricherFilters = ["languages", "pii", "topics", "intents"];
 
   const mainChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
@@ -689,9 +763,11 @@ runs.use("/ingest", ingest.routes());
  */
 runs.get("/", async (ctx: Context) => {
   const { query, page, limit } = getRunQuery(ctx, false);
+  const { projectId } = ctx.state;
 
   const rows = await query;
-  const runs = rows.map((run) => formatRun(run));
+  const intentMappings = await getIntentMappingsForProject(projectId);
+  const runs = rows.map((run) => formatRun(run, false, intentMappings));
 
   // TODO: improve this
   if (ctx.query.type === "llm") {
@@ -916,7 +992,11 @@ runs.get("/:id/public", async (ctx) => {
 
   if (!row) throw new Error("Run not found. It might not be public.");
 
-  ctx.body = formatRun(row);
+  const intentMappings = row.projectId
+    ? await getIntentMappingsForProject(row.projectId)
+    : undefined;
+
+  ctx.body = formatRun(row, false, intentMappings);
 });
 
 /**
@@ -1013,7 +1093,11 @@ runs.get("/:id", async (ctx) => {
     return ctx.throw(404, "Run not found");
   }
 
-  ctx.body = formatRun(row);
+  const intentMappings = row.projectId
+    ? await getIntentMappingsForProject(row.projectId)
+    : await getIntentMappingsForProject(ctx.state.projectId);
+
+  ctx.body = formatRun(row, false, intentMappings);
 });
 
 /**

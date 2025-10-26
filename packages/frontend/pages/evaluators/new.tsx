@@ -5,6 +5,7 @@ import EVALUATOR_TYPES from "@/utils/evaluators";
 import { slugify } from "@/utils/format";
 import { theme } from "@/utils/theme";
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -12,6 +13,8 @@ import {
   Fieldset,
   Flex,
   Group,
+  NumberInput,
+  Progress,
   SimpleGrid,
   Stack,
   Text,
@@ -25,12 +28,21 @@ import {
   Tabs,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCircleCheck,
+  IconCirclePlus,
+  IconRefreshAlert,
+  IconX,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckLogic, serializeLogic } from "shared";
 import { useCustomModels } from "@/utils/dataHooks/provider-configs";
 import ProviderEditor from "@/components/prompts/Provider";
+import { useIntentReclusterJob } from "@/utils/dataHooks/jobs";
+
+const DEFAULT_INTENT_MAX = 10;
 
 export function EvaluatorCard({
   evaluator,
@@ -98,6 +110,12 @@ export default function NewEvaluator() {
   const { user } = useUser();
   const { insertEvaluator } = useEvaluators();
   const { evaluator, update: updateEvaluator } = useEvaluator(evaluatorId);
+  const {
+    job: reclusterJob,
+    isStarting: reclusterStarting,
+    start: startRecluster,
+    mutate: mutateReclusterJob,
+  } = useIntentReclusterJob(evaluatorId);
   const isEditing = Boolean(evaluatorId);
 
   const [name, setName] = useState<string>("");
@@ -108,13 +126,90 @@ export default function NewEvaluator() {
     "OR",
     { id: "type", params: { type: "llm" } },
   ]);
-
   const serializedFilters = serializeLogic(filters);
   const { count: logCount } = useLogCount(serializedFilters);
 
   const { org } = useOrg();
   const { customModels } = useCustomModels();
-  const evaluatorAny = evaluator as any;
+  const evaluatorData = evaluator as any | undefined;
+  const evaluatorName = (evaluatorData?.name as string) || undefined;
+  const evaluatorParams = (evaluatorData?.params as Record<string, any>) || undefined;
+  const prevReclusterStatus = useRef<string | undefined>();
+
+  const isReclusterActive = Boolean(
+    reclusterJob && ["pending", "running"].includes(reclusterJob.status),
+  );
+
+  useEffect(() => {
+    if (!reclusterJob) {
+      if (prevReclusterStatus.current) {
+        notifications.hide("intent-recluster");
+        prevReclusterStatus.current = undefined;
+      }
+      return;
+    }
+
+    if (
+      prevReclusterStatus.current === reclusterJob.status &&
+      !["pending", "running"].includes(reclusterJob.status)
+    ) {
+      return;
+    }
+
+    if (["pending", "running"].includes(reclusterJob.status)) {
+      const message =
+        reclusterJob.status === "pending"
+          ? "Queued – we'll start reclustering shortly."
+          : `Cleaning up intents (${(reclusterJob.progress ?? 0).toFixed(1)}%)`;
+
+      const baseNotification = {
+        id: "intent-recluster",
+        title: "Reclustering intents",
+        message,
+        loading: true,
+        autoClose: false,
+      } as const;
+
+      if (prevReclusterStatus.current) {
+        notifications.update(baseNotification);
+      } else {
+        notifications.show(baseNotification);
+      }
+
+      prevReclusterStatus.current = reclusterJob.status;
+      return;
+    }
+
+    if (reclusterJob.status === "done") {
+      notifications.update({
+        id: "intent-recluster",
+        title: "Intent reclustering completed",
+        message:
+          reclusterJob.payload?.clusters != null
+            ? `Generated ${reclusterJob.payload?.clusters} canonical intents.`
+            : "Intent labels have been consolidated.",
+        icon: <IconCheck size={18} />,
+        color: "green",
+        autoClose: 4000,
+        loading: false,
+      });
+      prevReclusterStatus.current = reclusterJob.status;
+      return;
+    }
+
+    if (reclusterJob.status === "failed") {
+      notifications.update({
+        id: "intent-recluster",
+        title: "Reclustering failed",
+        message: reclusterJob.error || "See logs for details.",
+        icon: <IconRefreshAlert size={18} />,
+        color: "red",
+        autoClose: 6000,
+        loading: false,
+      });
+      prevReclusterStatus.current = reclusterJob.status;
+    }
+  }, [reclusterJob]);
 
   useEffect(() => {
     if (isEditing && evaluator) {
@@ -128,6 +223,16 @@ export default function NewEvaluator() {
           id: "llm",
           params: { ...(e.params as Record<string, any>) },
         });
+      } else if (e.type === "intent") {
+        setParams({
+          id: "intent",
+          params: {
+            maxIntents:
+              typeof e.params?.maxIntents === "number"
+                ? e.params.maxIntents
+                : DEFAULT_INTENT_MAX,
+          },
+        });
       }
     }
   }, [isEditing, evaluator]);
@@ -138,8 +243,45 @@ export default function NewEvaluator() {
   });
 
   const selectedEvaluator = evaluatorTypes.find((e) => e.id === type);
+
+  const ensureThreadFilter = useCallback(
+    (logic: CheckLogic): CheckLogic => {
+      if (selectedEvaluator?.id !== "intent") {
+        return logic;
+      }
+
+      if (!Array.isArray(logic)) {
+        return ["AND", { id: "type", params: { type: "thread" } }];
+      }
+
+      const rest = logic.slice(1) as CheckLogic[];
+
+      let hasTypeFilter = false;
+      const normalized = rest.map((node) => {
+        if (
+          typeof node === "object" &&
+          node !== null &&
+          !Array.isArray(node) &&
+          node.id === "type"
+        ) {
+          hasTypeFilter = true;
+          return { id: "type", params: { type: "thread" } };
+        }
+        return node;
+      });
+
+      if (!hasTypeFilter) {
+        normalized.push({ id: "type", params: { type: "thread" } });
+      }
+
+      return ["AND", ...normalized] as CheckLogic;
+    },
+    [selectedEvaluator?.id],
+  );
+
   const hasParams = Boolean(selectedEvaluator?.params?.length);
   const IconComponent = selectedEvaluator?.icon;
+  const currentMaxIntents = params?.params?.maxIntents ?? DEFAULT_INTENT_MAX;
 
   useEffect(() => {
     if (selectedEvaluator) {
@@ -153,6 +295,17 @@ export default function NewEvaluator() {
             categories: [],
           },
         });
+      } else if (selectedEvaluator.id === "intent") {
+        const defaultValue =
+          (evaluatorParams?.maxIntents as number | undefined) ??
+          DEFAULT_INTENT_MAX;
+        setParams({
+          id: "intent",
+          params: {
+            maxIntents: defaultValue,
+          },
+        });
+        return;
       } else {
         const initialParams = (selectedEvaluator.params as any[]).reduce(
           (acc, param) => {
@@ -167,6 +320,13 @@ export default function NewEvaluator() {
     }
   }, [selectedEvaluator]);
 
+  useEffect(() => {
+    if (!selectedEvaluator || selectedEvaluator.id !== "intent") return;
+
+    setMode("realtime");
+    setFilters((prev) => ensureThreadFilter(prev));
+  }, [selectedEvaluator, ensureThreadFilter]);
+
   function updateCategories(newCats: any[]) {
     setParams({
       id: "llm",
@@ -174,14 +334,41 @@ export default function NewEvaluator() {
     });
   }
 
+  async function handleReclusterIntents() {
+    if (!evaluatorId) return;
+
+    const maxIntents = params?.params?.maxIntents ?? DEFAULT_INTENT_MAX;
+
+    try {
+      await updateEvaluator(createEvaluatorBody());
+      await startRecluster(maxIntents);
+      await mutateReclusterJob();
+    } catch (error: any) {
+      notifications.show({
+        title: "Failed to start reclustering",
+        message: error?.message ?? "Unexpected error occurred",
+        color: "red",
+      });
+    }
+  }
+
   function createEvaluatorBody() {
+    const normalizedFilters =
+      type === "intent" ? ensureThreadFilter(filters) : filters;
+
     return {
       name,
       slug: slugify(name),
       mode,
-      params: params.params,
+      params:
+        params?.params ??
+        (type === "intent"
+          ? {
+              maxIntents: DEFAULT_INTENT_MAX,
+            }
+          : {}),
       type,
-      filters,
+      filters: normalizedFilters,
       ownerId: user.id,
     };
   }
@@ -229,7 +416,9 @@ export default function NewEvaluator() {
       <Stack gap="xl">
         <Group align="center">
           <Title order={3}>
-            {isEditing ? `Edit ${evaluatorAny.name}` : "New Evaluator"}
+            {isEditing
+              ? `Edit ${evaluatorName ?? name ?? "Evaluator"}`
+              : "New Evaluator"}
           </Title>
         </Group>
 
@@ -398,6 +587,92 @@ export default function NewEvaluator() {
           </Fieldset>
         )}
 
+        {selectedEvaluator?.id === "intent" && params && (
+          <Fieldset legend="Intent Configuration">
+            <Stack gap="md">
+              <NumberInput
+                label="Max visible intents"
+                min={1}
+                max={100}
+                value={currentMaxIntents}
+                onChange={(value) => {
+                  const next = Number(value);
+                  setParams({
+                    id: "intent",
+                    params: {
+                      maxIntents:
+                        Number.isFinite(next) && next > 0
+                          ? Math.min(Math.floor(next), 100)
+                          : DEFAULT_INTENT_MAX,
+                    },
+                  });
+                }}
+              />
+              <Text size="sm" c="dimmed">
+                Only the top intents by frequency will be shown individually.
+                The remaining ones collapse into an "Other" bucket for display
+                while keeping their original labels for future retriage.
+              </Text>
+              {isEditing && (
+                <Button
+                  variant="default"
+                  onClick={handleReclusterIntents}
+                  loading={reclusterStarting}
+                  disabled={reclusterStarting || isReclusterActive}
+                >
+                  Recluster intents with gpt-5-mini
+                </Button>
+              )}
+              {reclusterJob && (
+                <Stack gap="xs" w="100%">
+                  {isReclusterActive && (
+                    <>
+                      <Group justify="space-between">
+                        <Text size="sm" c="dimmed">
+                          Reclustering intents
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {(reclusterJob.progress ?? 0).toFixed(1)}%
+                        </Text>
+                      </Group>
+                      <Progress
+                        value={reclusterJob.progress ?? 0}
+                        size="md"
+                        radius="sm"
+                      />
+                    </>
+                  )}
+
+                  {reclusterJob.status === "done" && (
+                    <Alert
+                      icon={<IconCheck size={16} />}
+                      color="green"
+                      variant="light"
+                      title="Reclustering completed"
+                    >
+                      {reclusterJob.payload?.clusters != null
+                        ? `Generated ${reclusterJob.payload?.clusters} canonical intents.`
+                        : "Intent labels have been consolidated."}
+                    </Alert>
+                  )}
+
+                  {reclusterJob.status === "failed" && (
+                    <Alert
+                      icon={<IconRefreshAlert size={16} />}
+                      color="red"
+                      variant="light"
+                      title="Reclustering failed"
+                    >
+                      {reclusterJob.error ||
+                        "An error occurred while reclustering intents. Please try again."}
+                    </Alert>
+                  )}
+                </Stack>
+              )}
+            </Stack>
+          </Fieldset>
+        )}
+
         {selectedEvaluator && (
           <Fieldset legend="Live Mode Configuration">
             <Stack>
@@ -412,6 +687,7 @@ export default function NewEvaluator() {
                   onChange={(e) =>
                     setMode(e.currentTarget.checked ? "realtime" : "normal")
                   }
+                  disabled={selectedEvaluator?.id === "intent"}
                 />
 
                 {mode === "realtime" && (
@@ -424,7 +700,13 @@ export default function NewEvaluator() {
                       minimal
                       value={filters}
                       showAndOr
-                      onChange={setFilters}
+                      onChange={(nextFilters) =>
+                        setFilters(
+                          selectedEvaluator?.id === "intent"
+                            ? ensureThreadFilter(nextFilters)
+                            : nextFilters,
+                        )
+                      }
                       restrictTo={(filter) =>
                         ["tags", "type", "users", "metadata", "date"].includes(
                           filter.id,

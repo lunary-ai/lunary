@@ -1,4 +1,12 @@
-import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Group,
+  Popover,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconBiohazard,
@@ -14,6 +22,8 @@ import {
   EvaluatorType,
   LanguageDetectionResult,
   SentimentAnalysisResult,
+  IntentDetectionPayload,
+  IntentLabel,
 } from "shared";
 import { getFlagEmoji } from "./format";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
@@ -38,10 +48,113 @@ export function renderEnrichment(
     bias: renderBiasEnrichment,
     toxicity: renderToxicityEnrichment,
     llm: renderLLMEnrichment,
+    intent: renderIntentEnrichment,
   };
 
   const renderer = renderers[type] || JSON.stringify;
   return <ErrorBoundary>{renderer(data)}</ErrorBoundary>;
+}
+
+function renderIntentEnrichment(data: EnrichmentData) {
+  if (!data?.input?.length) return null;
+
+  const payload = data.input[0] as IntentDetectionPayload | undefined;
+  const intents = payload?.intents ?? [];
+
+  if (!Array.isArray(intents) || intents.length === 0) return null;
+
+  const summary = payload?.summary;
+
+  const isOtherIntent = (intent: IntentLabel) => {
+    const label =
+      intent.label ?? intent.canonicalLabel ?? intent.aliasLabel ?? "";
+    return intent.isOther || label.trim().toLowerCase() === "other";
+  };
+
+  const otherIntents = intents.filter(isOtherIntent);
+  const primaryIntents = intents.filter((intent) => !isOtherIntent(intent));
+
+  return (
+    <Stack gap={summary ? 6 : 0} align="center" justify="center">
+      <Group gap="xs" wrap="wrap" justify="center">
+        {primaryIntents.map((intent: IntentLabel, index) => {
+          const displayLabel =
+            intent.label ?? intent.canonicalLabel ?? intent.aliasLabel;
+          const confidencePct = Math.round((intent.confidence ?? 0) * 100);
+          const tooltipParts = [] as string[];
+
+          if (intent.canonicalLabel && intent.canonicalLabel !== displayLabel) {
+            tooltipParts.push(`Canonical: ${intent.canonicalLabel}`);
+          }
+
+          if (
+            intent.aliasLabel &&
+            intent.aliasLabel !== intent.canonicalLabel
+          ) {
+            tooltipParts.push(`Alias: ${intent.aliasLabel}`);
+          }
+
+          if (
+            typeof intent.confidence === "number" &&
+            !Number.isNaN(confidencePct)
+          ) {
+            tooltipParts.push(`Confidence: ${confidencePct}%`);
+          }
+
+          if (intent.rationale?.length) {
+            tooltipParts.push(intent.rationale);
+          }
+
+          const tooltip = tooltipParts.join("\n");
+
+          return (
+            <Tooltip
+              key={`${intent.canonicalLabel ?? intent.aliasLabel ?? displayLabel}-${index}`}
+              label={tooltip}
+              disabled={!tooltip.length}
+              multiline
+              w={260}
+            >
+              <Badge color="indigo" variant="light">
+                {displayLabel}
+              </Badge>
+            </Tooltip>
+          );
+        })}
+
+        {otherIntents.length > 0 && (
+          <Tooltip
+            key="intent-other"
+            label={otherIntents
+              .map(
+                (intent) =>
+                  intent.aliasLabel ||
+                  intent.canonicalLabel ||
+                  intent.originalLabel ||
+                  intent.label,
+              )
+              .filter(Boolean)
+              .join("\n")}
+            disabled={otherIntents.length === 0}
+            multiline
+            w={260}
+          >
+            <Badge color="gray" variant="light">
+              {otherIntents.length > 1
+                ? `Other (${otherIntents.length})`
+                : otherIntents[0].label ?? "Other"}
+            </Badge>
+          </Tooltip>
+        )}
+      </Group>
+
+      {summary && (
+        <Text size="xs" c="dimmed" ta="center">
+          {summary}
+        </Text>
+      )}
+    </Stack>
+  );
 }
 
 function renderLLMEnrichment(data: { passed: boolean; reason: string }) {

@@ -1,3 +1,4 @@
+import { getIntentMappingsForProject } from "@/src/evaluators/intent-mapping";
 import { isOpenAIMessage, unCamelObject } from "@/src/utils/misc";
 import { Parser } from "@json2csv/plainjs";
 import { Context } from "koa";
@@ -115,6 +116,8 @@ export async function fileExport(
   exportFormat: "csv" | "ojsonl" | "jsonl",
   exportType?: "trace" | "thread" | "llm",
 ) {
+  const intentMappings = await getIntentMappingsForProject(projectId);
+
   if (exportFormat === "csv") {
     const parser = new Parser();
 
@@ -128,12 +131,17 @@ export async function fileExport(
           let line;
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
-            const formattedRelated = related.map((r) => formatRun(r, true));
+            const formattedRelated = related.map((r) =>
+              formatRun(r, true, intentMappings),
+            );
             line = parser.parse(
-              getTraceChildren(formatRun(row, true), formattedRelated),
+              getTraceChildren(
+                formatRun(row, true, intentMappings),
+                formattedRelated,
+              ),
             );
           } else if (exportType === "thread") {
-            const formattedRun = formatRun(row, true);
+            const formattedRun = formatRun(row, true, intentMappings);
             const related = await getRelatedRuns(sql, row.id, projectId);
             formattedRun.children = getTraceChildren(
               formattedRun,
@@ -152,7 +160,7 @@ export async function fileExport(
 
             line = parser.parse(formattedRun);
           } else {
-            line = parser.parse(formatRun(row, true));
+            line = parser.parse(formatRun(row, true, intentMappings));
           }
           if (isFirst) {
             isFirst = false;
@@ -200,13 +208,18 @@ export async function fileExport(
           let line;
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
-            const formattedRelated = related.map((r) => formatRun(r, true));
+            const formattedRelated = related.map((r) =>
+              formatRun(r, true, intentMappings),
+            );
             line = JSON.stringify(
-              getTraceChildren(formatRun(row, true), formattedRelated),
+              getTraceChildren(
+                formatRun(row, true, intentMappings),
+                formattedRelated,
+              ),
             );
           } else if (exportType === "thread") {
             const messages = await getMessages(row.id, projectId);
-            const formattedRun = formatRun(row, true);
+            const formattedRun = formatRun(row, true, intentMappings);
             formattedRun.messages = messages;
             delete formattedRun.parentFeedback;
             delete formattedRun.input;
@@ -216,7 +229,7 @@ export async function fileExport(
             delete formattedRun.params;
             line = JSON.stringify(formattedRun);
           } else {
-            line = JSON.stringify(formatRun(row, true));
+            line = JSON.stringify(formatRun(row, true, intentMappings));
           }
           if (line.length > 0) {
             yield line + "\n";

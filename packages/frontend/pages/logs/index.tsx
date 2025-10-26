@@ -202,6 +202,20 @@ export default function Logs() {
   const { project, isLoading: projectLoading, setProjectId } = useProject();
   const { org } = useOrg();
 
+  const checksByType = useMemo(() => {
+    const base = {
+      llm: [...CHECKS_BY_TYPE.llm],
+      trace: [...CHECKS_BY_TYPE.trace],
+      thread: [...CHECKS_BY_TYPE.thread],
+    };
+
+    if (org?.beta && !base.thread.includes("intents")) {
+      base.thread.push("intents");
+    }
+
+    return base;
+  }, [org?.beta]);
+
   const { insert: insertView, isInserting: isInsertingView } = useViews();
 
   const [allColumns, setAllColumns] = useState(defaultColumns);
@@ -310,16 +324,25 @@ export default function Logs() {
 
   useEffect(() => {
     setAllColumns((prev) => {
-      const next: typeof prev = { ...prev, llm: [...prev.llm] };
+      const next: typeof prev = {
+        llm: [...prev.llm],
+        trace: [...prev.trace],
+        thread: [...prev.thread],
+      };
 
       next.llm = next.llm.filter(
         (col) =>
           !(type === "llm" && col.accessorKey?.startsWith("enrichment-")),
       );
 
-      if (type === "llm") {
-        if (Array.isArray(evaluators)) {
+      next.thread = next.thread.filter(
+        (col) => !(type === "thread" && col.id?.startsWith("enrichment-")),
+      );
+
+      if (Array.isArray(evaluators)) {
+        if (type === "llm") {
           evaluators.forEach((ev) => {
+            if (!org?.beta && ev.type === "intent") return;
             next.llm.push(
               ev.type === "toxicity"
                 ? toxicityColumn(ev.id)
@@ -327,13 +350,26 @@ export default function Logs() {
             );
           });
         }
-      } else if (next.llm[0]?.id === "select") {
+
+        if (type === "thread" && org?.beta) {
+          evaluators
+            .filter((ev) => ev.type === "intent")
+            .forEach((ev) => {
+              next.thread.push(enrichmentColumn(ev.name, ev.id, ev.type));
+            });
+        }
+      }
+
+      if (type === "llm" && next.llm[0]?.id === "select") {
         next.llm.shift();
       }
 
-      return sameCols(prev.llm, next.llm) ? prev : next;
+      const unchanged =
+        sameCols(prev.llm, next.llm) && sameCols(prev.thread, next.thread);
+
+      return unchanged ? prev : next;
     });
-  }, [type, evaluators, isSelectMode, setAllColumns]);
+  }, [type, evaluators, org?.beta, setAllColumns]);
 
   useEffect(() => {
     setAllColumns((prev) => {
@@ -396,8 +432,12 @@ export default function Logs() {
   }, [selectedRun?.projectId]);
 
   useEffect(() => {
+    if (query) {
+      return;
+    }
+
     setSearchValue("");
-  }, [projectId, type, serializedChecks]);
+  }, [projectId, type, serializedChecks, query]);
 
   useDidUpdate(() => {
     setChecks((prev) =>
@@ -798,7 +838,7 @@ export default function Logs() {
                 onChange={(value) => {
                   setChecks(value);
                 }}
-                restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
+                restrictTo={(f) => checksByType[type].includes(f.id)}
                 aiFilter={{
                   onSubmit: applyNaturalLanguageFilters,
                   loading: aiLoading,

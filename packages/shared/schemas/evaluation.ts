@@ -1,16 +1,16 @@
 import { Message } from "./old-openai";
 
+export interface EvaluationPrompt {
+  messages: Message[];
+  variations: Variation[];
+}
+
 export interface Evaluation {
   name?: string;
-  prompts: Prompt[];
+  prompts: EvaluationPrompt[];
   providers: any[];
   checklistId: string;
   datasetId: string;
-}
-
-export interface Prompt {
-  messages: Message[];
-  variations: Variation[];
 }
 
 export interface Variation {

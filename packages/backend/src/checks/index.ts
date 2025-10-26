@@ -312,6 +312,45 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
+    id: "intents",
+    sql: ({ intents }) => {
+      if (!intents || !intents.length) return sql`true`;
+
+      return sql`exists (
+        select
+          1
+        from
+          evaluation_result_v2 er2
+          join evaluator e2 on er2.evaluator_id = e2.id
+          left join lateral jsonb_array_elements(
+            coalesce(er2.result->'input', '[]'::jsonb)
+          ) payload on true
+          left join lateral jsonb_array_elements(
+            coalesce(payload->'intents', '[]'::jsonb)
+          ) intent on true
+          left join intent_cluster_version v on v.evaluator_id = e2.id
+            and v.created_at = (
+              select
+                max(created_at)
+              from
+                intent_cluster_version v2
+              where
+                v2.evaluator_id = e2.id
+            )
+          left join intent_cluster_alias a on a.version_id = v.id
+            and a.alias = trim(intent->>'label')
+          left join intent_cluster c on c.id = a.cluster_id
+        where
+          er2.run_id = r.id
+          and e2.type = 'intent'
+          and (
+            c.label = any(${sql.array(intents)}) or
+            trim(intent->>'label') = any(${sql.array(intents)})
+          )
+      )`;
+    },
+  },
+  {
     id: "users",
     sql: ({ users }) =>
       sql`(r.external_user_id = ANY(${sql.array(users, 20)}))`, // 20 is to specify it's a postgres int4
@@ -327,6 +366,59 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
 
       return true;
+    },
+  },
+  {
+    id: "user-props",
+    sql: ({ key, value }) => {
+      if (!key) {
+        return sql`true`;
+      }
+
+      if (value === undefined || value === null || value === "") {
+        return sql`true`;
+      }
+
+      const normalizedValue = (() => {
+        if (typeof value !== "string") {
+          return value;
+        }
+
+        const trimmed = value.trim();
+
+        if (!trimmed.length) {
+          return value;
+        }
+
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (
+            parsed &&
+            typeof parsed === "object" &&
+            "type" in parsed &&
+            "value" in parsed
+          ) {
+            return parsed.type === "null" ? null : parsed.value;
+          }
+          return parsed;
+        } catch (error) {
+          const lowered = trimmed.toLowerCase();
+          if (lowered === "true") return true;
+          if (lowered === "false") return false;
+          if (lowered === "null") return null;
+
+          const numericRegex = /^-?(0|[1-9]\d*)(\.\d+)?$/;
+          if (numericRegex.test(trimmed)) {
+            return Number(trimmed);
+          }
+
+          return trimmed;
+        }
+      })();
+
+      return sql`(
+        eu.props @> ${sql.json({ [key]: normalizedValue })}
+      )`;
     },
   },
   {

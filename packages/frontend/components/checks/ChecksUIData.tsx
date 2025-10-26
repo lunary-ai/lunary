@@ -5,6 +5,7 @@ import {
   IconBadge,
   IconBiohazard,
   IconBraces,
+  IconTarget,
   IconBracketsContainStart,
   IconBrain,
   IconBrandOpenai,
@@ -32,7 +33,6 @@ import {
   IconRulerMeasure,
   IconSearch,
   IconTag,
-  IconTarget,
   IconTextWrap,
   IconThumbUp,
   IconMessages,
@@ -84,6 +84,10 @@ const CHECKS_UI_DATA: ChecksUIData = {
   topics: {
     icon: IconBadge,
     color: "blue",
+  },
+  intents: {
+    icon: IconTarget,
+    color: "indigo",
   },
   templates: {
     icon: IconEditCircle,
