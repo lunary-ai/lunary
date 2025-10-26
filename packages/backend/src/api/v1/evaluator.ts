@@ -4,6 +4,7 @@ import { clearUndefined } from "@/src/utils/ingest";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { z } from "zod";
+import { checkOrgBetaAccess } from "@/src/utils/org";
 
 const evaluators = new Router({
   prefix: "/evaluators",
@@ -17,17 +18,24 @@ evaluators.get(
   "/",
   checkAccess("evaluations", "list"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state;
+    const { projectId, orgId } = ctx.state;
+
+    const hasOrgBetaAccess = await checkOrgBetaAccess(orgId);
 
     let evaluators =
       await sql`select * from evaluator where project_id = ${projectId}`;
+
+    if (!hasOrgBetaAccess) {
+      evaluators = evaluators.filter((ev: any) => ev.type !== "intent");
+    }
 
     ctx.body = evaluators;
   },
 );
 
 evaluators.get("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state;
+  const { projectId, orgId } = ctx.state;
+  const hasOrgBetaAccess = await checkOrgBetaAccess(orgId);
   const { id: evaluatorId } = ctx.params;
 
   const [evaluator] = await sql`
@@ -41,6 +49,15 @@ evaluators.get("/:id", async (ctx: Context) => {
   `;
 
   // TODO: return number of runs the evaluator will be applied to
+
+  if (!evaluator) {
+    ctx.body = evaluator;
+    return;
+  }
+
+  if (evaluator.type === "intent" && !hasOrgBetaAccess) {
+    ctx.throw(404, "Evaluator not found");
+  }
 
   ctx.body = evaluator;
 });
@@ -59,6 +76,11 @@ evaluators.post("/", async (ctx: Context) => {
 
   const { projectId } = ctx.state;
   const evaluator = requestBody.parse(ctx.request.body);
+  const hasOrgBetaAccess = await checkOrgBetaAccess(ctx.state.orgId);
+
+  if (evaluator.type === "intent" && !hasOrgBetaAccess) {
+    ctx.throw(403, "Intent evaluators require beta access.");
+  }
 
   // TODO: do not allow insert if the (project_id, slug) already exist (+ add constraint in db)
   const [insertedEvaluator] = await sql`
@@ -82,9 +104,14 @@ evaluators.patch("/:id", async (ctx: Context) => {
     filters: z.array(z.any()),
   });
 
-  const { projectId } = ctx.state;
+  const { projectId, orgId } = ctx.state;
   const { id: evaluatorId } = ctx.params;
   const evaluator = requestBody.parse(ctx.request.body);
+  const hasOrgBetaAccess = await checkOrgBetaAccess(orgId);
+
+  if (evaluator.type === "intent" && !hasOrgBetaAccess) {
+    ctx.throw(403, "Intent evaluators require beta access.");
+  }
 
   const [updatedEvaluator] = await sql`
     update 
@@ -98,6 +125,115 @@ evaluators.patch("/:id", async (ctx: Context) => {
   `;
 
   ctx.body = updatedEvaluator;
+});
+
+evaluators.post("/:id/recluster", async (ctx: Context) => {
+  const { projectId, orgId } = ctx.state;
+  const { id: evaluatorId } = ctx.params;
+
+  const bodySchema = z.object({
+    maxIntents: z.coerce.number().int().min(1).max(100).optional(),
+  });
+
+  const rawBody = ctx.request.body ?? {};
+  const parsedPayload = bodySchema.parse(
+    rawBody && typeof rawBody === "object" && "arg" in rawBody
+      ? ((rawBody as any).arg ?? {})
+      : rawBody,
+  );
+
+  const [evaluator] = await sql<
+    {
+      id: string;
+      type: string;
+      params: any;
+      name: string;
+      orgId: string;
+    }[]
+  >`
+    select
+      e.id,
+      e.type,
+      e.params,
+      e.name,
+      p.org_id as "orgId"
+    from
+      evaluator e
+      join project p on e.project_id = p.id
+    where
+      e.id = ${evaluatorId}
+      and e.project_id = ${projectId}
+  `;
+
+  if (!evaluator) {
+    ctx.throw(404, "Evaluator not found");
+  }
+
+  if (evaluator.type !== "intent") {
+    ctx.throw(
+      400,
+      "Intent clustering is only available for intent evaluators.",
+    );
+  }
+
+  const hasOrgBetaAccess = await checkOrgBetaAccess(orgId);
+  if (!hasOrgBetaAccess) {
+    ctx.throw(403, "Intent evaluators require beta access.");
+  }
+
+  const maxIntents = Number(
+    parsedPayload.maxIntents ?? evaluator.params?.maxIntents ?? 10,
+  );
+
+  if (!Number.isFinite(maxIntents) || maxIntents < 1) {
+    ctx.throw(400, "Invalid max intents value.");
+  }
+
+  const jobType = `intent-recluster:${evaluatorId}`;
+  const jobPayload = {
+    evaluatorId,
+    evaluatorName: evaluator.name,
+    maxIntents,
+  };
+
+  const insertedJob = await sql<{ id: string }[]>`
+    insert into 
+      _job (org_id, type, status, payload)
+    values 
+      (${evaluator.orgId}, ${jobType}, 'pending', ${sql.json(jobPayload)})
+    on conflict (org_id, type)
+      where status in ('pending','running')
+      do nothing
+    returning id
+  `;
+
+  let jobId: string | undefined = insertedJob[0]?.id;
+
+  if (!jobId) {
+    const existing = await sql<{ id: string }[]>`
+      select
+        id
+      from
+        _job
+      where
+        org_id = ${evaluator.orgId}
+        and type = ${jobType}
+      order by
+        created_at desc
+      limit 1
+    `;
+    jobId = existing[0]?.id;
+  }
+
+  if (!jobId) {
+    ctx.throw(500, "Unable to enqueue intent reclustering job");
+  }
+
+  ctx.status = 202;
+  ctx.body = {
+    jobId,
+    status: "queued",
+  };
 });
 
 evaluators.delete(

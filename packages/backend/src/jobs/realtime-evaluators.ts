@@ -9,6 +9,34 @@ import { sleep } from "../utils/misc";
 const RUNS_BATCH_SIZE = 100;
 const VERBOSE_MODE = process.env.LUNARY_REALTIME_EVALUATORS_VERBOSE === "true";
 
+function ensureThreadFilter(filters: any): any {
+  if (!Array.isArray(filters)) {
+    return ["AND", { id: "type", params: { type: "thread" } }];
+  }
+
+  const [, ...rest] = filters;
+  let hasTypeFilter = false;
+
+  const normalized = rest.map((node) => {
+    if (
+      node &&
+      typeof node === "object" &&
+      !Array.isArray(node) &&
+      node.id === "type"
+    ) {
+      hasTypeFilter = true;
+      return { id: "type", params: { type: "thread" } };
+    }
+    return node;
+  });
+
+  if (!hasTypeFilter) {
+    normalized.push({ id: "type", params: { type: "thread" } });
+  }
+
+  return ["AND", ...normalized];
+}
+
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
   try {
     const result = await evaluators[evaluator.type].evaluate(
@@ -62,9 +90,13 @@ async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
 }
 
 async function getEvaluatorRuns(evaluator: any) {
-  const filtersQuery = convertChecksToSQL(
-    evaluator.filters || ["AND", { id: "type", params: { type: "llm" } }],
-  );
+  const baseFilters = evaluator.filters || [
+    "AND",
+    { id: "type", params: { type: "llm" } },
+  ];
+  const enforcedFilters =
+    evaluator.type === "intent" ? ensureThreadFilter(baseFilters) : baseFilters;
+  const filtersQuery = convertChecksToSQL(enforcedFilters);
 
   const toxJoin =
     evaluator.type === "toxicity"
@@ -104,17 +136,24 @@ async function evaluatorJob() {
 
   const evaluators = await sql<RealtimeEvaluator[]>`
     select
-      *
+      e.*
     from
       evaluator e
+      join project p on e.project_id = p.id
+      join org o on p.org_id = o.id
     where
-      mode = 'realtime'
+      e.mode = 'realtime'
+      and e.type = 'intent'
     order by
       random()
   `;
 
   for (let i = 0; i < evaluators.length; i++) {
     const evaluator = evaluators[i];
+
+    if (evaluator.type === "intent" && evaluator.filters) {
+      evaluator.filters = ensureThreadFilter(evaluator.filters);
+    }
 
     const runs = await getEvaluatorRuns(evaluator);
     await sleep(1000);

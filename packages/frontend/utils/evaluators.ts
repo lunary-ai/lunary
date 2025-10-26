@@ -7,6 +7,7 @@ import {
   IconLanguage,
   IconNotebook,
   IconTextWrap,
+  IconTargetArrow,
 } from "@tabler/icons-react";
 
 type EvaluatorCategory = "labeler" | "text-similarity" | "custom";
@@ -93,6 +94,18 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
       },
     ],
     beta: false,
+    soon: false,
+  },
+  intent: {
+    id: "intent",
+    name: "Intent Detection",
+    category: "labeler",
+    icon: IconTargetArrow,
+    color: "indigo",
+    description:
+      "Detect the underlying intents behind an entire conversation thread.",
+    params: [],
+    beta: true,
     soon: false,
   },
   pii: {

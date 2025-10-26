@@ -7,6 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Lunary is an LLM observability and development platform providing conversation tracking, analytics, debugging, prompt management, and evaluation tools. It's a self-hostable toolkit that integrates with major LLM providers.
 
+## Documentation
+
+- Internal docs now live in the `ops` submodule under `ops/docs/`. Update and commit documentation changes from inside that submodule.
+
 ## Assumptions
 
 - Assume the local environment is already provisioned (database running, env vars set) and you have full access mode in this workspace.
@@ -70,6 +74,7 @@ Frontend requires: `API_URL`, `NEXT_PUBLIC_API_URL`
 - Mutations call `useProjectMutation` with the appropriate `fetcher` verb (`post`, `patch`, `put`, `delete`) and expose the returned `trigger` under descriptive names like `create`, `update`, or `remove`, wiring cache refreshes through `onSuccess`, `optimisticData`, or direct `mutate`.
 - When SWR Mutation is insufficient (e.g., custom DELETE flows), build the URL with `generateKey`, call the shared `fetcher` directly, and manually revalidate relevant caches.
 - All HTTP verbs ultimately use `packages/frontend/utils/fetcher.ts`, which prefixes `/v1`, attaches bearer auth, enforces consistent JSON payloads (`{ arg: ... }`), and centralizes error handling / sign-out logic.
+- UI components must never import `fetcher` directly; always wrap API calls in an existing or new data hook under `packages/frontend/utils/dataHooks/` so project scoping and caching behave consistently.
 
 ## File Naming
 
@@ -154,4 +159,4 @@ API: `http://localhost:3333`
 
 ## Additional References
 
-- [Filter System Overview](docs/filter-system-overview.md)
+- [Filter System Overview](ops/docs/filter-system-overview.md)

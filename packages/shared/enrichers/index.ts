@@ -11,7 +11,8 @@ export type EvaluatorType =
   | "geval"
   | "guidelines"
   | "bias"
-  | "replies";
+  | "replies"
+  | "intent";
 export type EvaluatorMode = "normal" | "realtime";
 
 interface BaseEvaluator {
@@ -48,6 +49,23 @@ export type EnrichmentData = {
   input: Array<Record<string, any>>;
   output: Array<Record<string, any>>;
   error: Array<Record<string, any>>;
+};
+
+export type IntentLabel = {
+  label: string;
+  confidence: number;
+  rationale?: string;
+  canonicalLabel?: string;
+  aliasLabel?: string;
+  originalLabel?: string;
+  isOther?: boolean;
+  clusterId?: string | null;
+  occurrences?: number | null;
+};
+
+export type IntentDetectionPayload = {
+  intents: IntentLabel[];
+  summary?: string;
 };
 
 export type LanguageDetectionResult = EnrichmentData & {

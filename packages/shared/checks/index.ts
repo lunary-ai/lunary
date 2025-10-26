@@ -293,6 +293,27 @@ export const CHECKS: Check[] = [
     ],
   },
   {
+    id: "intents",
+    name: "User Intent",
+    uiType: "ai",
+    uniqueInBar: true,
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "includes",
+      },
+      {
+        type: "select",
+        id: "intents",
+        multiple: true,
+        searchable: true,
+        width: 160,
+        options: () => `/filters/intents`,
+      },
+    ],
+  },
+  {
     id: "toxicity",
     name: "Toxicity",
     uiType: "ai",

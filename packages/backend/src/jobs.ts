@@ -1,16 +1,18 @@
 import sql from "@/src/utils/db";
 import { refreshCostsJob } from "./api/v1/runs/utils";
+import { intentReclusterJob } from "./evaluators/intent-clustering";
+import type { JobContext } from "./types";
 
-type JobHandler = (
-  orgId: string,
-  updateProgress: (pct: number) => Promise<void>,
-) => Promise<void>;
+type JobHandler = (context: JobContext) => Promise<void>;
 
 const handlers: Record<string, JobHandler> = {
-  "refresh-costs": refreshCostsJob,
+  "refresh-costs": ({ orgId, updateProgress }) =>
+    refreshCostsJob(orgId, updateProgress),
+  "intent-recluster": intentReclusterJob,
 };
 
 export async function startJobWorker(pollIntervalMs = 2_000) {
+  console.info("Starting Job Worker");
   while (true) {
     const [job] = await sql`
       with next_job as (
@@ -34,7 +36,7 @@ export async function startJobWorker(pollIntervalMs = 2_000) {
       where  
         j.id = next_job.id
       returning 
-        j.id, j.org_id, j.type;
+        j.id, j.org_id, j.type, j.payload;
     `;
 
     if (!job) {
@@ -45,16 +47,24 @@ export async function startJobWorker(pollIntervalMs = 2_000) {
     const {
       id: jobId,
       orgId,
-      type,
+      type: rawType,
+      payload,
     } = job as {
       id: string;
       orgId: string;
       type: string;
+      payload: any;
     };
+
+    const type = rawType?.trim?.() ?? rawType;
 
     console.info(`[JOB] picked ${type} (${jobId}) for org ${orgId}`);
 
-    const handler = handlers[type];
+    console.log(type);
+    const handlerKey = Object.keys(handlers).find(
+      (key) => type === key || type.startsWith(`${key}:`),
+    );
+    const handler = handlerKey ? handlers[handlerKey] : undefined;
     if (!handler) {
       await sql`
         update 
@@ -83,7 +93,21 @@ export async function startJobWorker(pollIntervalMs = 2_000) {
 
     console.info(`[JOB] ${type} (${jobId}) handler started`);
     try {
-      await handler(orgId, updateProgress);
+      const subject =
+        handlerKey && type.length > handlerKey.length
+          ? type.slice(handlerKey.length + 1)
+          : undefined;
+      const baseType = handlerKey ?? type;
+
+      await handler({
+        orgId,
+        jobId,
+        rawType: type,
+        type: baseType,
+        subject,
+        payload,
+        updateProgress,
+      });
 
       await sql`
         update 

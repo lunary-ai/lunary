@@ -185,7 +185,6 @@ export default function CheckPicker({
     examples?: string[];
   };
 }) {
-  console.log(value);
   const [modalOpened, setModalOpened] = useState(false);
 
   const options = CHECKS.filter(restrictTo);

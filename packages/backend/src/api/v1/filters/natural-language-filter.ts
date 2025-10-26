@@ -786,6 +786,18 @@ function compileClause(
       return ok ? [leaf(out)] : [];
     }
 
+    case "intents": {
+      const vals =
+        clause.values ?? (clause.value != null ? [String(clause.value)] : []);
+      if (!vals.length) {
+        unmatched.push("intents requires at least one value");
+        return [];
+      }
+      const out: Record<string, any> = {};
+      const ok = setParamValue(out, multiSelect ?? firstSelect, vals);
+      return ok ? [leaf(out)] : [];
+    }
+
     case "pii": {
       const v =
         clause.flag ??

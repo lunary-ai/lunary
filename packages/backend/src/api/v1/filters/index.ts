@@ -2,6 +2,7 @@ import sql from "@/src/utils/db";
 import { Context } from "koa";
 import Router from "koa-router";
 import { z } from "zod";
+import { checkOrgBetaAccess } from "@/src/utils/org";
 
 import {
   naturalLanguageToFilters,
@@ -88,6 +89,76 @@ filters.get("/topics", async (ctx: Context) => {
   `;
 
   ctx.body = rows.map((row) => row.topic);
+});
+
+filters.get("/intents", async (ctx: Context) => {
+  const { projectId, orgId } = ctx.state;
+
+  const orgHasBetaAccess = await checkOrgBetaAccess(orgId);
+  if (!orgHasBetaAccess) {
+    ctx.throw(404, "Not found");
+  }
+
+  const canonicalRows = await sql<
+    {
+      label: string;
+      sortOrder: number;
+      maxIntents: number;
+    }[]
+  >`
+    with latest_version as (
+      select
+        v.evaluator_id,
+        max(v.created_at) as created_at
+      from
+        intent_cluster_version v
+        join evaluator e on e.id = v.evaluator_id
+      where
+        e.project_id = ${projectId}
+        and e.type = 'intent'
+      group by
+        v.evaluator_id
+    )
+    select
+      c.label as label,
+      c.sort_order as "sortOrder",
+      v.max_intents as "maxIntents"
+    from
+      intent_cluster_version v
+      join latest_version lv on lv.evaluator_id = v.evaluator_id
+      and lv.created_at = v.created_at
+      join intent_cluster c on c.version_id = v.id
+    where
+      c.sort_order <= v.max_intents
+      or lower(c.label) = 'other'
+    order by
+      c.sort_order asc,
+      c.label asc
+  `;
+
+  if (canonicalRows.length) {
+    const unique = Array.from(new Set(canonicalRows.map((row) => row.label)));
+    ctx.body = unique;
+    return;
+  }
+
+  const fallbackRows = await sql`
+    select distinct
+      intent->>'label' as label
+    from
+      evaluator e
+      join evaluation_result_v2 er on er.evaluator_id = e.id
+      cross join lateral jsonb_array_elements(coalesce(er.result->'input', '[]'::jsonb)) as payload
+      cross join lateral jsonb_array_elements(coalesce(payload->'intents', '[]'::jsonb)) as intent
+    where
+      e.project_id = ${projectId}
+      and e.type = 'intent'
+      and intent->>'label' is not null
+    order by
+      label;
+  `;
+
+  ctx.body = fallbackRows.map((row) => row.label);
 });
 
 filters.get("/metadata", async (ctx: Context) => {

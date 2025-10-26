@@ -3,21 +3,32 @@ import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { z } from "zod";
+import { jobSchema, type Job } from "shared/schemas/job";
 
 const jobs = new Router({
   prefix: "/jobs",
 });
 
-async function getJobById(id: string, orgId: string) {
+async function getJobById(id: string, orgId: string): Promise<Job | null> {
   const [job] =
     await sql`select * from _job where id = ${id} and org_id = ${orgId}`;
-  return job;
+  return job ? jobSchema.parse(job) : null;
 }
 
-async function getJobByType(type: string, orgId: string) {
-  const [job] =
-    await sql` select * from _job where type = ${type} and org_id = ${orgId}`;
-  return job;
+async function getJobByType(type: string, orgId: string): Promise<Job | null> {
+  const [job] = await sql`
+    select 
+      *
+    from
+      _job
+    where
+      type = ${type}
+      and org_id = ${orgId}
+    order by
+      created_at desc
+    limit 1
+  `;
+  return job ? jobSchema.parse(job) : null;
 }
 
 jobs.get("/jobs/:id", checkAccess("jobs", "read"), async (ctx: Context) => {
@@ -50,9 +61,25 @@ jobs.get(
   "/refresh-costs",
   checkAccess("jobs", "read"),
   async (ctx: Context) => {
-    const { orgId } = ctx.state;
+  const { orgId } = ctx.state;
 
-    const job = await getJobByType("refresh-costs", orgId);
+  const job = await getJobByType("refresh-costs", orgId);
+
+  ctx.body = job;
+  },
+);
+
+jobs.get(
+  "/intent-recluster/:evaluatorId",
+  checkAccess("jobs", "read"),
+  async (ctx: Context) => {
+    const { orgId } = ctx.state;
+    const { evaluatorId } = z
+      .object({ evaluatorId: z.string() })
+      .parse(ctx.params);
+
+    const type = `intent-recluster:${evaluatorId}`;
+    const job = await getJobByType(type, orgId);
 
     ctx.body = job;
   },
