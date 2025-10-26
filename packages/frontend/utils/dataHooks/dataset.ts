@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
 import { ProjectContext } from "@/utils/context";
 import { fetcher } from "@/utils/fetcher";
 import {
@@ -18,6 +18,11 @@ export interface DatasetV2 {
   description: string | null;
   createdAt: string;
   updatedAt: string;
+  currentVersionId?: string | null;
+  currentVersionNumber?: number;
+  currentVersionCreatedAt?: string | null;
+  currentVersionCreatedBy?: string | null;
+  currentVersionRestoredFromVersionId?: string | null;
 }
 
 export interface DatasetV2Item {
@@ -31,6 +36,30 @@ export interface DatasetV2Item {
 
 export interface DatasetV2WithItems extends DatasetV2 {
   items: DatasetV2Item[];
+}
+
+export interface DatasetV2Version {
+  id: string;
+  datasetId: string;
+  versionNumber: number;
+  createdAt: string;
+  createdBy: string | null;
+  restoredFromVersionId: string | null;
+  name: string | null;
+  description: string | null;
+  itemCount: number;
+}
+
+export interface DatasetV2VersionItem {
+  id: string;
+  versionId: string;
+  datasetId: string;
+  itemIndex: number;
+  input: string;
+  groundTruth: string | null;
+  sourceItemId: string | null;
+  sourceCreatedAt: string | null;
+  sourceUpdatedAt: string | null;
 }
 
 export interface DatasetV2Input {
@@ -228,7 +257,7 @@ export function useDatasetV2(datasetId?: string) {
 
   const { trigger: createItem, isMutating: isCreatingItem } =
     useProjectMutation(
-      datasetId ? `/datasets-v2/${datasetId}/items` : null,
+      datasetId ? `/datasets-v2/${datasetId}/items?skipVersion=true` : null,
       fetcher.post,
       {
         onSuccess(item) {
@@ -257,6 +286,7 @@ export function useDatasetV2(datasetId?: string) {
       const url = generateKey(
         `/datasets-v2/${datasetId}/items/${itemId}`,
         projectId,
+        "skipVersion=true",
       );
 
       if (!url) {
@@ -292,6 +322,7 @@ export function useDatasetV2(datasetId?: string) {
       const url = generateKey(
         `/datasets-v2/${datasetId}/items/${itemId}`,
         projectId,
+        "skipVersion=true",
       );
 
       if (!url) {
@@ -372,5 +403,106 @@ export function useDatasetV2(datasetId?: string) {
     deleteItem,
     importItems,
     generateOutput,
+  };
+}
+
+export function useDatasetV2Versions(
+  datasetId?: string,
+  options: { limit?: number } = {},
+) {
+  const { limit = 50 } = options;
+
+  const {
+    data,
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useProjectSWR<{ versions: DatasetV2Version[] }>(
+    datasetId ? `/datasets-v2/${datasetId}/versions?limit=${limit}` : null,
+  );
+
+  return {
+    versions: data?.versions ?? [],
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  };
+}
+
+export function useDatasetV2Version(
+  datasetId?: string,
+  versionId?: string,
+) {
+  const {
+    data,
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useProjectSWR<{
+    version: DatasetV2Version;
+    items: DatasetV2VersionItem[];
+  }>(datasetId && versionId ? `/datasets-v2/${datasetId}/versions/${versionId}` : null);
+
+  return {
+    version: data?.version ?? null,
+    items: data?.items ?? [],
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  };
+}
+
+export function useDatasetV2VersionMutations(datasetId?: string) {
+  const { projectId } = useContext(ProjectContext);
+
+  const {
+    trigger: triggerCreateVersion,
+    isMutating: isCreatingVersion,
+  } = useProjectMutation(
+    datasetId ? `/datasets-v2/${datasetId}/versions` : null,
+    fetcher.post,
+  );
+
+  const createVersion = useCallback(async () => {
+    if (!datasetId) return null;
+    return triggerCreateVersion({});
+  }, [datasetId, triggerCreateVersion]);
+
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  const restoreVersion = useCallback(
+    async (versionId: string) => {
+      if (!datasetId || !projectId) {
+        return null;
+      }
+
+      const url = generateKey(
+        `/datasets-v2/${datasetId}/versions/${versionId}/restore`,
+        projectId,
+      );
+
+      if (!url) {
+        return null;
+      }
+
+      setIsRestoring(true);
+      try {
+        return await fetcher.post(url, { arg: {} });
+      } finally {
+        setIsRestoring(false);
+      }
+    },
+    [datasetId, projectId],
+  );
+
+  return {
+    createVersion,
+    isCreatingVersion,
+    restoreVersion,
+    isRestoring,
   };
 }
