@@ -45,10 +45,12 @@ export function renderEnrichment(
     tone: renderToneEnrichment,
     guidelines: renderGuidelinesEnrichment,
     replies: renderRepliesEnrichment,
-    bias: renderBiasEnrichment,
     toxicity: renderToxicityEnrichment,
     llm: renderLLMEnrichment,
     intent: renderIntentEnrichment,
+    "text-similarity": renderTextSimilarityEnrichment,
+    "model-labeler": renderModelLabelerEnrichment,
+    "model-scorer": renderModelScorerEnrichment,
   };
 
   const renderer = renderers[type] || JSON.stringify;
@@ -172,15 +174,88 @@ function renderLLMEnrichment(data: { passed: boolean; reason: string }) {
   );
 }
 
-function renderBiasEnrichment(data: EnrichmentData) {
-  if (!(data && data.output && Array.isArray(data.output))) {
-    return null;
-  }
-  data = data.output[0];
+function renderTextSimilarityEnrichment(data: any) {
+  if (!data || typeof data !== "object") return null;
+  if (typeof data.score !== "number") return null;
+
+  const method = typeof data.method === "string" ? data.method : "similarity";
+  const score = Number(data.score).toFixed(2);
+  const threshold =
+    typeof data.threshold === "number"
+      ? Number(data.threshold).toFixed(2)
+      : undefined;
+
   return (
-    <Tooltip label={data.reason}>
-      <Text size="lg">{data.score}</Text>
-    </Tooltip>
+    <Stack gap={2} align="center">
+      <Text size="sm">{`${method.toUpperCase()} score: ${score}`}</Text>
+      {threshold && (
+        <Text size="xs" c="dimmed">
+          Threshold {threshold}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+function renderModelLabelerEnrichment(data: any) {
+  if (!data || typeof data !== "object") return null;
+  const primary =
+    typeof data.primaryLabel === "string" && data.primaryLabel.trim().length
+      ? data.primaryLabel
+      : undefined;
+  const matches = Array.isArray(data.matches)
+    ? data.matches.filter((label: any) => typeof label === "string" && label.trim().length)
+    : [];
+  const labels = Array.isArray(data.labels)
+    ? data.labels.filter((label: any) => typeof label === "string" && label.trim().length)
+    : [];
+
+  if (!primary && !matches.length && !labels.length) return null;
+
+  return (
+    <Stack gap={4} align="center">
+      {primary ? (
+        <Badge color="blue" variant="light">
+          {primary}
+        </Badge>
+      ) : (
+        <Text size="xs" c="dimmed">
+          No label matched
+        </Text>
+      )}
+      {matches.length > 1 && (
+        <Text size="xs" c="dimmed">
+          Also matched: {matches.filter((label) => label !== primary).join(", ")}
+        </Text>
+      )}
+      {!primary && labels.length > 0 && (
+        <Text size="xs" c="dimmed">
+          Available labels: {labels.join(", ")}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+function renderModelScorerEnrichment(data: any) {
+  if (!data || typeof data !== "object" || typeof data.score !== "number")
+    return null;
+
+  const score = Number(data.score).toFixed(2);
+  const minScore =
+    typeof data.minScore === "number" ? Number(data.minScore).toFixed(2) : undefined;
+  const maxScore =
+    typeof data.maxScore === "number" ? Number(data.maxScore).toFixed(2) : undefined;
+
+  return (
+    <Stack gap={2} align="center">
+      <Text size="sm">Score: {score}</Text>
+      {minScore != null && maxScore != null && (
+        <Text size="xs" c="dimmed">
+          Range {minScore} – {maxScore}
+        </Text>
+      )}
+    </Stack>
   );
 }
 

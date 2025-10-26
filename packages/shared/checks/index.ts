@@ -129,7 +129,7 @@ export const CHECKS: Check[] = [
             value: "tool",
           },
           {
-            label: "Thread",
+            label: "Conversation",
             value: "thread",
           },
           {

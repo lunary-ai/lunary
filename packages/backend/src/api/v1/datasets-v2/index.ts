@@ -9,6 +9,8 @@ import { randomUUID } from "crypto";
 import OpenAI from "openai";
 import { z } from "zod";
 import config from "@/src/utils/config";
+import type { Sql } from "postgres";
+import { createDatasetVersion, type CreateDatasetVersionOptions } from "./versioning";
 
 const datasetsV2 = new Router({
   prefix: "/datasets-v2",
@@ -21,6 +23,19 @@ const DatasetIdParamsSchema = z.object({
 const DatasetItemIdParamsSchema = z.object({
   datasetId: z.string().uuid(),
   itemId: z.string().uuid(),
+});
+
+const DatasetVersionIdParamsSchema = z.object({
+  datasetId: z.string().uuid(),
+  versionId: z.string().uuid(),
+});
+
+const DatasetVersionListQuerySchema = z.object({
+  limit: z
+    .coerce.number()
+    .min(1)
+    .max(100)
+    .default(50),
 });
 
 const DatasetInputSchema = z.object({
@@ -122,6 +137,80 @@ async function generateCopyName(
 }
 
 type ParsedItem = { input: string; groundTruth: string | null };
+
+type SqlClient = Sql<any> | typeof sql;
+
+function shouldSkipAutoVersion(ctx: Context) {
+  const raw = (ctx.request.query?.skipVersion ?? ctx.request.query?.skipVersioning) as
+    | string
+    | undefined;
+  if (!raw) return false;
+  const value = raw.toLowerCase();
+  return value === "true" || value === "1" || value === "yes";
+}
+
+async function fetchDatasetMeta(client: SqlClient, datasetId: string) {
+  const [dataset] = await client`
+    select
+      d.*,
+      coalesce(item_stats.item_count, 0)::int as item_count,
+      owner.name as owner_name,
+      owner.email as owner_email,
+      current_version.created_at as current_version_created_at,
+      current_version.created_by as current_version_created_by,
+      current_version.restored_from_version_id as current_version_restored_from_version_id
+    from dataset_v2 d
+    left join lateral (
+      select count(*) as item_count
+      from dataset_v2_item di
+      where di.dataset_id = d.id
+    ) item_stats on true
+    left join account owner on owner.id = d.owner_id
+    left join dataset_v2_version current_version on current_version.id = d.current_version_id
+    where d.id = ${datasetId}
+    limit 1
+  `;
+
+  return dataset ?? null;
+}
+
+async function fetchDatasetWithItems(datasetId: string) {
+  const dataset = await fetchDatasetMeta(sql, datasetId);
+  if (!dataset) {
+    return null;
+  }
+
+  const items = await sql`
+    select *
+    from dataset_v2_item
+    where dataset_id = ${datasetId}
+    order by created_at asc
+  `;
+
+  return {
+    ...dataset,
+    items,
+  };
+}
+
+async function maybeCreateAutoVersion(
+  ctx: Context,
+  client: SqlClient,
+  datasetId: string,
+  options: CreateDatasetVersionOptions = {},
+) {
+  if (shouldSkipAutoVersion(ctx)) {
+    return null;
+  }
+
+  const createdBy =
+    options.createdBy ?? (ctx.state.userId as string | undefined) ?? null;
+
+  return createDatasetVersion(client, datasetId, {
+    ...options,
+    createdBy,
+  });
+}
 
 function parseCsvLine(line: string) {
   const values: string[] = [];
@@ -362,13 +451,17 @@ datasetsV2.get("/", checkAccess("datasets", "list"), async (ctx: Context) => {
       d.*,
       coalesce(item_stats.item_count, 0)::int as item_count,
       owner.name as owner_name,
-      owner.email as owner_email
+      owner.email as owner_email,
+      current_version.created_at as current_version_created_at,
+      current_version.created_by as current_version_created_by,
+      current_version.restored_from_version_id as current_version_restored_from_version_id
     from dataset_v2 d
     left join lateral (
       select count(*) as item_count
       from dataset_v2_item di
       where di.dataset_id = d.id
     ) item_stats on true
+    left join dataset_v2_version current_version on current_version.id = d.current_version_id
     left join account owner on owner.id = d.owner_id
     where d.project_id = ${projectId}
     ${
@@ -414,17 +507,26 @@ datasetsV2.post(
     const parsedBody = DatasetInputSchema.parse(ctx.request.body ?? {});
 
     try {
-      const [dataset] = await sql`
-      insert into dataset_v2 ${sql(
-        clearUndefined({
-          projectId,
-          ownerId: ownerId ?? null,
-          name: parsedBody.name,
-          description: parsedBody.description ?? null,
-        }),
-      )}
-      returning *
-    `;
+      const dataset = await sql.begin(async (trx) => {
+        const [created] = await trx`
+          insert into dataset_v2 ${sql(
+            clearUndefined({
+              projectId,
+              ownerId: ownerId ?? null,
+              name: parsedBody.name,
+              description: parsedBody.description ?? null,
+            }),
+          )}
+          returning *
+        `;
+
+        await createDatasetVersion(trx, created.id, {
+          createdBy: ownerId ?? null,
+        });
+
+        const datasetWithMeta = await fetchDatasetMeta(trx, created.id);
+        return datasetWithMeta ?? created;
+      });
 
       ctx.status = 201;
       ctx.body = dataset;
@@ -473,11 +575,18 @@ datasetsV2.get("/:datasetId", async (ctx: Context) => {
     return;
   }
 
+  const datasetWithMeta = await fetchDatasetMeta(sql, datasetId);
+
+  if (!datasetWithMeta) {
+    ctx.throw(404, "Dataset not found");
+    return;
+  }
+
   const items =
     await sql`select * from dataset_v2_item where dataset_id = ${datasetId} order by created_at asc`;
 
   ctx.body = {
-    ...dataset,
+    ...datasetWithMeta,
     items,
   };
 });
@@ -550,7 +659,11 @@ datasetsV2.patch(
       returning *
     `;
 
-    ctx.body = updatedDataset;
+    await maybeCreateAutoVersion(ctx, sql, datasetId);
+
+    const datasetWithMeta = await fetchDatasetMeta(sql, datasetId);
+
+    ctx.body = datasetWithMeta ?? updatedDataset;
   },
 );
 
@@ -658,7 +771,11 @@ datasetsV2.post(
     }
 
     const insertedCount = await sql.begin(async (trx) => {
-      return insertDatasetItems(trx, datasetId, items);
+      const inserted = await insertDatasetItems(trx, datasetId, items);
+      if (inserted > 0) {
+        await maybeCreateAutoVersion(ctx, trx, datasetId);
+      }
+      return inserted;
     });
 
     ctx.body = { insertedCount };
@@ -705,7 +822,7 @@ datasetsV2.post(
 
     const newDatasetId = randomUUID();
 
-    const insertedDataset = await sql.begin(async (trx) => {
+    const duplicatedDataset = await sql.begin(async (trx) => {
       const copyName = await generateCopyName(dataset.name, projectId, trx);
 
       const [createdDataset] = await trx`
@@ -728,28 +845,335 @@ datasetsV2.post(
         where dataset_id = ${datasetId}
       `;
 
-      return createdDataset;
+      await createDatasetVersion(trx, newDatasetId, {
+        createdBy: ownerId ?? null,
+      });
+
+      const datasetWithMeta = await fetchDatasetMeta(trx, newDatasetId);
+      return datasetWithMeta ?? createdDataset;
     });
 
-    const [responseDataset] = await sql`
+    ctx.status = 201;
+    ctx.body = duplicatedDataset;
+  },
+);
+
+/**
+ * @openapi
+ * /v1/datasets-v2/{datasetId}/versions:
+ *   get:
+ *     summary: List dataset versions
+ *     tags: [Datasets v2]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: datasetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *     responses:
+ *       200:
+ *         description: Dataset versions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 versions:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/DatasetV2Version'
+ */
+datasetsV2.get(
+  "/:datasetId/versions",
+  checkAccess("datasets", "list"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId } = DatasetIdParamsSchema.parse(ctx.params);
+    const { limit } = DatasetVersionListQuerySchema.parse(
+      ctx.request.query ?? {},
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    const versions = await sql`
       select
-        d.*,
-        coalesce(item_stats.item_count, 0)::int as item_count,
-        owner.name as owner_name,
-        owner.email as owner_email
-      from dataset_v2 d
+        v.*,
+        coalesce(version_items.item_count, 0)::int as item_count
+      from dataset_v2_version v
       left join lateral (
         select count(*) as item_count
-        from dataset_v2_item di
-        where di.dataset_id = d.id
-      ) item_stats on true
-      left join account owner on owner.id = d.owner_id
-      where d.id = ${insertedDataset.id}
+        from dataset_v2_version_item vi
+        where vi.version_id = v.id
+      ) version_items on true
+      where v.dataset_id = ${datasetId}
+      order by v.version_number desc
+      limit ${limit}
+    `;
+
+    ctx.body = { versions };
+  },
+);
+
+/**
+ * @openapi
+ * /v1/datasets-v2/{datasetId}/versions/{versionId}:
+ *   get:
+ *     summary: Get dataset version
+ *     tags: [Datasets v2]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: datasetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: versionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Dataset version with items
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 version:
+ *                   $ref: '#/components/schemas/DatasetV2Version'
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/DatasetV2VersionItem'
+ */
+datasetsV2.get(
+  "/:datasetId/versions/:versionId",
+  checkAccess("datasets", "list"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId, versionId } = DatasetVersionIdParamsSchema.parse(
+      ctx.params,
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    const [version] = await sql`
+      select
+        v.*,
+        coalesce(version_items.item_count, 0)::int as item_count
+      from dataset_v2_version v
+      left join lateral (
+        select count(*) as item_count
+        from dataset_v2_version_item vi
+        where vi.version_id = v.id
+      ) version_items on true
+      where v.id = ${versionId}
+        and v.dataset_id = ${datasetId}
       limit 1
     `;
 
+    if (!version) {
+      ctx.throw(404, "Dataset version not found");
+      return;
+    }
+
+    const items = await sql`
+      select
+        id,
+        version_id,
+        dataset_id,
+        item_index,
+        input,
+        ground_truth,
+        source_item_id,
+        source_created_at,
+        source_updated_at
+      from dataset_v2_version_item
+      where version_id = ${versionId}
+      order by item_index asc
+    `;
+
+    ctx.body = {
+      version,
+      items,
+    };
+  },
+);
+
+/**
+ * @openapi
+ * /v1/datasets-v2/{datasetId}/versions:
+ *   post:
+ *     summary: Create dataset version snapshot
+ *     tags: [Datasets v2]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: datasetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       201:
+ *         description: Created dataset version
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 version:
+ *                   $ref: '#/components/schemas/DatasetV2Version'
+ *                 dataset:
+ *                   $ref: '#/components/schemas/DatasetV2'
+ */
+datasetsV2.post(
+  "/:datasetId/versions",
+  checkAccess("datasets", "update"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId } = DatasetIdParamsSchema.parse(ctx.params);
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    const version = await createDatasetVersion(sql, datasetId, {
+      createdBy: (ctx.state.userId as string | undefined) ?? dataset.ownerId ?? null,
+    });
+
+    const datasetWithMeta = await fetchDatasetMeta(sql, datasetId);
+
     ctx.status = 201;
-    ctx.body = responseDataset;
+    ctx.body = {
+      version,
+      dataset: datasetWithMeta ?? dataset,
+    };
+  },
+);
+
+/**
+ * @openapi
+ * /v1/datasets-v2/{datasetId}/versions/{versionId}/restore:
+ *   post:
+ *     summary: Restore dataset to a previous version
+ *     tags: [Datasets v2]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: datasetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: versionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Restored dataset with current items
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetV2WithItems'
+ */
+datasetsV2.post(
+  "/:datasetId/versions/:versionId/restore",
+  checkAccess("datasets", "update"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const userId = ctx.state.userId as string | undefined;
+    const { datasetId, versionId } = DatasetVersionIdParamsSchema.parse(
+      ctx.params,
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    const [targetVersion] = await sql`
+      select *
+      from dataset_v2_version
+      where id = ${versionId}
+        and dataset_id = ${datasetId}
+      limit 1
+    `;
+
+    if (!targetVersion) {
+      ctx.throw(404, "Dataset version not found");
+      return;
+    }
+
+    await sql.begin(async (trx) => {
+      await trx`
+        delete from dataset_v2_item
+        where dataset_id = ${datasetId}
+      `;
+
+      await trx`
+        insert into dataset_v2_item (dataset_id, input, ground_truth)
+        select ${datasetId}, input, ground_truth
+        from dataset_v2_version_item
+        where version_id = ${versionId}
+        order by item_index asc
+      `;
+
+      await trx`
+        update dataset_v2
+        set name = ${targetVersion.name ?? dataset.name},
+            description = ${targetVersion.description ?? null}
+        where id = ${datasetId}
+      `;
+
+      await createDatasetVersion(trx, datasetId, {
+        createdBy: userId ?? dataset.ownerId ?? null,
+        restoredFromVersionId: versionId,
+      });
+    });
+
+    const datasetWithItems = await fetchDatasetWithItems(datasetId);
+
+    if (!datasetWithItems) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    ctx.body = datasetWithItems;
   },
 );
 
@@ -982,6 +1406,8 @@ datasetsV2.post(
 
     await touchDataset(datasetId);
 
+    await maybeCreateAutoVersion(ctx, sql, datasetId);
+
     ctx.status = 201;
     ctx.body = item;
   },
@@ -1120,6 +1546,8 @@ datasetsV2.patch(
 
     await touchDataset(datasetId);
 
+    await maybeCreateAutoVersion(ctx, sql, datasetId);
+
     ctx.body = item;
   },
 );
@@ -1173,6 +1601,8 @@ datasetsV2.delete(
 
     await touchDataset(datasetId);
 
+    await maybeCreateAutoVersion(ctx, sql, datasetId);
+
     ctx.status = 204;
   },
 );
@@ -1194,6 +1624,12 @@ datasetsV2.delete(
  *           type: string
  *           format: uuid
  *           nullable: true
+ *         ownerName:
+ *           type: string
+ *           nullable: true
+ *         ownerEmail:
+ *           type: string
+ *           nullable: true
  *         name:
  *           type: string
  *         description:
@@ -1205,6 +1641,26 @@ datasetsV2.delete(
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *         itemCount:
+ *           type: integer
+ *         currentVersionId:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         currentVersionNumber:
+ *           type: integer
+ *         currentVersionCreatedAt:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *         currentVersionCreatedBy:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         currentVersionRestoredFromVersionId:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
  *     DatasetV2Input:
  *       type: object
  *       properties:
@@ -1263,6 +1719,67 @@ datasetsV2.delete(
  *       required:
  *         - format
  *         - content
+ *     DatasetV2Version:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *         datasetId:
+ *           type: string
+ *           format: uuid
+ *         versionNumber:
+ *           type: integer
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         createdBy:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         restoredFromVersionId:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         name:
+ *           type: string
+ *           nullable: true
+ *         description:
+ *           type: string
+ *           nullable: true
+ *         itemCount:
+ *           type: integer
+ *     DatasetV2VersionItem:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *         versionId:
+ *           type: string
+ *           format: uuid
+ *         datasetId:
+ *           type: string
+ *           format: uuid
+ *         itemIndex:
+ *           type: integer
+ *         input:
+ *           type: string
+ *         groundTruth:
+ *           type: string
+ *           nullable: true
+ *         sourceItemId:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         sourceCreatedAt:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *         sourceUpdatedAt:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
  */
 
 export default datasetsV2;

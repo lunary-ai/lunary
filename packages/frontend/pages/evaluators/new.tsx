@@ -1,5 +1,5 @@
 import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker";
-import { useLogCount, useOrg, useUser } from "@/utils/dataHooks";
+import { useOrg, useUser } from "@/utils/dataHooks";
 import { useEvaluators, useEvaluator } from "@/utils/dataHooks/evaluators";
 import EVALUATOR_TYPES from "@/utils/evaluators";
 import { slugify } from "@/utils/format";
@@ -15,6 +15,7 @@ import {
   Group,
   NumberInput,
   Progress,
+  Select,
   SimpleGrid,
   Stack,
   Text,
@@ -22,10 +23,8 @@ import {
   Title,
   Tooltip,
   UnstyledButton,
-  SegmentedControl,
   Switch,
   Textarea,
-  Tabs,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -37,12 +36,26 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckLogic, serializeLogic } from "shared";
-import { useCustomModels } from "@/utils/dataHooks/provider-configs";
+import { CheckLogic } from "shared";
 import ProviderEditor from "@/components/prompts/Provider";
 import { useIntentReclusterJob } from "@/utils/dataHooks/jobs";
 
 const DEFAULT_INTENT_MAX = 10;
+const LEGACY_TEXT_SIMILARITY_TYPES = new Set([
+  "bleu",
+  "gleu",
+  "rouge",
+  "cosine",
+  "fuzzy",
+]);
+const DEFAULT_TEXT_SIMILARITY_METHOD = "cosine";
+const TEXT_SIMILARITY_METHODS = [
+  { label: "Cosine Similarity", value: "cosine" },
+  { label: "BLEU", value: "bleu" },
+  { label: "ROUGE", value: "rouge" },
+  { label: "GLEU", value: "gleu" },
+  { label: "Fuzzy Match", value: "fuzzy" },
+];
 
 export function EvaluatorCard({
   evaluator,
@@ -126,11 +139,8 @@ export default function NewEvaluator() {
     "OR",
     { id: "type", params: { type: "llm" } },
   ]);
-  const serializedFilters = serializeLogic(filters);
-  const { count: logCount } = useLogCount(serializedFilters);
 
   const { org } = useOrg();
-  const { customModels } = useCustomModels();
   const evaluatorData = evaluator as any | undefined;
   const evaluatorName = (evaluatorData?.name as string) || undefined;
   const evaluatorParams =
@@ -213,37 +223,129 @@ export default function NewEvaluator() {
   }, [reclusterJob]);
 
   useEffect(() => {
-    if (isEditing && evaluator) {
-      const e = evaluator as any;
-      setName(e.name);
-      setType(e.type);
-      setMode(e.mode);
-      setFilters(e.filters as CheckLogic);
-      if (e.type === "llm" && e.params) {
+    if (!isEditing || !evaluator) {
+      return;
+    }
+
+    const e = evaluator as any;
+    setName(e.name);
+    setMode(e.mode);
+    setFilters(e.filters as CheckLogic);
+
+    if (e.type === "intent") {
+      setType("intent");
+      setParams({
+        id: "intent",
+        params: {
+          maxIntents:
+            typeof e.params?.maxIntents === "number"
+              ? e.params.maxIntents
+              : DEFAULT_INTENT_MAX,
+        },
+      });
+      return;
+    }
+
+    if (e.type === "llm") {
+      const scoringType = e.params?.scoringType ?? "categorical";
+      if (scoringType === "categorical") {
+        setType("model-labeler");
+        const legacyCategories = Array.isArray(e.params?.categories)
+          ? (e.params.categories as Array<{ label: string }>)
+          : [];
         setParams({
-          id: "llm",
-          params: { ...(e.params as Record<string, any>) },
-        });
-      } else if (e.type === "intent") {
-        setParams({
-          id: "intent",
+          id: "model-labeler",
           params: {
-            maxIntents:
-              typeof e.params?.maxIntents === "number"
-                ? e.params.maxIntents
-                : DEFAULT_INTENT_MAX,
+            modelId: e.params?.modelId ?? "",
+            prompt: e.params?.prompt ?? "",
+            labels: legacyCategories
+              .map((cat) => cat?.label)
+              .filter(Boolean) as string[],
+          },
+        });
+      } else {
+        setType("model-scorer");
+        setParams({
+          id: "model-scorer",
+          params: {
+            modelId: e.params?.modelId ?? "",
+            prompt: e.params?.prompt ?? "",
+            minScore:
+              typeof e.params?.minScore === "number" ? e.params?.minScore : 0,
+            maxScore:
+              typeof e.params?.maxScore === "number" ? e.params?.maxScore : 1,
           },
         });
       }
+      return;
+    }
+
+    if (e.type === "text-similarity" || LEGACY_TEXT_SIMILARITY_TYPES.has(e.type)) {
+      setType("text-similarity");
+      const method =
+        e.type === "text-similarity"
+          ? e.params?.method ?? DEFAULT_TEXT_SIMILARITY_METHOD
+          : e.type;
+      setParams({
+        id: "text-similarity",
+        params: {
+          method,
+          reference: e.params?.reference ?? "",
+        },
+      });
+      return;
+    }
+
+    setType(e.type);
+    if (e.params) {
+      if (e.type === "model-labeler") {
+        const incomingLabels = Array.isArray(e.params.labels)
+          ? e.params.labels
+          : [];
+        setParams({
+          id: "model-labeler",
+          params: {
+            modelId: e.params?.modelId ?? "",
+            prompt: e.params?.prompt ?? "",
+            labels: incomingLabels.length ? incomingLabels : [""],
+          },
+        });
+        return;
+      }
+      if (e.type === "model-scorer") {
+        setParams({
+          id: "model-scorer",
+          params: {
+            modelId: e.params?.modelId ?? "",
+            prompt: e.params?.prompt ?? "",
+            minScore:
+              typeof e.params?.minScore === "number" ? e.params.minScore : 0,
+            maxScore:
+              typeof e.params?.maxScore === "number" ? e.params.maxScore : 10,
+          },
+        });
+        return;
+      }
+      setParams({
+        id: e.type,
+        params: { ...(e.params as Record<string, any>) },
+      });
+    } else {
+      setParams(undefined);
     }
   }, [isEditing, evaluator]);
 
-  const evaluatorTypes = Object.values(EVALUATOR_TYPES).filter((e) => {
+  const allEvaluatorDefinitions = Object.values(EVALUATOR_TYPES).filter((e) => {
     if (e.beta && !org.beta) return false;
     return true;
   });
 
-  const selectedEvaluator = evaluatorTypes.find((e) => e.id === type);
+  const selectableEvaluators = allEvaluatorDefinitions.filter(
+    (e) => !e.builtin,
+  );
+
+  const selectedEvaluator = allEvaluatorDefinitions.find((e) => e.id === type);
+  const isBuiltinSelected = selectedEvaluator?.builtin ?? false;
 
   const ensureThreadFilter = useCallback(
     (logic: CheckLogic): CheckLogic => {
@@ -285,41 +387,69 @@ export default function NewEvaluator() {
   const currentMaxIntents = params?.params?.maxIntents ?? DEFAULT_INTENT_MAX;
 
   useEffect(() => {
-    if (selectedEvaluator) {
-      if (selectedEvaluator.id === "llm") {
-        setParams({
-          id: "llm",
+    if (!selectedEvaluator) return;
+
+    setParams((prev: any) => {
+      if (prev?.id === selectedEvaluator.id) {
+        return prev;
+      }
+
+      if (selectedEvaluator.id === "model-labeler") {
+        return {
+          id: "model-labeler",
           params: {
             modelId: "",
-            scoringType: "boolean",
             prompt: "",
-            categories: [],
+            labels: [""],
           },
-        });
-      } else if (selectedEvaluator.id === "intent") {
+        };
+      }
+
+      if (selectedEvaluator.id === "model-scorer") {
+        return {
+          id: "model-scorer",
+          params: {
+            modelId: "",
+            prompt: "",
+            minScore: 0,
+            maxScore: 10,
+          },
+        };
+      }
+
+      if (selectedEvaluator.id === "text-similarity") {
+        return {
+          id: "text-similarity",
+          params: {
+            method: DEFAULT_TEXT_SIMILARITY_METHOD,
+            reference: "",
+          },
+        };
+      }
+
+      if (selectedEvaluator.id === "intent") {
         const defaultValue =
           (evaluatorParams?.maxIntents as number | undefined) ??
           DEFAULT_INTENT_MAX;
-        setParams({
+        return {
           id: "intent",
           params: {
             maxIntents: defaultValue,
           },
-        });
-        return;
-      } else {
-        const initialParams = (selectedEvaluator.params as any[]).reduce(
-          (acc, param) => {
-            if ("id" in param)
-              acc[(param as any).id] = (param as any).defaultValue;
-            return acc;
-          },
-          {} as Record<string, any>,
-        );
-        setParams({ id: selectedEvaluator.id, params: initialParams });
+        };
       }
-    }
-  }, [selectedEvaluator]);
+
+      const initialParams = (selectedEvaluator.params as any[]).reduce(
+        (acc, param) => {
+          if ("id" in param)
+            acc[(param as any).id] = (param as any).defaultValue;
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
+      return { id: selectedEvaluator.id, params: initialParams };
+    });
+  }, [selectedEvaluator, evaluatorParams]);
 
   useEffect(() => {
     if (!selectedEvaluator || selectedEvaluator.id !== "intent") return;
@@ -328,11 +458,11 @@ export default function NewEvaluator() {
     setFilters((prev) => ensureThreadFilter(prev));
   }, [selectedEvaluator, ensureThreadFilter]);
 
-  function updateCategories(newCats: any[]) {
-    setParams({
-      id: "llm",
-      params: { ...params.params, categories: newCats },
-    });
+  function updateLabelerLabels(nextLabels: string[]) {
+    setParams((prev: any) => ({
+      id: "model-labeler",
+      params: { ...(prev?.params ?? {}), labels: nextLabels },
+    }));
   }
 
   async function handleReclusterIntents() {
@@ -357,17 +487,46 @@ export default function NewEvaluator() {
     const normalizedFilters =
       type === "intent" ? ensureThreadFilter(filters) : filters;
 
+    let payloadParams: Record<string, any>;
+
+    if (type === "model-labeler") {
+      const labels = Array.isArray(params?.params?.labels)
+        ? params.params.labels
+            .map((label: string) => label?.trim())
+            .filter((label: string) => label?.length)
+        : [];
+      payloadParams = {
+        ...(params?.params ?? {}),
+        labels,
+      };
+    } else if (type === "model-scorer") {
+      const minScore = Number(params?.params?.minScore ?? 0);
+      const maxScore = Number(params?.params?.maxScore ?? 10);
+      payloadParams = {
+        ...(params?.params ?? {}),
+        minScore,
+        maxScore,
+      };
+    } else if (type === "text-similarity") {
+      payloadParams = {
+        method: params?.params?.method ?? DEFAULT_TEXT_SIMILARITY_METHOD,
+        reference: params?.params?.reference ?? "",
+        threshold: params?.params?.threshold ?? 0.5,
+      };
+    } else if (type === "intent") {
+      payloadParams =
+        params?.params ?? {
+          maxIntents: DEFAULT_INTENT_MAX,
+        };
+    } else {
+      payloadParams = params?.params ?? {};
+    }
+
     return {
       name,
       slug: slugify(name),
       mode,
-      params:
-        params?.params ??
-        (type === "intent"
-          ? {
-              maxIntents: DEFAULT_INTENT_MAX,
-            }
-          : {}),
+      params: payloadParams,
       type,
       filters: normalizedFilters,
       ownerId: user.id,
@@ -394,23 +553,9 @@ export default function NewEvaluator() {
     router.push("/evaluators");
   }
 
-  const categories = Array.from(new Set(evaluatorTypes.map((e) => e.category)))
-    .sort((a, b) => {
-      const order: Record<string, number> = {
-        labeler: 0,
-        "text-similarity": 1,
-        custom: 2,
-      };
-      const rankA = order[a] ?? 100;
-      const rankB = order[b] ?? 100;
-      return rankA !== rankB ? rankA - rankB : a.localeCompare(b);
-    })
-    .map((cat) => {
-      if (cat === "labeler") return { name: "Model Labeler", value: "labeler" };
-      if (cat === "text-similarity")
-        return { name: "Text Similarity", value: "text-similarity" };
-      return { name: "Custom", value: "custom" };
-    });
+  const sortedEvaluators = [...selectableEvaluators].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   return (
     <Container>
@@ -431,42 +576,24 @@ export default function NewEvaluator() {
           onChange={(e) => setName(e.target.value)}
         />
 
-        <Stack>
-          <Title order={6}>Evaluator type:</Title>
-
-          <Tabs
-            defaultValue={categories[0].value}
-            onChange={() => setType(undefined)}
-          >
-            <Tabs.List>
-              {categories.map((category) => (
-                <Tabs.Tab key={category.value} value={category.value}>
-                  {category.name}
-                </Tabs.Tab>
+        {!isBuiltinSelected && (
+          <Stack gap="sm">
+            <Title order={6}>Evaluator type:</Title>
+            <SimpleGrid cols={5} spacing="md">
+              {sortedEvaluators.map((e) => (
+                <EvaluatorCard
+                  key={e.id}
+                  evaluator={e}
+                  isSelected={type === e.id}
+                  onItemClick={(t) => {
+                    setType(t);
+                    setName(e.name);
+                  }}
+                />
               ))}
-            </Tabs.List>
-
-            {categories.map((category) => (
-              <Tabs.Panel key={category.value} value={category.value} pt="md">
-                <SimpleGrid cols={5} spacing="md">
-                  {evaluatorTypes
-                    .filter((e) => e.category === category.value)
-                    .map((e) => (
-                      <EvaluatorCard
-                        key={e.id}
-                        evaluator={e}
-                        isSelected={type === e.id}
-                        onItemClick={(t) => {
-                          setType(t);
-                          setName(e.name);
-                        }}
-                      />
-                    ))}
-                </SimpleGrid>
-              </Tabs.Panel>
-            ))}
-          </Tabs>
-        </Stack>
+            </SimpleGrid>
+          </Stack>
+        )}
 
         {hasParams && selectedEvaluator && (
           <Fieldset legend="Configure" style={{ overflow: "visible" }}>
@@ -479,8 +606,45 @@ export default function NewEvaluator() {
           </Fieldset>
         )}
 
-        {type === "llm" && params && (
-          <Fieldset legend="LLM Configuration">
+        {type === "text-similarity" && params && (
+          <Fieldset legend="Text Similarity Configuration">
+            <Stack gap="md">
+              <Select
+                label="Method"
+                data={TEXT_SIMILARITY_METHODS}
+                value={params.params.method}
+                onChange={(value) => {
+                  if (!value) return;
+                  setParams({
+                    params: {
+                      ...params.params,
+                      method: value,
+                    },
+                    id: "text-similarity",
+                  });
+                }}
+              />
+              <Textarea
+                label="Reference Text"
+                placeholder="Enter the reference text to compare against"
+                minRows={6}
+                value={params.params.reference}
+                onChange={(e) =>
+                  setParams({
+                    id: "text-similarity",
+                    params: {
+                      ...params.params,
+                      reference: e.currentTarget.value,
+                    },
+                  })
+                }
+              />
+            </Stack>
+          </Fieldset>
+        )}
+
+        {type === "model-labeler" && params && (
+          <Fieldset legend="Model Labeler Configuration">
             <Stack gap="md">
               <ProviderEditor
                 value={{ model: params.params.modelId || "", config: {} }}
@@ -489,101 +653,131 @@ export default function NewEvaluator() {
                 hideToolCalls
                 onChange={({ model }) =>
                   setParams({
-                    id: "llm",
+                    id: "model-labeler",
                     params: { ...params.params, modelId: model },
-                  })
-                }
-              />
-              <SegmentedControl
-                fullWidth
-                value={params.params.scoringType || "boolean"}
-                data={[
-                  { label: "Boolean", value: "boolean" },
-                  { label: "Categorical", value: "categorical" },
-                ]}
-                onChange={(value) =>
-                  setParams({
-                    id: "llm",
-                    params: {
-                      ...params.params,
-                      scoringType: value,
-                      categories:
-                        value === "categorical"
-                          ? (params.params.categories ?? [])
-                          : [],
-                    },
                   })
                 }
               />
               <Textarea
                 label="Evaluation Prompt"
-                placeholder="Enter the prompt to guide the evaluator"
-                minRows={20}
+                placeholder="Provide instructions for assigning labels"
+                minRows={12}
                 value={params.params.prompt}
                 onChange={(e) =>
                   setParams({
-                    id: "llm",
+                    id: "model-labeler",
                     params: { ...params.params, prompt: e.currentTarget.value },
                   })
                 }
               />
-              {params.params.scoringType === "categorical" && (
-                <Stack gap="sm">
-                  <Title order={6}>Labels</Title>
-                  {params.params.categories.map(
-                    (cat: { label: string; pass: boolean }, idx: number) => (
-                      <Group key={idx} align="flex-start" wrap="nowrap">
-                        <TextInput
-                          style={{ flex: 1 }}
-                          placeholder="Label name"
-                          value={cat.label}
-                          onChange={(e) => {
-                            const cats = [...params.params.categories];
-                            cats[idx] = { ...cats[idx], label: e.target.value };
-                            updateCategories(cats);
-                          }}
-                        />
-                        <SegmentedControl
-                          data={[
-                            { label: "Pass", value: "pass" },
-                            { label: "Fail", value: "fail" },
-                          ]}
-                          value={cat.pass ? "pass" : "fail"}
-                          onChange={(val) => {
-                            const cats = [...params.params.categories];
-                            cats[idx] = { ...cats[idx], pass: val === "pass" };
-                            updateCategories(cats);
-                          }}
-                        />
-                        <Button
-                          variant="subtle"
-                          p={0}
-                          onClick={() => {
-                            const cats = params.params.categories.filter(
-                              (_: any, i: number) => i !== idx,
-                            );
-                            updateCategories(cats);
-                          }}
-                        >
-                          <IconX size={16} />
-                        </Button>
-                      </Group>
-                    ),
-                  )}
-                  <Button
-                    variant="default"
-                    leftSection={<IconCirclePlus size={16} />}
-                    onClick={() =>
-                      updateCategories([
-                        ...params.params.categories,
-                        { label: "", pass: true },
-                      ])
-                    }
-                  >
-                    Add label
-                  </Button>
-                </Stack>
-              )}
+              <Stack gap="xs">
+                <Title order={6}>Labels</Title>
+                {params.params.labels?.map((label: string, idx: number) => (
+                  <Group key={idx} align="flex-start" wrap="nowrap">
+                    <TextInput
+                      style={{ flex: 1 }}
+                      placeholder="Label name"
+                      value={label}
+                      onChange={(e) => {
+                        const next = [...params.params.labels];
+                        next[idx] = e.currentTarget.value;
+                        updateLabelerLabels(next);
+                      }}
+                    />
+                    <Button
+                      variant="subtle"
+                      p={0}
+                      onClick={() => {
+                        updateLabelerLabels(
+                          params.params.labels.filter(
+                            (_: any, i: number) => i !== idx,
+                          ),
+                        );
+                      }}
+                    >
+                      <IconX size={16} />
+                    </Button>
+                  </Group>
+                ))}
+                <Button
+                  variant="default"
+                  leftSection={<IconCirclePlus size={16} />}
+                  onClick={() =>
+                    updateLabelerLabels([...(params.params.labels ?? []), ""])
+                  }
+                >
+                  Add label
+                </Button>
+              </Stack>
+            </Stack>
+          </Fieldset>
+        )}
+
+        {type === "model-scorer" && params && (
+          <Fieldset legend="Model Scorer Configuration">
+            <Stack gap="md">
+              <ProviderEditor
+                value={{ model: params.params.modelId || "", config: {} }}
+                hideStream
+                hideTopP
+                hideToolCalls
+                onChange={({ model }) =>
+                  setParams({
+                    id: "model-scorer",
+                    params: { ...params.params, modelId: model },
+                  })
+                }
+              />
+              <Textarea
+                label="Evaluation Prompt"
+                placeholder="Provide instructions for scoring the response"
+                minRows={12}
+                value={params.params.prompt}
+                onChange={(e) =>
+                  setParams({
+                    id: "model-scorer",
+                    params: { ...params.params, prompt: e.currentTarget.value },
+                  })
+                }
+              />
+              <Group align="flex-end" gap="md">
+                <NumberInput
+                  label="Minimum score"
+                  value={params.params.minScore}
+                  onChange={(value) => {
+                    const min = Number.isFinite(Number(value))
+                      ? Number(value)
+                      : 0;
+                    setParams({
+                      id: "model-scorer",
+                      params: {
+                        ...params.params,
+                        minScore: min,
+                        maxScore:
+                          params.params.maxScore < min
+                            ? min
+                            : params.params.maxScore,
+                      },
+                    });
+                  }}
+                />
+                <NumberInput
+                  label="Maximum score"
+                  value={params.params.maxScore}
+                  onChange={(value) => {
+                    const max = Number.isFinite(Number(value))
+                      ? Number(value)
+                      : params.params.minScore;
+                    setParams({
+                      id: "model-scorer",
+                      params: {
+                        ...params.params,
+                        maxScore: Math.max(max, params.params.minScore),
+                      },
+                    });
+                  }}
+                />
+              </Group>
             </Stack>
           </Fieldset>
         )}
@@ -683,10 +877,9 @@ export default function NewEvaluator() {
                   onChange={(e) =>
                     setMode(e.currentTarget.checked ? "realtime" : "normal")
                   }
-                  disabled={selectedEvaluator?.id === "intent"}
                 />
 
-                {mode === "realtime" && (
+                {mode === "realtime" && !isBuiltinSelected && (
                   <>
                     <Text mb="5" mt="sm" size="sm">
                       Filters
