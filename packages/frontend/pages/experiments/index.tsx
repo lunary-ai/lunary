@@ -16,8 +16,8 @@ import {
   Stack,
   Switch,
   Table,
-  Tabs,
   Text,
+  TextInput,
   Textarea,
   Title,
   Menu,
@@ -44,6 +44,8 @@ import {
   IconChevronDown,
   IconMaximize,
   IconPencil,
+  IconCirclePlus,
+  IconX,
 } from "@tabler/icons-react";
 import { KeyboardEvent, useEffect, useMemo, useReducer, useState } from "react";
 import { CheckLogic } from "shared";
@@ -64,34 +66,67 @@ export function extractVariables(text = ""): string[] {
   return vars;
 }
 
+const DEFAULT_TEXT_SIMILARITY_METHOD = "cosine";
+
 const buildInitialParams = (evaluator: any): CheckLogic => {
-  if (evaluator.id === "llm") {
-    return {
-      id: "llm",
-      params: {
-        modelId: "",
-        scoringType: "boolean",
-        prompt: "",
-        categories: [],
-      },
-    };
+  switch (evaluator.id) {
+    case "model-labeler":
+      return {
+        id: "model-labeler",
+        params: {
+          modelId: "",
+          prompt: "",
+          labels: [""],
+        },
+      };
+    case "model-scorer":
+      return {
+        id: "model-scorer",
+        params: {
+          modelId: "",
+          prompt: "",
+          minScore: 0,
+          maxScore: 10,
+        },
+      };
+    case "text-similarity":
+      return {
+        id: "text-similarity",
+        params: {
+          method: DEFAULT_TEXT_SIMILARITY_METHOD,
+          reference: "",
+          threshold: 0.5,
+        },
+      };
+    case "llm":
+      return {
+        id: "llm",
+        params: {
+          modelId: "",
+          scoringType: "boolean",
+          prompt: "",
+          categories: [],
+        },
+      };
+    default: {
+      const init = (evaluator.params as any[]).reduce<Record<string, any>>(
+        (acc, p) => {
+          if ("id" in p) acc[p.id] = p.defaultValue;
+          return acc;
+        },
+        {},
+      );
+      return { id: evaluator.id, params: init };
+    }
   }
-  // Generic param initialiser
-  const init = (evaluator.params as any[]).reduce<Record<string, any>>(
-    (acc, p) => {
-      if ("id" in p) acc[p.id] = p.defaultValue;
-      return acc;
-    },
-    {},
-  );
-  return { id: evaluator.id, params: init };
 };
 
 /* ───────────────────────────── Types ─────────────────────────────────────── */
 
 interface EvalResult {
-  passed: boolean;
+  passed?: boolean;
   loading: boolean;
+  result?: any;
 }
 interface CompResult {
   modelOutput: string;
@@ -172,7 +207,8 @@ type Action =
       type: "SET_EVAL_RESULT";
       rowId: number;
       instanceId: number;
-      passed: boolean;
+      passed?: boolean;
+      result?: any;
     }
   | { type: "ADD_COMP" }
   | { type: "SET_COMP_PV"; compId: number; pv?: PromptVersion }
@@ -273,7 +309,7 @@ function reducer(state: State, a: Action): State {
                 evalResults: a.instanceIds.reduce<Record<number, EvalResult>>(
                   (acc, id) => ({
                     ...acc,
-                    [id]: { passed: false, loading: true },
+                    [id]: { passed: undefined, loading: true },
                   }),
                   { ...r.evalResults },
                 ),
@@ -291,7 +327,11 @@ function reducer(state: State, a: Action): State {
                 ...r,
                 evalResults: {
                   ...r.evalResults,
-                  [a.instanceId]: { passed: a.passed, loading: false },
+                  [a.instanceId]: {
+                    passed: a.passed,
+                    result: a.result,
+                    loading: false,
+                  },
                 },
               }
             : r,
@@ -379,9 +419,44 @@ function EvalCell({
 }) {
   const [open, setOpen] = useState(false);
   const total = evaluatorConfigs.length;
-  const passedCount = evaluatorConfigs.filter(
+  const passTrackedConfigs = evaluatorConfigs.filter(
+    (cfg) => typeof evalResults[cfg.instanceId]?.passed === "boolean",
+  );
+  const passedCount = passTrackedConfigs.filter(
     (cfg) => evalResults[cfg.instanceId]?.passed,
   ).length;
+  const hasPassMetrics = passTrackedConfigs.length > 0;
+
+  const formatEvaluatorResult = (
+    cfg: EvaluatorConfig,
+    res?: EvalResult,
+  ): string => {
+    if (!res || res.loading) return "Pending";
+    if (typeof res.passed === "boolean") {
+      return res.passed ? "✅ Pass" : "❌ Fail";
+    }
+
+    const data = res.result;
+    if (!data || typeof data !== "object") return "—";
+
+    if (typeof (data as any).score === "number") {
+      const score = Number((data as any).score).toFixed(2);
+      if (typeof (data as any).method === "string") {
+        return `${String((data as any).method).toUpperCase()} score: ${score}`;
+      }
+      return `Score: ${score}`;
+    }
+
+    if (typeof (data as any).primaryLabel === "string") {
+      return `Label: ${(data as any).primaryLabel}`;
+    }
+
+    if (Array.isArray((data as any).matches) && (data as any).matches.length) {
+      return `Matches: ${(data as any).matches.join(", ")}`;
+    }
+
+    return "—";
+  };
 
   if (!isComplete || !output) return null;
 
@@ -419,10 +494,16 @@ function EvalCell({
             <Accordion.Item value={"evals"}>
               <Accordion.Control>
                 <Group gap="xs">
-                  {passedCount === total && total > 0 && (
-                    <IconCheck color="green" size={16} />
+                  {hasPassMetrics &&
+                    passedCount === passTrackedConfigs.length &&
+                    passTrackedConfigs.length > 0 && (
+                      <IconCheck color="green" size={16} />
                   )}
-                  <Text size="sm">{`${passedCount}/${total} tests passed`}</Text>
+                  <Text size="sm">
+                    {hasPassMetrics
+                      ? `${passedCount}/${passTrackedConfigs.length} tests passed`
+                      : "Evaluator results"}
+                  </Text>
                 </Group>
               </Accordion.Control>
               <Accordion.Panel>
@@ -430,7 +511,7 @@ function EvalCell({
                   const res = evalResults[cfg.instanceId];
                   return (
                     <Text size="sm" key={cfg.instanceId}>
-                      {`${res?.passed ? "✅" : "❌"} ${cfg.evaluator.name}`}
+                      {`${formatEvaluatorResult(cfg, res)} – ${cfg.evaluator.name}`}
                     </Text>
                   );
                 })}
@@ -451,6 +532,7 @@ export default function Experiments() {
 
   const allEvaluators = Object.values(EVALUATOR_TYPES).filter((e) => {
     if (e.beta && !org?.beta) return false;
+    if (e.builtin) return false;
     return true;
   });
 
@@ -647,7 +729,9 @@ export default function Experiments() {
             });
             return {
               instanceId: cfg.instanceId,
-              passed: resp.passed as boolean,
+              passed:
+                typeof resp.passed === "boolean" ? (resp.passed as boolean) : undefined,
+              result: resp,
             };
           }),
         );
@@ -681,7 +765,11 @@ export default function Experiments() {
               });
               return {
                 instanceId: cfg.instanceId,
-                passed: resp.passed as boolean,
+                passed:
+                  typeof resp.passed === "boolean"
+                    ? (resp.passed as boolean)
+                    : undefined,
+                result: resp,
               };
             }),
           );
@@ -713,8 +801,14 @@ export default function Experiments() {
           cost,
         });
         dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: false });
-        evals.forEach(({ instanceId, passed }) => {
-          dispatch({ type: "SET_EVAL_RESULT", rowId, instanceId, passed });
+        evals.forEach(({ instanceId, passed, result }) => {
+          dispatch({
+            type: "SET_EVAL_RESULT",
+            rowId,
+            instanceId,
+            passed,
+            result,
+          });
         });
       },
     );
@@ -752,7 +846,11 @@ export default function Experiments() {
           type: "SET_EVAL_RESULT",
           rowId,
           instanceId: cfg.instanceId,
-          passed: resp.passed as boolean,
+          passed:
+            typeof resp.passed === "boolean"
+              ? (resp.passed as boolean)
+              : undefined,
+          result: resp,
         });
       } catch (err) {
         console.error(err);
@@ -791,25 +889,9 @@ export default function Experiments() {
 
   /* ──────────────────────── Evaluator categories ───────────────────── */
 
-  const evaluatorCategories = Array.from(
-    new Set(allEvaluators.map((e) => e.category)),
-  )
-    .sort((a, b) => {
-      const order: Record<string, number> = {
-        labeler: 0,
-        "text-similarity": 1,
-        custom: 2,
-      };
-      const rankA = order[a] ?? 100;
-      const rankB = order[b] ?? 100;
-      return rankA !== rankB ? rankA - rankB : a.localeCompare(b);
-    })
-    .map((cat) => {
-      if (cat === "labeler") return { name: "Model Labeler", value: "labeler" };
-      if (cat === "text-similarity")
-        return { name: "Text Similarity", value: "text-similarity" };
-      return { name: "Custom", value: "custom" };
-    });
+  const sortedEvaluators = [...allEvaluators].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   const anyPrompt = state.promptVersion != null;
 
@@ -917,64 +999,217 @@ export default function Experiments() {
 
         {evalModalPage === "add" && (
           <Stack>
-            <Tabs defaultValue={evaluatorCategories[0]?.value}>
-              <Tabs.List>
-                {evaluatorCategories.map((cat) => (
-                  <Tabs.Tab key={cat.value} value={cat.value}>
-                    {cat.name}
-                  </Tabs.Tab>
-                ))}
-              </Tabs.List>
-
-              {evaluatorCategories.map((cat) => (
-                <Tabs.Panel key={cat.value} value={cat.value} pt="sm">
-                  <SimpleGrid cols={3}>
-                    {allEvaluators
-                      .filter((e) => e.category === cat.value)
-                      .map((ev) => (
-                        <EvaluatorCard
-                          key={ev.id}
-                          evaluator={ev}
-                          isSelected={selectedAddEvaluator?.id === ev.id}
-                          onItemClick={() => {
-                            setSelectedAddEvaluator(ev);
-                            setAddEvaluatorParams(buildInitialParams(ev));
-                          }}
-                        />
-                      ))}
-                  </SimpleGrid>
-                </Tabs.Panel>
+            <SimpleGrid cols={3}>
+              {sortedEvaluators.map((ev) => (
+                <EvaluatorCard
+                  key={ev.id}
+                  evaluator={ev}
+                  isSelected={selectedAddEvaluator?.id === ev.id}
+                  onItemClick={() => {
+                    setSelectedAddEvaluator(ev);
+                    setAddEvaluatorParams(buildInitialParams(ev));
+                  }}
+                />
               ))}
-            </Tabs>
+            </SimpleGrid>
 
             {selectedAddEvaluator &&
-              ["toxicity", "llm"].includes(selectedAddEvaluator.id) && (
-                <Fieldset legend="Evaluator Configuration">
-                  {selectedAddEvaluator.id === "llm" && (
+              ["model-labeler", "model-scorer", "text-similarity"].includes(
+                selectedAddEvaluator.id,
+              ) && (
+              <Fieldset legend="Evaluator Configuration">
+                {selectedAddEvaluator.id === "model-labeler" && (
+                  <Stack gap="sm">
                     <Textarea
-                      label="LLM Prompt"
+                      label="Prompt"
                       autosize
-                      minRows={2}
+                      minRows={3}
                       value={addEvaluatorParams?.params.prompt || ""}
-                      onChange={(e) => {
-                        const newPrompt = e.currentTarget.value;
-                        setAddEvaluatorParams((prev) => {
-                          const base = prev ?? {
-                            params: { assertion: "" },
-                          };
-                          return {
-                            ...base,
+                      onChange={(e) =>
+                        setAddEvaluatorParams((prev) => ({
+                          ...(prev ?? { id: "model-labeler", params: {} }),
+                          params: {
+                            ...(prev?.params ?? {}),
+                            prompt: e.currentTarget.value,
+                          },
+                        }))
+                      }
+                    />
+                    <Stack gap="xs">
+                      <Text size="sm" fw={500}>
+                        Labels
+                      </Text>
+                      {(addEvaluatorParams?.params.labels ?? [""]).map(
+                        (label: string, idx: number) => (
+                          <Group key={idx} align="center" gap="xs">
+                            <TextInput
+                              placeholder="Label name"
+                              value={label}
+                              onChange={(e) => {
+                                const labels = [
+                                  ...(addEvaluatorParams?.params.labels ?? []),
+                                ];
+                                labels[idx] = e.currentTarget.value;
+                                setAddEvaluatorParams((prev) => ({
+                                  ...(prev ?? {
+                                    id: "model-labeler",
+                                    params: {},
+                                  }),
+                                  params: {
+                                    ...(prev?.params ?? {}),
+                                    labels,
+                                  },
+                                }));
+                              }}
+                            />
+                            <Button
+                              variant="subtle"
+                              onClick={() => {
+                                const labels = (
+                                  addEvaluatorParams?.params.labels ?? []
+                                ).filter((_, i) => i !== idx);
+                                setAddEvaluatorParams((prev) => ({
+                                  ...(prev ?? {
+                                    id: "model-labeler",
+                                    params: {},
+                                  }),
+                                  params: {
+                                    ...(prev?.params ?? {}),
+                                    labels,
+                                  },
+                                }));
+                              }}
+                            >
+                              <IconX size={14} />
+                            </Button>
+                          </Group>
+                        ),
+                      )}
+                      <Button
+                        variant="light"
+                        leftSection={<IconCirclePlus size={14} />}
+                        onClick={() => {
+                          const labels = [
+                            ...(addEvaluatorParams?.params.labels ?? []),
+                            "",
+                          ];
+                          setAddEvaluatorParams((prev) => ({
+                            ...(prev ?? { id: "model-labeler", params: {} }),
                             params: {
-                              ...base.params,
-                              prompt: newPrompt,
+                              ...(prev?.params ?? {}),
+                              labels,
                             },
-                          };
-                        });
+                          }));
+                        }}
+                      >
+                        Add label
+                      </Button>
+                    </Stack>
+                  </Stack>
+                )}
+
+                {selectedAddEvaluator.id === "model-scorer" && (
+                  <Stack gap="sm">
+                    <Textarea
+                      label="Prompt"
+                      autosize
+                      minRows={3}
+                      value={addEvaluatorParams?.params.prompt || ""}
+                      onChange={(e) =>
+                        setAddEvaluatorParams((prev) => ({
+                          ...(prev ?? { id: "model-scorer", params: {} }),
+                          params: {
+                            ...(prev?.params ?? {}),
+                            prompt: e.currentTarget.value,
+                          },
+                        }))
+                      }
+                    />
+                    <Group align="flex-end" gap="md">
+                      <NumberInput
+                        label="Min"
+                        value={addEvaluatorParams?.params.minScore ?? 0}
+                        onChange={(value) => {
+                          const min = Number(value) || 0;
+                          setAddEvaluatorParams((prev) => ({
+                            ...(prev ?? { id: "model-scorer", params: {} }),
+                            params: {
+                              ...(prev?.params ?? {}),
+                              minScore: min,
+                              maxScore: Math.max(
+                                prev?.params?.maxScore ?? 10,
+                                min,
+                              ),
+                            },
+                          }));
+                        }}
+                      />
+                      <NumberInput
+                        label="Max"
+                        value={addEvaluatorParams?.params.maxScore ?? 10}
+                        onChange={(value) => {
+                          const max = Number(value) || 10;
+                          setAddEvaluatorParams((prev) => ({
+                            ...(prev ?? { id: "model-scorer", params: {} }),
+                            params: {
+                              ...(prev?.params ?? {}),
+                              maxScore: Math.max(
+                                max,
+                                prev?.params?.minScore ?? 0,
+                              ),
+                            },
+                          }));
+                        }}
+                      />
+                    </Group>
+                  </Stack>
+                )}
+
+                {selectedAddEvaluator.id === "text-similarity" && (
+                  <Stack gap="sm">
+                    <Select
+                      label="Method"
+                      data={[
+                        { label: "Cosine Similarity", value: "cosine" },
+                        { label: "BLEU", value: "bleu" },
+                        { label: "ROUGE", value: "rouge" },
+                        { label: "GLEU", value: "gleu" },
+                        { label: "Fuzzy Match", value: "fuzzy" },
+                      ]}
+                      value={
+                        addEvaluatorParams?.params.method ||
+                        DEFAULT_TEXT_SIMILARITY_METHOD
+                      }
+                      onChange={(value) => {
+                        if (!value) return;
+                        setAddEvaluatorParams((prev) => ({
+                          ...(prev ?? { id: "text-similarity", params: {} }),
+                          params: {
+                            ...(prev?.params ?? {}),
+                            method: value,
+                          },
+                        }));
                       }}
                     />
-                  )}
-                </Fieldset>
-              )}
+                    <Textarea
+                      label="Reference Text"
+                      autosize
+                      minRows={3}
+                      value={addEvaluatorParams?.params.reference || ""}
+                      onChange={(e) =>
+                        setAddEvaluatorParams((prev) => ({
+                          ...(prev ?? { id: "text-similarity", params: {} }),
+                          params: {
+                            ...(prev?.params ?? {}),
+                            reference: e.currentTarget.value,
+                          },
+                        }))
+                      }
+                    />
+                  </Stack>
+                )}
+              </Fieldset>
+            )}
 
             <Group justify="flex-end">
               <Button

@@ -70,12 +70,46 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
     where account.org_id = ${orgId} and (account.role = 'owner' or account.role = 'admin')
   `;
 
-  await sql`
-    insert into
-      evaluator ("name", "slug", "type", "mode", "params", "filters", "project_id")
-    values
-      ('Language', 'language', 'language', 'realtime', '{}', '["OR", {"id": "type", "params": {"type": "llm"}}, {"id": "type", "params": {"type": "chat"}}]', ${project.id});
-  `;
+  const builtinEvaluators = [
+    {
+      name: "Language",
+      slug: "language",
+      type: "language",
+    },
+    {
+      name: "PII Detection",
+      slug: "pii-detection",
+      type: "pii",
+    },
+    {
+      name: "Topics Detection",
+      slug: "topics-detection",
+      type: "topics",
+    },
+    {
+      name: "Intent Detection",
+      slug: "intent-detection",
+      type: "intent",
+    },
+    {
+      name: "Toxicity",
+      slug: "toxicity",
+      type: "toxicity",
+    },
+  ];
+
+  for (const builtin of builtinEvaluators) {
+    await sql`
+      insert into evaluator ${sql({
+        ...builtin,
+        mode: "normal",
+        params: {},
+        filters: ["AND"],
+        projectId: project.id,
+        kind: "builtin",
+      })}
+    `;
+  }
 
   const publicKey = {
     type: "public",

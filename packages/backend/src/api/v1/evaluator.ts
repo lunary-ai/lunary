@@ -5,6 +5,13 @@ import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { z } from "zod";
 import { checkOrgBetaAccess } from "@/src/utils/org";
+import {
+  BUILTIN_EVALUATOR_TYPES,
+  BuiltinEvaluatorType,
+} from "shared";
+
+const isBuiltinType = (type: string): type is BuiltinEvaluatorType =>
+  BUILTIN_EVALUATOR_TYPES.includes(type as BuiltinEvaluatorType);
 
 const evaluators = new Router({
   prefix: "/evaluators",
@@ -19,11 +26,20 @@ evaluators.get(
   checkAccess("evaluations", "list"),
   async (ctx: Context) => {
     const { projectId, orgId } = ctx.state;
+    const kindQuery = ctx.query?.kind;
+    const kindFilter =
+      typeof kindQuery === "string" && kindQuery.length ? kindQuery : undefined;
 
     const hasOrgBetaAccess = await checkOrgBetaAccess(orgId);
 
     let evaluators =
       await sql`select * from evaluator where project_id = ${projectId}`;
+
+    if (kindFilter === "builtin") {
+      evaluators = evaluators.filter((ev: any) => ev.kind === "builtin");
+    } else if (kindFilter === "custom") {
+      evaluators = evaluators.filter((ev: any) => ev.kind !== "builtin");
+    }
 
     if (!hasOrgBetaAccess) {
       evaluators = evaluators.filter((ev: any) => ev.type !== "intent");
@@ -82,11 +98,16 @@ evaluators.post("/", async (ctx: Context) => {
     ctx.throw(403, "Intent evaluators require beta access.");
   }
 
+  if (isBuiltinType(evaluator.type)) {
+    ctx.throw(400, "Builtin evaluators cannot be created manually.");
+  }
+
   // TODO: do not allow insert if the (project_id, slug) already exist (+ add constraint in db)
   const [insertedEvaluator] = await sql`
     insert into evaluator ${sql({
       ...evaluator,
       projectId,
+      kind: "custom",
     })} 
     returning *
   `;
@@ -111,6 +132,53 @@ evaluators.patch("/:id", async (ctx: Context) => {
 
   if (evaluator.type === "intent" && !hasOrgBetaAccess) {
     ctx.throw(403, "Intent evaluators require beta access.");
+  }
+
+  const [existingEvaluator] = await sql<{
+    kind: string;
+    type: string;
+    filters: any;
+  }[]>`
+    select kind, type, filters
+    from evaluator
+    where project_id = ${projectId}
+      and id = ${evaluatorId}
+  `;
+
+  if (!existingEvaluator) {
+    ctx.throw(404, "Evaluator not found");
+  }
+
+  if (isBuiltinType(evaluator.type) && existingEvaluator.kind !== "builtin") {
+    ctx.throw(400, "Cannot convert a custom evaluator into a builtin evaluator.");
+  }
+
+  if (existingEvaluator.kind === "builtin") {
+    const [updatedBuiltinEvaluator] = await sql`
+      update 
+        evaluator 
+      set
+        ${sql(
+          clearUndefined({
+            name: evaluator.name,
+            description: evaluator.description,
+            params: evaluator.params,
+            mode: evaluator.mode,
+            updatedAt: new Date(),
+          }),
+        )}
+      where 
+        project_id = ${projectId}
+        and id = ${evaluatorId}
+      returning *
+    `;
+
+    ctx.body = updatedBuiltinEvaluator;
+    return;
+  }
+
+  if (isBuiltinType(evaluator.type)) {
+    ctx.throw(400, "Custom evaluators must use non-builtin types.");
   }
 
   const [updatedEvaluator] = await sql`
@@ -242,6 +310,20 @@ evaluators.delete(
   async (ctx: Context) => {
     const { projectId } = ctx.state;
     const { id: evaluatorId } = ctx.params;
+
+    const [targetEvaluator] = await sql<{ kind: string }[]>`
+      select kind
+      from evaluator
+      where project_id = ${projectId} and id = ${evaluatorId}
+    `;
+
+    if (!targetEvaluator) {
+      ctx.throw(404, "Evaluator not found");
+    }
+
+    if (targetEvaluator.kind === "builtin") {
+      ctx.throw(400, "Builtin evaluators cannot be deleted.");
+    }
 
     await sql`
     delete 
