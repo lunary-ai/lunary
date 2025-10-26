@@ -8,11 +8,13 @@
 
 .tableContainer {
   height: 100%;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
 }
 
 .tableContainer table {
-  width: 100% !important;
+  min-width: 100%;
+  width: max-content !important;
   table-layout: fixed;
   font-size: 14px;
 }

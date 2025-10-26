@@ -334,7 +334,7 @@ export function enrichmentColumn(
   return columnHelper.accessor(`enrichment-${id}`, {
     header: evaluatorType === "topics" ? "Topics" : `${capitalize(name)}`,
     id: `enrichment-${id}`,
-    size: 120,
+    size: evaluatorType === "intent" ? 400 : 120,
     enableSorting: false,
     cell: (props) => {
       const data = props.row.original[`enrichment-${id}`];

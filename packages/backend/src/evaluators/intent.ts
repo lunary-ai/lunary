@@ -291,6 +291,8 @@ Return JSON with:
 - intents: array of objects { label, confidence, rationale? } where confidence is 0-1.
 - summary: optional concise description (<= 200 chars) of what the user is trying to accomplish overall.
 
+Keep each intent label concise: maximum 4 words, and prefer 2 words when they convey the intent clearly.
+
 Do not invent intents that are not grounded in the conversation. Group repeated requests under the same label.
 `,
       input: conversationText,
