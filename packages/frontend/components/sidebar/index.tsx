@@ -1,7 +1,6 @@
 import {
   ActionIcon,
   Anchor,
-  Badge,
   Box,
   Collapse,
   Flex,
@@ -13,23 +12,19 @@ import {
   Stack,
   Text,
   TextInput,
-  ThemeIcon,
-  Tooltip,
   useMantineColorScheme,
 } from "@mantine/core";
 
 import {
   IconActivity,
-  IconAnalyze,
   IconBell,
   IconBinaryTree2,
-  IconCheckbox,
   IconChecklist,
   IconCompass,
   IconCreditCard,
   IconDatabase,
   IconFilterCog,
-  IconFlask,
+  IconFlask2,
   IconHelpOctagon,
   IconHelpSmall,
   IconListSearch,
@@ -44,7 +39,6 @@ import {
   IconShieldHalf,
   IconSparkles,
   IconSun,
-  IconTelescope,
   IconTerminal2,
   IconTimeline,
   IconUsers,
@@ -54,12 +48,9 @@ import UserAvatar from "@/components/blocks/UserAvatar";
 import { useOrg, useUser } from "@/utils/dataHooks";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { openUpgrade } from "./UpgradeModal";
+import { openUpgrade } from "../layout/UpgradeModal";
 
 import analytics from "@/utils/analytics";
-import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core";
-
-import { IconPlus } from "@tabler/icons-react";
 
 import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
@@ -67,99 +58,13 @@ import { useProject, useProjects } from "@/utils/dataHooks";
 import { useViews } from "@/utils/dataHooks/views";
 import { show } from "@intercom/messenger-js-sdk";
 import { useDisclosure, useFocusTrap, useLocalStorage } from "@mantine/hooks";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 import { getIconComponent } from "../blocks/IconPicker";
+import { ProjectDropdown } from "./project-dropdown";
+import { SidebarLink } from "./sidebar-link";
 import styles from "./sidebar.module.css";
-
-interface NavbarLinkProps {
-  icon: any;
-  label: string;
-  link: string;
-  rightSection?: any;
-  soon?: boolean;
-  onClick?: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-  disabled?: boolean;
-}
-
-export function NavbarLink({
-  icon: Icon,
-  label,
-  link,
-  rightSection,
-  soon = false,
-  onClick = () => {},
-  disabled = false,
-}: NavbarLinkProps) {
-  const router = useRouter();
-
-  // For logs pages, we want to compare the view param to see if a view is selected
-
-  const active = useMemo(() => {
-    if (disabled || soon) return false;
-
-    if (router.pathname.startsWith("/logs")) {
-      const search = link.includes("?") ? link.split("?")[1] : "";
-      const params = new URLSearchParams(search);
-
-      if (params.has("view")) {
-        return router.asPath.includes(`view=${params.get("view")}`);
-      }
-      return router.asPath.startsWith(link);
-    }
-
-    if (
-      router.pathname.startsWith("/dashboards/[id]") &&
-      link.startsWith("/dashboards")
-    ) {
-      return true;
-    }
-
-    return router.pathname.startsWith(link);
-  }, [router.asPath, router.pathname, link, disabled, soon]);
-
-  if (disabled) return null;
-
-  return (
-    <NavLink
-      w="100%"
-      href={link}
-      component={Link}
-      pl={5}
-      styles={{
-        label: {
-          fontSize: 14,
-        },
-      }}
-      onClick={onClick}
-      h={33}
-      label={
-        <Group gap="xs">
-          {label}
-          {label === "Insights" && (
-            <Badge size="xs" variant="light">
-              Alpha
-            </Badge>
-          )}
-          {label === "Experiments" && (
-            <Badge size="xs" variant="light">
-              Beta
-            </Badge>
-          )}
-        </Group>
-      }
-      disabled={disabled || soon}
-      active={active}
-      leftSection={
-        <ThemeIcon variant={"subtle"} size="md" mr={-10}>
-          <Icon size={16} opacity={0.7} />
-        </ThemeIcon>
-      }
-      rightSection={rightSection}
-    />
-  );
-}
 
 type MenuItem = {
   label: string;
@@ -168,7 +73,6 @@ type MenuItem = {
   resource?: ResourceName;
   disabled?: boolean;
   searchable?: boolean;
-  c?: string;
   isSection?: boolean;
   subMenu?: MenuItem[];
   isAlpha?: boolean;
@@ -271,7 +175,7 @@ function MenuSection({ item }) {
               );
             }
             return (
-              <NavbarLink {...subItem} key={subItem.link || subItem.label} />
+              <SidebarLink {...subItem} key={subItem.link || subItem.label} />
             );
           })}
       </Collapse>
@@ -298,17 +202,20 @@ export default function Sidebar() {
     getInitialValueInEffect: false,
   });
 
-  const projectsCombobox = useCombobox({
-    onDropdownClose: () => {
-      projectsCombobox.resetSelectedOption();
-      setSearch("");
-    },
-    onDropdownOpen: () => {
-      projectsCombobox.focusSearchInput();
-    },
-  });
+  const handleSelectProject = useCallback(
+    async (id: string) => {
+      if (router.pathname.startsWith("/dashboards/")) {
+        await router.push("/dashboards");
+      }
 
-  const [search, setSearch] = useState("");
+      if (router.pathname.startsWith("/prompts/")) {
+        await router.push("/prompts");
+      }
+
+      setProjectId(id);
+    },
+    [router, setProjectId],
+  );
 
   const isSelfHosted = config.IS_SELF_HOSTED;
 
@@ -336,7 +243,6 @@ export default function Sidebar() {
     {
       label: "",
       isSection: true,
-      c: "blue",
       subMenu: [
         {
           label: "Dashboards",
@@ -350,10 +256,9 @@ export default function Sidebar() {
     {
       label: "Explore",
       isSection: true,
-      c: "blue",
       subMenu: [
         {
-          label: "LLM Logs",
+          label: "Logs",
           icon: IconTerminal2,
           link: "/logs?type=llm",
           resource: "logs",
@@ -371,19 +276,10 @@ export default function Sidebar() {
           resource: "logs",
         },
         { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
-        {
-          label: "Insights",
-          icon: IconTelescope,
-          link: "/insights",
-          resource: "analytics",
-          disabled: !org.beta,
-          isAlpha: true,
-        },
       ],
     },
     {
-      label: "Improve",
-      c: "violet",
+      label: "Optimize",
       subMenu: [
         {
           label: "Prompts",
@@ -391,21 +287,6 @@ export default function Sidebar() {
           link: "/prompts",
           resource: "prompts",
         },
-        {
-          label: "Experiments",
-          icon: IconFlask,
-          link: "/experiments",
-          resource: "prompts",
-          disabled: !org.beta,
-          isAlpha: true,
-        },
-      ],
-    },
-    {
-      label: "Evaluations",
-      isSection: true,
-      c: "violet",
-      subMenu: [
         {
           label: "Evaluators",
           icon: IconCompass,
@@ -420,6 +301,13 @@ export default function Sidebar() {
           disabled: isSelfHosted
             ? org.license && !org.license.evalEnabled
             : false,
+        },
+        {
+          label: "Tests",
+          icon: IconFlask2,
+          link: "/tests",
+          resource: "evaluations", // TODO: use tests resource when available
+          // disabled: !org?.datasetV2Enabled,
         },
         {
           label: "Checklists",
@@ -437,7 +325,6 @@ export default function Sidebar() {
     {
       label: "Protect",
       isSection: true,
-      c: "blue",
       subMenu: [
         {
           label: "Data Rules",
@@ -506,15 +393,6 @@ export default function Sidebar() {
     }
   }, [project, projects, loading, setProjectId]);
 
-  const projectOptions = projects
-    ?.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((item) => (
-      <Combobox.Option value={item.id} key={item.id}>
-        {item.name}
-      </Combobox.Option>
-    ));
-
   return (
     <Flex
       className="sidebar"
@@ -531,99 +409,13 @@ export default function Sidebar() {
       <Stack w="100%" gap={0}>
         <Box w="100%">
           <Group wrap="nowrap" my="xs" pb="xs" mx="xs" justify="space-between">
-            <Combobox
-              store={projectsCombobox}
-              withinPortal={false}
-              onOptionSubmit={async (id) => {
-                if (router.pathname.startsWith("/dashboards/")) {
-                  await router.push("/dashboards");
-                }
-
-                if (router.pathname.startsWith("/prompts/")) {
-                  await router.push("/prompts");
-                }
-
-                setProjectId(id);
-                projectsCombobox.closeDropdown();
-              }}
-              styles={{
-                dropdown: { minWidth: "fit-content", maxWidth: 600 },
-              }}
-            >
-              <Combobox.Target>
-                <InputBase
-                  component="button"
-                  size="xs"
-                  variant="unstyled"
-                  w={"100%"}
-                  fw={500}
-                  fz="xl"
-                  type="button"
-                  style={{
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                  }}
-                  pointer
-                  leftSection={
-                    <ThemeIcon size={19} ml={-4} variant="light">
-                      <IconAnalyze size={15} />
-                    </ThemeIcon>
-                  }
-                  rightSection={<Combobox.Chevron />}
-                  onClick={() => projectsCombobox.toggleDropdown()}
-                  rightSectionPointerEvents="none"
-                >
-                  <Tooltip label={project?.name}>
-                    {project?.name ? (
-                      <span
-                        style={{
-                          textOverflow: "ellipsis",
-                          overflow: "hidden",
-                          whiteSpace: "nowrap",
-                          height: "100%",
-                          display: "block",
-                        }}
-                      >
-                        {project.name}
-                      </span>
-                    ) : (
-                      <Input.Placeholder>Select project</Input.Placeholder>
-                    )}
-                  </Tooltip>
-                </InputBase>
-              </Combobox.Target>
-              <Combobox.Dropdown w={400}>
-                <Combobox.Search
-                  value={search}
-                  onChange={(event) => setSearch(event.currentTarget.value)}
-                  placeholder={"Type to filter..."}
-                  style={{
-                    top: 0,
-                    zIndex: 2,
-                    position: "sticky",
-                  }}
-                />
-                <Combobox.Options>
-                  {projectOptions?.length > 0 ? (
-                    projectOptions
-                  ) : (
-                    <Combobox.Empty>No projects found</Combobox.Empty>
-                  )}
-                </Combobox.Options>
-                <Combobox.Footer>
-                  <Button
-                    loading={createProjectLoading}
-                    onClick={createProject}
-                    data-testid="new-project"
-                    variant="light"
-                    fullWidth
-                    leftSection={<IconPlus size={12} />}
-                  >
-                    Create Project
-                  </Button>
-                </Combobox.Footer>
-              </Combobox.Dropdown>
-            </Combobox>
+            <ProjectDropdown
+              project={project}
+              projects={projects}
+              onSelect={handleSelectProject}
+              onCreateProject={createProject}
+              createProjectLoading={createProjectLoading}
+            />
             {hasAccess(user.role, "settings", "read") && (
               <ActionIcon
                 variant="default"
