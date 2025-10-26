@@ -27,8 +27,14 @@ const MODEL = "gpt-5";
 /**
  * Supported run types
  */
-export type RunType = "llm" | "trace" | "thread";
-const SUPPORTED_RUN_TYPES = new Set<RunType>(["llm", "trace", "thread"]);
+export type RunType = "llm" | "trace" | "thread" | "tool" | "retriever";
+const SUPPORTED_RUN_TYPES = new Set<RunType>([
+  "llm",
+  "trace",
+  "thread",
+  "tool",
+  "retriever",
+]);
 
 /**
  * OpenAI client
@@ -106,7 +112,8 @@ type FilterSpec =
       kind: "flag-or-list";
       values?: string[];
     } // optional lists
-  | { id: "metadata"; kind: "kv" };
+  | { id: "metadata"; kind: "kv" }
+  | { id: "tools" | "retrievers"; kind: "text" };
 
 const asArray = <T>(x: T | T[] | undefined | null) =>
   x == null ? [] : Array.isArray(x) ? x : [x];
@@ -209,6 +216,12 @@ function buildFilterSpecs(
     { id: "toxicity", kind: "flag-or-list", values: [] },
     { id: "pii", kind: "flag-or-list", values: ["true", "false"] },
     { id: "metadata", kind: "kv" },
+    ...(runType === "tool"
+      ? ([{ id: "tools", kind: "text" }] as FilterSpec[])
+      : []),
+    ...(runType === "retriever"
+      ? ([{ id: "retrievers", kind: "text" }] as FilterSpec[])
+      : []),
   ];
 }
 
@@ -322,6 +335,17 @@ function buildEmitPlanTool(specs: FilterSpec[]): ToolSpec {
           properties: {
             id: { type: "string", enum: [s.id] },
             value: enumProp(s.values),
+          },
+        });
+        break;
+      }
+      case "text": {
+        push({
+          type: "object",
+          required: ["id", "value"],
+          properties: {
+            id: { type: "string", enum: [s.id] },
+            value: { type: "string" },
           },
         });
         break;
@@ -758,6 +782,20 @@ function compileClause(
 
       const out: Record<string, any> = {};
       const ok = setParamValue(out, multiSelect ?? firstSelect, filtered);
+      return ok ? [leaf(out)] : [];
+    }
+
+    case "tools":
+    case "retrievers": {
+      const value =
+        clause.value ??
+        (Array.isArray(clause.values) ? clause.values[0] : undefined);
+      if (!value) {
+        unmatched.push(`${clause.id} requires a name`);
+        return [];
+      }
+      const out: Record<string, any> = {};
+      const ok = setParamValue(out, textParam, value);
       return ok ? [leaf(out)] : [];
     }
 

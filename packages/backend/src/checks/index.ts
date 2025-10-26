@@ -120,10 +120,29 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "tools",
-    sql: () => {},
+    sql: ({ toolName }) => {
+      if (!toolName) return sql`true`;
+      const pattern = `%${toolName}%`;
+      return sql`(r.name ILIKE ${pattern})`;
+    },
     ingestionCheck: async (run, params) => {
       const { toolName } = params;
       if (run.type === "tool" && toolName === run.name) {
+        return false;
+      }
+      return true;
+    },
+  },
+  {
+    id: "retrievers",
+    sql: ({ retrieverName }) => {
+      if (!retrieverName) return sql`true`;
+      const pattern = `%${retrieverName}%`;
+      return sql`(r.name ILIKE ${pattern})`;
+    },
+    ingestionCheck: async (run, params) => {
+      const { retrieverName } = params;
+      if (run.type === "retriever" && retrieverName === run.name) {
         return false;
       }
       return true;

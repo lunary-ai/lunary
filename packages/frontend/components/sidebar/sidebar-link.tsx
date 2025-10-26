@@ -3,6 +3,12 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useMemo, type MouseEvent } from "react";
 
+const LOG_GROUP_TYPES = ["llm", "tool", "retriever"] as const;
+const isLogGroupType = (
+  value: string | null | undefined,
+): value is (typeof LOG_GROUP_TYPES)[number] =>
+  !!value && (LOG_GROUP_TYPES as readonly string[]).includes(value);
+
 export interface SidebarLinkProps {
   icon: any;
   label: string;
@@ -30,9 +36,36 @@ export function SidebarLink({
     if (router.pathname.startsWith("/logs")) {
       const search = link.includes("?") ? link.split("?")[1] : "";
       const params = new URLSearchParams(search);
+      const currentSearch = router.asPath.includes("?")
+        ? router.asPath.split("?")[1]
+        : "";
+      const currentParams = new URLSearchParams(currentSearch);
+      const routerTypeQuery = router.query?.type;
+      const routerType = Array.isArray(routerTypeQuery)
+        ? routerTypeQuery[0]
+        : routerTypeQuery;
+      const currentType = currentParams.get("type") ?? routerType ?? "llm";
+      const currentHasView = currentParams.has("view");
+      const linkHasView = params.has("view");
 
-      if (params.has("view")) {
+      if (linkHasView) {
         return router.asPath.includes(`view=${params.get("view")}`);
+      }
+
+      if (currentHasView && !linkHasView) {
+        return false;
+      }
+
+      if (params.has("type")) {
+        const targetType = params.get("type");
+
+        if (targetType === currentType) {
+          return true;
+        }
+
+        if (targetType === "llm" && isLogGroupType(currentType)) {
+          return true;
+        }
       }
 
       return router.asPath.startsWith(link);
@@ -46,7 +79,14 @@ export function SidebarLink({
     }
 
     return router.pathname.startsWith(link);
-  }, [router.asPath, router.pathname, link, disabled, soon]);
+  }, [
+    router.asPath,
+    router.pathname,
+    router.query?.type,
+    link,
+    disabled,
+    soon,
+  ]);
 
   if (disabled) return null;
 

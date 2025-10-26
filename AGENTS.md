@@ -37,6 +37,8 @@ Lunary is an LLM observability and development platform providing conversation t
 **Package Manager:** This repository exclusively uses `bun`. Never use `npm`, `pnpm`, or `yarn`.
 
 **Database Migrations:** Migration files must not rely on implicit transactions—write them as plain SQL statements executed sequentially (no `BEGIN`/`COMMIT`, `DO $$` blocks, etc.).
+  - **Async operations (e.g., `CREATE INDEX CONCURRENTLY`)** must be queued via `_db_migration_async`. Insert a row per async statement using `insert into _db_migration_async (name, operation, statement) values (...)` with the raw SQL in a dollar-quoted string. Never run `CREATE INDEX CONCURRENTLY` directly in the migration body.
+  - **Synchronous schema changes** (ALTER TABLE, INSERT seed data, etc.) stay in the migration file body as plain SQL.
 
 ## Architecture
 
