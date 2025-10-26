@@ -971,7 +971,7 @@ function Playground() {
             }}
           >
             <Text size="lg" fw={600}>
-              Configuration
+              Model Configuration
             </Text>
           </Box>
 

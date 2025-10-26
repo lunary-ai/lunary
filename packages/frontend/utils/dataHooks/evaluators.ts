@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { CheckLogic } from "shared";
 import { useProjectMutation, useProjectSWR } from ".";
 import { fetcher } from "../fetcher";
@@ -7,6 +8,7 @@ export interface Evaluator {
   id: string;
   type: string;
   name: string;
+  kind?: "builtin" | "custom";
 }
 
 interface CreateEvaluatorData {
@@ -20,10 +22,12 @@ interface CreateEvaluatorData {
   filters?: CheckLogic;
 }
 
-export function useEvaluators() {
-  const { data, isLoading, mutate } = useProjectSWR<Evaluator[]>(
-    `/evaluators` as string,
-  );
+export function useEvaluators(options: { kind?: "builtin" | "custom" } = {}) {
+  const { kind } = options;
+  const endpoint =
+    kind != null ? `/evaluators?kind=${encodeURIComponent(kind)}` : `/evaluators`;
+
+  const { data, isLoading, mutate } = useProjectSWR<Evaluator[]>(endpoint as string);
   const { trigger: insertEvaluatorMutation } = useProjectMutation(
     `/evaluators`,
     fetcher.post,
@@ -32,8 +36,17 @@ export function useEvaluators() {
     insertEvaluatorMutation(data);
   }
 
+  const evaluatorsList = useMemo(
+    () =>
+      (data ?? []).map((item) => ({
+        ...item,
+        kind: item.kind ?? "custom",
+      })),
+    [data],
+  );
+
   return {
-    evaluators: data || ([] as Evaluator[]),
+    evaluators: evaluatorsList as Evaluator[],
     mutate,
     isLoading,
     insertEvaluator,

@@ -37,6 +37,7 @@ function EvaluatorCard({ id, initialData }) {
   if (!evalMeta) return null;
 
   const { description, icon: Icon } = evalMeta;
+  const isBuiltin = evaluatorAny?.kind === "builtin";
 
   return (
     <Card p={16} withBorder>
@@ -64,14 +65,16 @@ function EvaluatorCard({ id, initialData }) {
                 </Menu.Target>
 
                 <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={
-                      <IconTrash color="red" width="15px" height="15px" />
-                    }
-                    onClick={() => deleteEvaluator()}
-                  >
-                    Delete
-                  </Menu.Item>
+                  {!isBuiltin && (
+                    <Menu.Item
+                      leftSection={
+                        <IconTrash color="red" width="15px" height="15px" />
+                      }
+                      onClick={() => deleteEvaluator()}
+                    >
+                      Delete
+                    </Menu.Item>
+                  )}
                   <Menu.Item
                     leftSection={
                       <IconPencil color="gray" width="15px" height="15px" />
@@ -173,7 +176,7 @@ export default function EvaluatorsPage() {
               variant="default"
               onClick={() => router.push("/evaluators/new")}
             >
-              Add Evaluator
+              Create Evaluator
             </Button>
           </Group>
 

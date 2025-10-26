@@ -10,9 +10,11 @@ export type EvaluatorType =
   | "factualness"
   | "geval"
   | "guidelines"
-  | "bias"
   | "replies"
-  | "intent";
+  | "intent"
+  | "text-similarity"
+  | "model-labeler"
+  | "model-scorer";
 export type EvaluatorMode = "normal" | "realtime";
 
 interface BaseEvaluator {

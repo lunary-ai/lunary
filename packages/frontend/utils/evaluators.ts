@@ -2,12 +2,12 @@ import {
   IconBadge,
   IconBiohazard,
   IconCheck,
-  IconEyeCheck,
+  IconGauge,
   IconIdBadge,
   IconLanguage,
   IconNotebook,
-  IconTextWrap,
   IconTargetArrow,
+  IconTextWrap,
 } from "@tabler/icons-react";
 
 type EvaluatorCategory = "labeler" | "text-similarity" | "custom";
@@ -27,6 +27,7 @@ interface EvaluatorDefinition {
   /** Optional feature‑flag fields */
   beta?: boolean;
   soon?: boolean;
+  builtin?: boolean;
 }
 
 type EvaluatorTypes = Record<string, EvaluatorDefinition>;
@@ -43,18 +44,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     params: [],
     beta: false,
     soon: false,
-  },
-  bias: {
-    id: "bias",
-    name: "Bias",
-    category: "labeler",
-    icon: IconEyeCheck,
-    color: "blue",
-    description:
-      "Detects if the LLM output contains gender, racial, or political bias.",
-    params: [],
-    beta: true,
-    soon: false,
+    builtin: true,
   },
   toxicity: {
     id: "toxicity",
@@ -66,6 +56,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     params: [],
     beta: true,
     soon: false,
+    builtin: true,
   },
   topics: {
     id: "topics",
@@ -95,6 +86,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     ],
     beta: false,
     soon: false,
+    builtin: true,
   },
   intent: {
     id: "intent",
@@ -107,6 +99,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     params: [],
     beta: true,
     soon: false,
+    builtin: true,
   },
   pii: {
     id: "pii",
@@ -172,178 +165,49 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     ],
     beta: false,
     soon: false,
+    builtin: true,
   },
-  llm: {
-    id: "llm",
-    name: "LLM Evaluator",
-    category: "custom",
+  "model-labeler": {
+    id: "model-labeler",
+    name: "Model Labeler",
+    category: "labeler",
     icon: IconNotebook,
     color: "blue",
-    description: "Use a customizable LLM model to evaluate outputs.",
+    description:
+      "Use a custom LLM prompt to assign labels to model responses.",
     params: [],
     beta: true,
     soon: false,
   },
-  bleu: {
-    id: "bleu",
-    name: "BLEU",
-    category: "text-similarity",
-    icon: IconTextWrap,
-    color: "blue",
-    description: "Evaluate outputs using the BLEU metric.",
+  "model-scorer": {
+    id: "model-scorer",
+    name: "Model Scorer",
+    category: "custom",
+    icon: IconGauge,
+    color: "gray",
+    description:
+      "Score responses with an LLM prompt and capture the numeric result.",
+    params: [],
     beta: true,
-    params: [
-      {
-        type: "label",
-        label: "Reference Text",
-      },
-      {
-        type: "text",
-        id: "reference",
-        label: "Reference Text",
-        placeholder: "Reference",
-      },
-      {
-        type: "slider",
-        id: "threshold",
-        label: "Passing grade",
-        description: "Minimum BLEU score (0‑1)",
-        min: 0,
-        max: 1,
-        step: 0.01,
-        defaultValue: 0.5,
-      },
-    ],
+    soon: false,
   },
-  gleu: {
-    id: "gleu",
-    name: "GLEU",
+  "text-similarity": {
+    id: "text-similarity",
+    name: "Text Similarity",
     category: "text-similarity",
     icon: IconTextWrap,
-    color: "teal",
-    description: "Evaluate outputs using the GLEU metric.",
+    color: "indigo",
+    description:
+      "Compare outputs to reference text using BLEU, ROUGE, cosine and more.",
+    params: [],
     beta: true,
-    params: [
-      {
-        type: "label",
-        label: "Reference Text",
-      },
-      {
-        type: "text",
-        id: "reference",
-        label: "Reference Text",
-        placeholder: "Reference",
-      },
-      {
-        type: "slider",
-        id: "threshold",
-        label: "Passing grade",
-        description: "Minimum GLEU score (0‑1)",
-        min: 0,
-        max: 1,
-        step: 0.01,
-        defaultValue: 0.5,
-      },
-    ],
-  },
-  rouge: {
-    id: "rouge",
-    name: "ROUGE",
-    category: "text-similarity",
-    icon: IconTextWrap,
-    color: "red",
-    description: "Evaluate outputs using the ROUGE metric.",
-    beta: true,
-    params: [
-      {
-        type: "label",
-        label: "Reference Text",
-      },
-      {
-        type: "text",
-        id: "reference",
-        label: "Reference Text",
-        placeholder: "Reference",
-      },
-      {
-        type: "slider",
-        id: "threshold",
-        label: "Passing grade",
-        description: "Minimum ROUGE score (0‑1)",
-        min: 0,
-        max: 1,
-        step: 0.01,
-        defaultValue: 0.5,
-      },
-    ],
-  },
-  cosine: {
-    id: "cosine",
-    name: "Cosine Similarity",
-    category: "text-similarity",
-    icon: IconTextWrap,
-    color: "violet",
-    description: "Evaluate outputs using Cosine Similarity.",
-    beta: true,
-    params: [
-      {
-        type: "label",
-        label: "Reference Text",
-      },
-      {
-        type: "text",
-        id: "reference",
-        label: "Reference Text",
-        placeholder: "Reference",
-      },
-      {
-        type: "slider",
-        id: "threshold",
-        label: "Passing grade",
-        description: "Minimum Cosine Similarity (0‑1)",
-        min: 0,
-        max: 1,
-        step: 0.01,
-        defaultValue: 0.5,
-      },
-    ],
-  },
-  fuzzy: {
-    id: "fuzzy",
-    name: "Fuzzy Match",
-    category: "text-similarity",
-    icon: IconTextWrap,
-    color: "orange",
-    description: "Evaluate outputs using Fuzzy Matching.",
-    beta: true,
-    params: [
-      {
-        type: "label",
-        label: "Reference Text",
-      },
-      {
-        type: "text",
-        id: "reference",
-        label: "Reference Text",
-        placeholder: "Reference",
-      },
-      {
-        type: "slider",
-        id: "threshold",
-        label: "Passing grade",
-        description: "Minimum Fuzzy Match ratio (0‑1)",
-        min: 0,
-        max: 1,
-        step: 0.01,
-        defaultValue: 0.5,
-      },
-    ],
+    soon: false,
   },
   string: {
     id: "string",
-    name: "String Comparator",
+    name: "String Check",
     category: "text-similarity",
-    icon: IconTextWrap,
+    icon: IconCheck,
     color: "gray",
     description: "Compare output text to a reference string.",
     beta: true,

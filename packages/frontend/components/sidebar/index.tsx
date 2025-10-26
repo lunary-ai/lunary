@@ -303,7 +303,7 @@ export default function Sidebar() {
           icon: IconFlask2,
           link: "/tests",
           resource: "evaluations", // TODO: use tests resource when available
-          // disabled: !org?.datasetV2Enabled,
+          disabled: !org?.datasetV2Enabled,
         },
         {
           label: "Checklists",
