@@ -201,6 +201,12 @@ export default function Logs() {
   const { projectId } = useContext(ProjectContext);
   const { project, isLoading: projectLoading, setProjectId } = useProject();
   const { org } = useOrg();
+  const { evaluators } = useEvaluators();
+
+  const hasIntentEvaluator = useMemo(
+    () => evaluators.some((ev) => ev.type === "intent"),
+    [evaluators],
+  );
 
   const checksByType = useMemo(() => {
     const base = {
@@ -209,12 +215,12 @@ export default function Logs() {
       thread: [...CHECKS_BY_TYPE.thread],
     };
 
-    if (org?.beta && !base.thread.includes("intents")) {
+    if (org?.beta && hasIntentEvaluator && !base.thread.includes("intents")) {
       base.thread.push("intents");
     }
 
     return base;
-  }, [org?.beta]);
+  }, [org?.beta, hasIntentEvaluator]);
 
   const { insert: insertView, isInserting: isInsertingView } = useViews();
 
@@ -278,7 +284,6 @@ export default function Logs() {
     return serializeLogic(checksWithType);
   }, [checks, type, view]);
 
-  const { evaluators } = useEvaluators();
   const { metadataKeys } = useMetadataKeys(type);
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300);
@@ -700,7 +705,7 @@ export default function Logs() {
 
   return (
     <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
-      <NextSeo title="Requests" />
+      <NextSeo title="Logs - Lunary" />
 
       <Stack>
         <Card withBorder p={2} px="sm">

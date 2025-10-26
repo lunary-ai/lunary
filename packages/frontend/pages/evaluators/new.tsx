@@ -133,7 +133,8 @@ export default function NewEvaluator() {
   const { customModels } = useCustomModels();
   const evaluatorData = evaluator as any | undefined;
   const evaluatorName = (evaluatorData?.name as string) || undefined;
-  const evaluatorParams = (evaluatorData?.params as Record<string, any>) || undefined;
+  const evaluatorParams =
+    (evaluatorData?.params as Record<string, any>) || undefined;
   const prevReclusterStatus = useRef<string | undefined>();
 
   const isReclusterActive = Boolean(
@@ -608,11 +609,6 @@ export default function NewEvaluator() {
                   });
                 }}
               />
-              <Text size="sm" c="dimmed">
-                Only the top intents by frequency will be shown individually.
-                The remaining ones collapse into an "Other" bucket for display
-                while keeping their original labels for future retriage.
-              </Text>
               {isEditing && (
                 <Button
                   variant="default"
@@ -620,7 +616,7 @@ export default function NewEvaluator() {
                   loading={reclusterStarting}
                   disabled={reclusterStarting || isReclusterActive}
                 >
-                  Recluster intents with gpt-5-mini
+                  Recluster intents
                 </Button>
               )}
               {reclusterJob && (
