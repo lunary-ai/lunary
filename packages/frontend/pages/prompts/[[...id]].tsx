@@ -66,7 +66,13 @@ import { openConfirmModal } from "@mantine/modals";
 
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
 import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
-import { hasAccess } from "shared";
+import {
+  FIXED_TEMPERATURE_VALUE,
+  getMaxTokenParam,
+  hasAccess,
+  normalizeTemperature,
+  requiresFixedTemperature,
+} from "shared";
 
 function NotepadButton({ value, onChange }) {
   const [modalOpened, setModalOpened] = useState(false);
@@ -233,10 +239,18 @@ function Playground() {
     };
 
     if (templateVersion.extra) {
+      const modelId = templateVersion.extra.model;
+      const normalizedTemperature = normalizeTemperature(
+        modelId,
+        templateVersion.extra.temperature,
+      );
+
       protectedPayload.model_params = {
-        temperature: templateVersion.extra.temperature,
-        max_tokens: templateVersion.extra.max_tokens,
-        model: templateVersion.extra.model,
+        ...getMaxTokenParam(modelId, templateVersion.extra.max_tokens),
+        temperature: requiresFixedTemperature(modelId)
+          ? FIXED_TEMPERATURE_VALUE
+          : normalizedTemperature,
+        model: modelId,
       };
     }
 
@@ -544,6 +558,23 @@ function Playground() {
       // Original LLM playground logic
       const model = templateVersion?.extra?.model;
 
+      const normalizedExtra = {
+        ...templateVersion?.extra,
+        ...getMaxTokenParam(model, templateVersion?.extra?.max_tokens),
+        temperature: normalizeTemperature(
+          model,
+          templateVersion?.extra?.temperature,
+        ),
+      };
+
+      if (requiresFixedTemperature(model)) {
+        normalizedExtra.temperature = FIXED_TEMPERATURE_VALUE;
+      }
+
+      if (requiresFixedTemperature(model) || model?.includes("gpt-5")) {
+        delete normalizedExtra.max_tokens;
+      }
+
       if (org?.plan === "free" || !org?.playAllowance) {
         return openUpgrade("playground");
       }
@@ -566,7 +597,7 @@ function Playground() {
           `/orgs/${org?.id}/playground`,
           {
             content: templateVersion.content,
-            extra: templateVersion.extra,
+            extra: normalizedExtra,
             variables: templateVersion.testValues,
           },
           (chunk) => {
@@ -634,7 +665,23 @@ function Playground() {
         // Generate the protected payload with interpolated variables
         const variables = templateVersion?.testValues || {};
         const content = templateVersion?.content;
-        const extra = templateVersion?.extra || {};
+        const modelId = templateVersion?.extra?.model;
+        const extra = {
+          ...templateVersion?.extra,
+          ...getMaxTokenParam(modelId, templateVersion?.extra?.max_tokens),
+          temperature: normalizeTemperature(
+            modelId,
+            templateVersion?.extra?.temperature,
+          ),
+        };
+
+        if (requiresFixedTemperature(modelId)) {
+          extra.temperature = FIXED_TEMPERATURE_VALUE;
+        }
+
+        if (requiresFixedTemperature(modelId) || modelId?.includes("gpt-5")) {
+          delete extra.max_tokens;
+        }
 
         // Compile the content with variables
         let compiledContent;

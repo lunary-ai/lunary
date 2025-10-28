@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next"
 import { OpenAI } from "openai"
+import { getMaxTokenParam, normalizeTemperature } from "shared"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -33,9 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           content: prompt,
         },
       ],
-      temperature: version.temperature,
-      max_tokens: version.max_tokens,
+      temperature: normalizeTemperature(version.model, version.temperature),
       top_p: version.top_p,
+      ...getMaxTokenParam(version.model, version.max_tokens),
     })
 
     return res.status(200).json({ response: response.choices[0]?.message?.content || "No response generated" })

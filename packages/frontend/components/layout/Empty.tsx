@@ -117,24 +117,6 @@ response = completion(
     messages=[{"role": "user", "content": "Hello!"}]
 )`,
   },
-  mistral: {
-    py: `
-import os
-from openai import OpenAI
-import lunary
-
-MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY")
-
-client = OpenAI(api_key=MISTRAL_API_KEY, base_url="https://api.mistral.ai/v1/")
-
-lunary.monitor(client)  # This line sets up monitoring for all calls made through the 'openai' module
-
-chat_completion = client.chat.completions.create(
-  model="mistral-small-latest",
-  messages=[{"role": "user", "content": "Hello world"}]
-)
-    `,
-  },
   custom: {
     curl: `curl -X POST "https://api.lunary.ai/v1/runs/ingest" \
   -H "Content-Type: application/json" \
@@ -312,6 +294,172 @@ const IntegrationStepper = ({ integration }: { integration: string }) => {
     key: "preferred-language",
     defaultValue: "js" as "js" | "py",
   });
+
+  if (integration === "vercel") {
+    const installInstrumentation = `npm install @vercel/otel @opentelemetry/api`;
+    const registerInstrumentation = `import { registerOTel } from "@vercel/otel";
+
+export function register() {
+  registerOTel({ serviceName: "vercel-ai-with-lunary" });
+}
+`;
+    const instrumentationHookConfig = `export default {
+  experimental: {
+    instrumentationHook: true,
+  },
+};
+`;
+    const envExporterConfig = `OTEL_EXPORTER_OTLP_ENDPOINT=https://api.lunary.ai
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer \${LUNARY_PUBLIC_KEY}"
+OTEL_RESOURCE_ATTRIBUTES="service.name=vercel-ai-app,deployment.environment=production"`;
+    const explicitExporter = `import { registerOTel, OTLPHttpJsonTraceExporter } from "@vercel/otel";
+
+export function register() {
+  registerOTel({
+    serviceName: "vercel-ai-with-lunary",
+    traceExporter: new OTLPHttpJsonTraceExporter({
+      url: "https://api.lunary.ai/v1/traces",
+      headers: {
+        Authorization: \`Bearer \${process.env.LUNARY_PUBLIC_KEY}\`,
+      },
+    }),
+  });
+}
+`;
+    const telemetryExample = `import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+
+export async function summarize(content: string, userId: string) {
+  const result = await generateText({
+    model: openai("gpt-5"),
+    prompt: \`Summarize:\\n\${content}\`,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: "summarizer",
+      metadata: {
+        lunary_user_id: userId,
+        thread_id: \`thread-\${userId}\`,
+      },
+    },
+  });
+
+  return result.text;
+}
+`;
+
+    return (
+      <Steps>
+        <Step
+          icon={<IconPackage size={24} />}
+          label="Enable Vercel's OpenTelemetry instrumentation"
+        >
+          <Stack gap="sm">
+            <Text>Install Vercel's OpenTelemetry helper if it's not already in your project:</Text>
+            <Card my="xs" p={0} withBorder>
+              <CodeHighlightTabs
+                code={[
+                  {
+                    fileName: "Install instrumentation",
+                    code: installInstrumentation,
+                    language: "bash",
+                  },
+                ]}
+              />
+            </Card>
+            <Text>Register OpenTelemetry in your `instrumentation.ts` (or `src/instrumentation.ts`) file:</Text>
+            <Card my="xs" p={0} withBorder>
+              <CodeHighlightTabs
+                code={[
+                  {
+                    fileName: "instrumentation.ts",
+                    code: registerInstrumentation,
+                    language: "typescript",
+                  },
+                ]}
+              />
+            </Card>
+            <Text>
+              If you are on Next.js 14 or earlier, enable the instrumentation hook in `next.config.mjs`:
+            </Text>
+            <Card my="xs" p={0} withBorder>
+              <CodeHighlightTabs
+                code={[
+                  {
+                    fileName: "next.config.mjs",
+                    code: instrumentationHookConfig,
+                    language: "javascript",
+                  },
+                ]}
+              />
+            </Card>
+          </Stack>
+        </Step>
+
+        <Step icon={<IconCode size={24} />} label="Point OpenTelemetry to Lunary">
+          <Stack gap="sm">
+            <Text>Set environment variables so the OTLP exporter forwards spans to Lunary:</Text>
+            <Card my="xs" p={0} withBorder>
+              <CodeHighlightTabs
+                code={[
+                  {
+                    fileName: ".env",
+                    code: envExporterConfig,
+                    language: "bash",
+                  },
+                ]}
+              />
+            </Card>
+            <Text>Or configure the exporter explicitly when registering OpenTelemetry:</Text>
+            <Card my="xs" p={0} withBorder>
+              <CodeHighlightTabs
+                code={[
+                  {
+                    fileName: "instrumentation.ts",
+                    code: explicitExporter,
+                    language: "typescript",
+                  },
+                ]}
+              />
+            </Card>
+            <Text size="sm" c="dimmed">
+              Use your Lunary project public key for the authorization header so traces are accepted by the managed collector.
+            </Text>
+          </Stack>
+        </Step>
+
+        <Step
+          icon={<IconAnalyze size={24} />}
+          label="Emit AI spans with Lunary metadata"
+        >
+          <Stack gap="sm">
+            <Text>
+              Wrap the AI SDK calls you want to observe with `experimental_telemetry` to attach user and trace metadata:
+            </Text>
+            <Card my="xs" p={0} withBorder>
+              <CodeHighlightTabs
+                code={[
+                  {
+                    fileName: "ai-handler.ts",
+                    code: telemetryExample,
+                    language: "typescript",
+                  },
+                ]}
+              />
+            </Card>
+            <Text size="sm" c="dimmed">
+              Each invocation emits spans annotated with function, user, and thread identifiers so Lunary can group traces.
+            </Text>
+          </Stack>
+        </Step>
+
+        <Step icon={<IconCheck size={24} />} label="Validate traces inside Lunary">
+          <Text>
+            Deploy or run your app locally, trigger an instrumented request, then open <Text span fw={500}>Observability → Traces</Text> in the Lunary dashboard to confirm spans tagged with your `service.name` are arriving.
+          </Text>
+        </Step>
+      </Steps>
+    );
+  }
 
   return (
     <Steps>
@@ -516,8 +664,8 @@ export function EmptyOnboarding() {
               onClick={setIntegration}
             />
             <IntegrationButton
-              value="mistral"
-              label="Mistral"
+              value="vercel"
+              label="Vercel AI SDK"
               onClick={setIntegration}
             />
             <IntegrationButton
@@ -539,6 +687,7 @@ export function EmptyOnboarding() {
       openai: <IntegrationStepper integration="openai" />,
       anthropic: <IntegrationStepper integration="anthropic" />,
       langchain: <IntegrationStepper integration="langchain" />,
+      vercel: <IntegrationStepper integration="vercel" />,
       llamaindex: (
         <Stack>
           <Alert icon={<IconInfoCircle size={32} />} color="blue">
@@ -588,7 +737,12 @@ export function EmptyOnboarding() {
       }}
     >
       <Center h="100%">
-        <Card withBorder p={50} w={800}>
+        <Card
+          withBorder
+          p={50}
+          w={800}
+          style={{ maxHeight: "90vh", overflow: "auto" }}
+        >
           <Stack align="start" gap="xl" w="100%">
             {renderContent()}
 

@@ -26,8 +26,13 @@ import {
   IconTools,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { useState } from "react";
-import { Model, OldProvider } from "shared";
+import { useEffect, useState } from "react";
+import {
+  FIXED_TEMPERATURE_VALUE,
+  Model,
+  OldProvider,
+  requiresFixedTemperature,
+} from "shared";
 import ModelSelect from "./ModelSelect";
 
 function convertOpenAIToolsToAnthropic(openAITools) {
@@ -69,31 +74,29 @@ export const ParamItem = ({
   max,
   step,
   precision,
+  disabled = false,
 }) => (
-  <Stack gap={4}>
-    <Group justify="space-between">
-      <Group gap={5}>
-        <Text size="sm" fw="bold">
-          {name}
-        </Text>
-        {description && (
-          <Tooltip label={description}>
-            <IconInfoCircle size={14} />
-          </Tooltip>
-        )}
-      </Group>
+  <Stack gap={4} mt="sm">
+    <Group gap="0" justify="space-between">
+      <Text size="sm" fw="bold">
+        {name}
+      </Text>
       {displayValue !== undefined && onValueChange ? (
         <NumberInput
           value={displayValue}
-          onChange={onValueChange}
+          onChange={disabled ? undefined : onValueChange}
           min={min}
           max={max}
           step={step}
-          w="100%"
+          w={120}
           size="xs"
           variant="unstyled"
+          disabled={disabled}
           styles={{
-            input: { textAlign: "right", paddingRight: 20 },
+            input: {
+              textAlign: "right",
+              height: 24,
+            },
           }}
         />
       ) : displayValue !== undefined ? (
@@ -278,6 +281,23 @@ export default function ProviderEditor({
     },
   });
 
+  const selectedModelId =
+    typeof value?.model === "string" ? value?.model : value?.model?.id;
+  const fixedTemperature = requiresFixedTemperature(selectedModelId);
+
+  useEffect(() => {
+    if (!fixedTemperature) return;
+    if (value?.config?.temperature === FIXED_TEMPERATURE_VALUE) return;
+
+    onChange({
+      ...value,
+      config: {
+        ...value.config,
+        temperature: FIXED_TEMPERATURE_VALUE,
+      },
+    });
+  }, [fixedTemperature, value?.config?.temperature, onChange, value]);
+
   function handleModelSelectChange(model: Model) {
     const modelId = model.id;
 
@@ -310,6 +330,9 @@ export default function ProviderEditor({
       config: {
         ...value.config,
         tools: updatedTools,
+        temperature: requiresFixedTemperature(modelId)
+          ? FIXED_TEMPERATURE_VALUE
+          : value.config.temperature,
       },
     });
   }
@@ -410,8 +433,13 @@ export default function ProviderEditor({
                       )}
                       <ParamItem
                         name="Temperature"
-                        displayValue={value?.config?.temperature || 0}
+                        displayValue={
+                          fixedTemperature
+                            ? FIXED_TEMPERATURE_VALUE
+                            : value?.config?.temperature || 0
+                        }
                         onValueChange={(val) => {
+                          if (fixedTemperature) return;
                           onChange({
                             ...value,
                             config: {
@@ -424,6 +452,7 @@ export default function ProviderEditor({
                         max={2}
                         step={0.01}
                         precision={2}
+                        disabled={fixedTemperature}
                         value={
                           <Slider
                             min={0}
@@ -432,6 +461,7 @@ export default function ProviderEditor({
                             precision={2}
                             style={{ zIndex: 0 }}
                             w="100%"
+                            disabled={fixedTemperature}
                             {...configHandler("temperature")}
                           />
                         }
@@ -619,6 +649,80 @@ export default function ProviderEditor({
               </Group>
             }
           />
+          <Group gap={8} mt="sm" wrap="wrap" align="center">
+            {isOpenAIModel(value?.model) && (
+              <Group gap={4} wrap="nowrap" align="center">
+                <Text size="xs" c="dark.6" lh={1}>
+                  text.format:
+                </Text>
+                <Text
+                  size="xs"
+                  c="blue.6"
+                  lh={1}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setParamsPopoverOpened(true)}
+                >
+                  {value?.config?.response_format?.type || "text"}
+                </Text>
+              </Group>
+            )}
+            <Group gap={4} wrap="nowrap" align="center">
+              <Text size="xs" c="dark.6" lh={1}>
+                temperature:
+              </Text>
+              <Text
+                size="xs"
+                c="blue.6"
+                lh={1}
+                style={{ cursor: "pointer" }}
+                onClick={() => setParamsPopoverOpened(true)}
+              >
+                {value?.config?.temperature ?? 0}
+              </Text>
+            </Group>
+            <Group gap={4} wrap="nowrap" align="center">
+              <Text size="xs" c="dark.6" lh={1}>
+                max_tokens:
+              </Text>
+              <Text
+                size="xs"
+                c="blue.6"
+                lh={1}
+                style={{ cursor: "pointer" }}
+                onClick={() => setParamsPopoverOpened(true)}
+              >
+                {value?.config?.max_tokens ?? 1}
+              </Text>
+            </Group>
+            <Group gap={4} wrap="nowrap" align="center">
+              <Text size="xs" c="dark.6" lh={1}>
+                top_p:
+              </Text>
+              <Text
+                size="xs"
+                c="blue.6"
+                lh={1}
+                style={{ cursor: "pointer" }}
+                onClick={() => setParamsPopoverOpened(true)}
+              >
+                {value?.config?.top_p ?? 0}
+              </Text>
+            </Group>
+            <Group gap={4} wrap="nowrap" align="center">
+              <Text size="xs" c="dark.6" lh={1}>
+                stream:
+              </Text>
+              <Text
+                size="xs"
+                c="blue.6"
+                lh={1}
+                style={{ cursor: "pointer" }}
+                onClick={() => setParamsPopoverOpened(true)}
+              >
+                {value?.config?.stream ? "true" : "false"}
+              </Text>
+            </Group>
+          </Group>
         </Stack>
       )}
 
