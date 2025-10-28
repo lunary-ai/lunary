@@ -63,6 +63,7 @@ function normalizeEvaluatorRun(run: any): DatasetEvaluatorRun {
     id: String(run?.id ?? ""),
     datasetId: String(run?.datasetId ?? run?.dataset_id ?? ""),
     versionId: run?.versionId ?? run?.version_id ?? null,
+    name: run?.name ?? null,
     createdBy: run?.createdBy ?? run?.created_by ?? null,
     createdAt: run?.createdAt ?? run?.created_at ?? new Date().toISOString(),
     updatedAt: run?.updatedAt ?? run?.updated_at ?? new Date().toISOString(),
@@ -206,6 +207,7 @@ export interface DatasetEvaluatorRun {
   id: string;
   datasetId: string;
   versionId: string | null;
+  name: string | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -785,6 +787,8 @@ export function useDatasetV2EvaluatorRuns(
   options: { limit?: number } = {},
 ) {
   const { limit = 20 } = options;
+  const { projectId } = useContext(ProjectContext);
+  const [isUpdatingRun, setIsUpdatingRun] = useState(false);
 
   const {
     data,
@@ -801,20 +805,58 @@ export function useDatasetV2EvaluatorRuns(
     [data?.runs],
   );
 
-  const aggregate = useMemo(
-    () =>
-      (data?.aggregate ?? []).map((entry) =>
-        normalizeRunAggregate(entry),
-      ),
-    [data?.aggregate],
+  const updateRunName = useCallback(
+    async (runId: string, name: string | null) => {
+      if (!datasetId || !projectId) {
+        return null;
+      }
+
+      const url = generateKey(
+        `/datasets-v2/${datasetId}/evaluator-runs/${runId}`,
+        projectId,
+      );
+
+      if (!url) {
+        return null;
+      }
+
+      setIsUpdatingRun(true);
+      try {
+        const response = await fetcher.patch(url, { arg: { name } });
+        const normalized = response?.run
+          ? normalizeEvaluatorRun(response.run)
+          : normalizeEvaluatorRun(response);
+
+        await mutate((currentData) => {
+          if (!currentData) {
+            return currentData;
+          }
+
+          return {
+            ...currentData,
+            runs: (currentData.runs ?? []).map((run: any) =>
+              run.id === normalized.id
+                ? { ...run, name: normalized.name, updatedAt: normalized.updatedAt }
+                : run,
+            ),
+          };
+        }, { revalidate: false });
+
+        return normalized;
+      } finally {
+        setIsUpdatingRun(false);
+      }
+    },
+    [datasetId, projectId, mutate],
   );
 
   return {
     runs,
-    aggregate,
     isLoading,
     isValidating,
     error,
     mutate,
+    updateRunName,
+    isUpdatingRun,
   };
 }

@@ -21,13 +21,10 @@ import {
   Menu,
   Modal,
   NumberInput,
-  Progress,
   Select,
-  SimpleGrid,
   Stack,
   Switch,
   Table,
-  Tabs,
   Text,
   Textarea,
   TextInput,
@@ -55,6 +52,7 @@ import {
   IconSettings,
   IconFilter,
   IconFlask,
+  IconTimelineEvent,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
@@ -73,9 +71,6 @@ import {
   useDatasetV2VersionMutations,
   useDatasetV2Versions,
   useDatasetsV2,
-  useDatasetV2EvaluatorRuns,
-  type DatasetEvaluatorRun,
-  type DatasetEvaluatorRunSlotSummary,
 } from "@/utils/dataHooks/dataset";
 import { useEvaluators, type Evaluator } from "@/utils/dataHooks/evaluators";
 import { formatDateTime } from "@/utils/format";
@@ -981,15 +976,13 @@ export default function DatasetV2DetailPage() {
     runEvaluators,
   } = useDatasetV2(datasetId);
 
+  const initialVersionParam = Array.isArray(router.query.version)
+    ? router.query.version[0]
+    : router.query.version;
   const [selectedVersionId, setSelectedVersionId] = useState<"latest" | string>(
-    "latest",
-  );
-
-  const initialTabParam = Array.isArray(router.query.tab)
-    ? router.query.tab[0]
-    : router.query.tab;
-  const [activeTab, setActiveTab] = useState<"data" | "runs">(
-    initialTabParam === "runs" ? "runs" : "data",
+    initialVersionParam && typeof initialVersionParam === "string"
+      ? initialVersionParam
+      : "latest",
   );
 
   const {
@@ -1015,14 +1008,6 @@ export default function DatasetV2DetailPage() {
   const { evaluators: customEvaluators, isLoading: isLoadingEvaluators } =
     useEvaluators({ kind: "custom" });
 
-  const {
-    runs,
-    aggregate: runAggregate,
-    isLoading: isLoadingRuns,
-    isValidating: isValidatingRuns,
-    mutate: mutateRuns,
-  } = useDatasetV2EvaluatorRuns(datasetId);
-
   const [isAttachingEvaluator, setIsAttachingEvaluator] = useState(false);
   const [isRunningEvaluators, setIsRunningEvaluators] = useState(false);
 
@@ -1030,46 +1015,6 @@ export default function DatasetV2DetailPage() {
     addEvaluatorModalOpened,
     { open: openAddEvaluatorModal, close: closeAddEvaluatorModal },
   ] = useDisclosure(false);
-
-  useEffect(() => {
-    if (!router.isReady) return;
-    const tabValue = Array.isArray(router.query.tab)
-      ? router.query.tab[0]
-      : router.query.tab;
-
-    if (tabValue === "runs" && activeTab !== "runs") {
-      setActiveTab("runs");
-    } else if (
-      (!tabValue || tabValue === "data") &&
-      activeTab !== "data"
-    ) {
-      setActiveTab("data");
-    }
-  }, [router.isReady, router.query.tab, activeTab]);
-
-  const handleTabChange = useCallback(
-    (value: string | null) => {
-      if (value !== "data" && value !== "runs") {
-        return;
-      }
-
-      setActiveTab(value);
-
-      const nextQuery: Record<string, any> = { ...router.query };
-      if (value === "data") {
-        delete nextQuery.tab;
-      } else {
-        nextQuery.tab = value;
-      }
-
-      router.replace(
-        { pathname: router.pathname, query: nextQuery },
-        undefined,
-        { shallow: true },
-      );
-    },
-    [router],
-  );
 
   const {
     localItems,
@@ -1174,115 +1119,6 @@ const availableEvaluators = useMemo(
       return next;
     });
   }, [displayEvaluatorSlots]);
-
-  const runEvaluatorColumns = useMemo(() => {
-    const map = new Map<
-      number,
-      { slot: number; evaluatorId: string | null; evaluatorName: string }
-    >();
-
-    runs.forEach((run) => {
-      run.slots.forEach((slot) => {
-        if (!map.has(slot.slot)) {
-          map.set(slot.slot, {
-            slot: slot.slot,
-            evaluatorId: slot.evaluatorId,
-            evaluatorName: slot.evaluatorName ?? `Slot ${slot.slot}`,
-          });
-        }
-      });
-    });
-
-    return Array.from(map.values()).sort((a, b) => a.slot - b.slot);
-  }, [runs]);
-
-  const overallRunStats = useMemo(() => {
-    const aggregateMap = new Map<
-      string,
-      {
-        slot: number;
-        evaluatorId: string | null;
-        evaluatorName: string | null;
-        evaluatorKind: string | null;
-        evaluatorType: string | null;
-        pass: number;
-        fail: number;
-        unknown: number;
-        evaluated: number;
-        runCount: number;
-      }
-    >();
-
-    runAggregate.forEach((entry) => {
-      const key = entry.evaluatorId ?? `slot-${entry.slot}`;
-      aggregateMap.set(key, {
-        slot: entry.slot,
-        evaluatorId: entry.evaluatorId,
-        evaluatorName: entry.evaluatorName,
-        evaluatorKind: entry.evaluatorKind ?? null,
-        evaluatorType: entry.evaluatorType ?? null,
-        pass: entry.passCount ?? 0,
-        fail: entry.failCount ?? 0,
-        unknown: entry.unknownCount ?? 0,
-        evaluated: entry.evaluatedCount ?? 0,
-        runCount: entry.runCount ?? 0,
-      });
-    });
-
-    if (aggregateMap.size === 0 && runs.length > 0) {
-      runs.forEach((run) => {
-        run.slots.forEach((slot) => {
-          const key = slot.evaluatorId ?? `slot-${slot.slot}`;
-          if (!aggregateMap.has(key)) {
-            aggregateMap.set(key, {
-              slot: slot.slot,
-              evaluatorId: slot.evaluatorId,
-              evaluatorName: slot.evaluatorName,
-              evaluatorKind: slot.evaluatorKind,
-              evaluatorType: slot.evaluatorType,
-              pass: slot.passCount,
-              fail: slot.failCount,
-              unknown: slot.unknownCount,
-              evaluated: slot.evaluatedCount,
-              runCount: 1,
-            });
-          }
-        });
-      });
-    }
-
-    return Array.from(aggregateMap.values())
-      .map((entry) => {
-        const passRate =
-          entry.evaluated > 0
-            ? Number(((entry.pass / entry.evaluated) * 100).toFixed(1))
-            : null;
-
-        return {
-          ...entry,
-          passRate,
-        };
-      })
-      .sort((a, b) => a.slot - b.slot);
-  }, [runAggregate, runs]);
-
-  const overallRunStatsColumnCount = useMemo(
-    () => Math.max(1, Math.min(3, overallRunStats.length || 1)),
-    [overallRunStats],
-  );
-
-  const formatPercentage = useCallback((value: number | null) => {
-    if (value === null || Number.isNaN(value)) {
-      return "—";
-    }
-
-    const rounded = Math.round(value);
-    if (Math.abs(value - rounded) < 0.1) {
-      return `${rounded}%`;
-    }
-
-    return `${value.toFixed(1)}%`;
-  }, []);
 
   const dataColumnCount = 3 + displayEvaluatorSlots.length;
   const fixedColumnWidthPx = 108; // checkbox + actions columns (46px + 62px)
@@ -2026,7 +1862,6 @@ const availableEvaluators = useMemo(
 
       await mutateDatasets();
       await mutateVersions();
-      await mutateRuns();
 
       const updatedCount = response.updatedItemCount ?? 0;
       const versionNumber =
@@ -2063,7 +1898,6 @@ const availableEvaluators = useMemo(
     dataset?.items,
     mutateDatasets,
     mutateVersions,
-    mutateRuns,
   ]);
 
   const handleConfirmAddEvaluator = useCallback(
@@ -2095,12 +1929,6 @@ const availableEvaluators = useMemo(
       try {
         await addEvaluator(evaluatorId, config ?? undefined);
         await mutateDatasets();
-
-        notifications.show({
-          title: "Evaluator added",
-          message: "A new evaluator column was added to the dataset.",
-          color: "green",
-        });
 
         closeAddEvaluatorModal();
       } catch (error) {
@@ -2580,65 +2408,6 @@ const availableEvaluators = useMemo(
     [dataset?.evaluatorConfigs],
   );
 
-  const renderRunSlotCell = useCallback(
-    (slot?: DatasetEvaluatorRunSlotSummary) => {
-      if (!slot) {
-        return (
-          <Text size="xs" c="dimmed">
-            —
-          </Text>
-        );
-      }
-
-      const hasResults =
-        slot.evaluatedCount > 0 ||
-        slot.passCount > 0 ||
-        slot.failCount > 0 ||
-        slot.unknownCount > 0;
-
-      if (!hasResults) {
-        return (
-          <Text size="xs" c="dimmed">
-            —
-          </Text>
-        );
-      }
-
-      const color =
-        slot.passRate === null
-          ? neutralMetricColor
-          : getSuccessColor(slot.passRate);
-
-      const label = formatPercentage(slot.passRate);
-
-      return (
-        <HoverCard withArrow withinPortal>
-          <HoverCard.Target>
-            <Text
-              size="sm"
-              fw={600}
-              style={{ color, cursor: "default" }}
-              component="span"
-            >
-              {label}
-            </Text>
-          </HoverCard.Target>
-          <HoverCard.Dropdown>
-            <Stack gap={4}>
-              <Text size="sm">{slot.passCount} passed</Text>
-              <Text size="sm">{slot.failCount} failed</Text>
-              <Text size="sm">{slot.unknownCount} unknown</Text>
-              <Text size="xs" c="dimmed">
-                {slot.evaluatedCount} evaluated
-              </Text>
-            </Stack>
-          </HoverCard.Dropdown>
-        </HoverCard>
-      );
-    },
-    [formatPercentage, getSuccessColor, neutralMetricColor],
-  );
-
   const handleSelectVersion = useCallback(
     (nextVersionId: "latest" | string) => {
       if (nextVersionId === selectedVersionId) {
@@ -2659,21 +2428,82 @@ const availableEvaluators = useMemo(
       setSelectedIds(new Set());
       setLastSelectedIndex(null);
       setSelectedVersionId(nextVersionId);
+
+      const nextQuery: Record<string, any> = { ...router.query };
+      if (nextVersionId === "latest") {
+        delete nextQuery.version;
+      } else {
+        nextQuery.version = nextVersionId;
+      }
+
+      router.replace(
+        { pathname: router.pathname, query: nextQuery },
+        undefined,
+        { shallow: true },
+      );
       return true;
     },
-    [selectedVersionId, hasPendingChanges],
+    [selectedVersionId, hasPendingChanges, router],
   );
 
-  const handleRunRowClick = useCallback(
-    (run: DatasetEvaluatorRun) => {
-      if (!run.versionId) return;
-      const switched = handleSelectVersion(run.versionId);
-      if (switched) {
-        handleTabChange("data");
+  useEffect(() => {
+    if (!router.isReady) return;
+    const versionParamRaw = Array.isArray(router.query.version)
+      ? router.query.version[0]
+      : router.query.version;
+    const versionParam =
+      typeof versionParamRaw === "string" && versionParamRaw.trim().length
+        ? versionParamRaw
+        : undefined;
+
+    if (!versionParam) {
+      if (selectedVersionId !== "latest") {
+        setEditingCell(null);
+        setSelectedIds(new Set());
+        setLastSelectedIndex(null);
+        setSelectedVersionId("latest");
       }
-    },
-    [handleSelectVersion, handleTabChange],
-  );
+      return;
+    }
+
+    if (versionParam === selectedVersionId) {
+      return;
+    }
+
+    if (hasPendingChanges) {
+      notifications.show({
+        title: "Save changes first",
+        message:
+          "Save or discard your unsaved changes before switching versions.",
+        color: "yellow",
+      });
+
+      const revertQuery: Record<string, any> = { ...router.query };
+      if (selectedVersionId === "latest") {
+        delete revertQuery.version;
+      } else {
+        revertQuery.version = selectedVersionId;
+      }
+
+      router.replace(
+        { pathname: router.pathname, query: revertQuery },
+        undefined,
+        { shallow: true },
+      );
+      return;
+    }
+
+    setEditingCell(null);
+    setSelectedIds(new Set());
+    setLastSelectedIndex(null);
+    setSelectedVersionId(versionParam);
+  }, [
+    router.isReady,
+    router.query.version,
+    selectedVersionId,
+    hasPendingChanges,
+    router,
+  ]);
 
   const handleUpdateDataset = useCallback(
     async ({
@@ -2895,14 +2725,7 @@ const availableEvaluators = useMemo(
 
   return (
     <Container fluid py="lg" px="lg">
-      <Tabs value={activeTab} onChange={handleTabChange}>
-        <Tabs.List>
-          <Tabs.Tab value="data">Data</Tabs.Tab>
-          <Tabs.Tab value="runs">Runs</Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value="data" pt="lg">
-          <Stack gap="md">
+      <Stack gap="md">
         <Group justify="space-between" align="flex-start">
           <Group align="center" gap="sm">
             <ActionIcon
@@ -2914,6 +2737,17 @@ const availableEvaluators = useMemo(
               <IconChevronLeft size={18} />
             </ActionIcon>
             <Title order={2}>{dataset.name}</Title>
+            <Tooltip label="View evaluator runs" withArrow>
+              <ActionIcon
+                variant="subtle"
+                aria-label="View evaluator runs"
+                onClick={() =>
+                  navigateWithGuard(`/datasets/v2/${datasetId}/runs`)
+                }
+              >
+                <IconTimelineEvent size={18} />
+              </ActionIcon>
+            </Tooltip>
             <ActionIcon
               variant="subtle"
               aria-label="Edit dataset details"
@@ -3578,177 +3412,6 @@ const availableEvaluators = useMemo(
       </Stack>
     </Modal>
 
-        </Tabs.Panel>
-
-        <Tabs.Panel value="runs" pt="lg">
-          {isLoadingRuns ? (
-            <Group justify="center" py="xl">
-              <Loader />
-            </Group>
-          ) : runs.length === 0 ? (
-            <Card withBorder>
-              <Stack gap="sm">
-                <Text size="sm" c="dimmed">
-                  No evaluator runs recorded yet.
-                </Text>
-                <Text size="xs" c="dimmed">
-                  Run “Test → Run all” to generate the first evaluation summary.
-                </Text>
-              </Stack>
-            </Card>
-          ) : (
-            <Stack gap="md">
-              <Card withBorder>
-                <Stack gap="sm">
-                  <Group justify="space-between" align="center">
-                    <Text fw={600}>Overall performance</Text>
-                    {isValidatingRuns && <Loader size="xs" />}
-                  </Group>
-                  {overallRunStats.length ? (
-                    <SimpleGrid
-                      cols={{
-                        base: 1,
-                        sm: Math.min(2, overallRunStatsColumnCount),
-                        lg: overallRunStatsColumnCount,
-                      }}
-                      spacing="md"
-                    >
-                      {overallRunStats.map((entry) => {
-                        const color =
-                          entry.passRate === null
-                            ? neutralMetricColor
-                            : getSuccessColor(entry.passRate);
-                        const percentageLabel = formatPercentage(
-                          entry.passRate,
-                        );
-
-                        return (
-                          <Card
-                            key={`${entry.slot}-${entry.evaluatorId ?? "none"}`}
-                            withBorder
-                            padding="md"
-                          >
-                            <Stack gap={6}>
-                              <Group justify="space-between" align="center">
-                                <Text size="sm" fw={600}>
-                                  {entry.evaluatorName ?? `Evaluator ${entry.slot}`}
-                                </Text>
-                                <Text size="sm" fw={600} style={{ color }}>
-                                  {percentageLabel}
-                                </Text>
-                              </Group>
-                              <Progress
-                                value={
-                                  entry.passRate === null
-                                    ? 0
-                                    : Math.max(0, Math.min(100, entry.passRate))
-                                }
-                                styles={{ bar: { backgroundColor: color } }}
-                              />
-                              <Text size="xs" c="dimmed">
-                                {entry.pass} passed · {entry.fail} failed · {entry.runCount} run
-                                {entry.runCount === 1 ? "" : "s"}
-                              </Text>
-                            </Stack>
-                          </Card>
-                        );
-                      })}
-                    </SimpleGrid>
-                  ) : (
-                    <Text size="sm" c="dimmed">
-                      No evaluator results yet.
-                    </Text>
-                  )}
-                </Stack>
-              </Card>
-
-              <Card withBorder>
-                <Stack gap="sm">
-                  <Group justify="space-between" align="center">
-                    <Text fw={600}>Run history</Text>
-                    {isValidatingRuns && <Loader size="xs" />}
-                  </Group>
-                  <Table withColumnBorders highlightOnHover verticalSpacing="sm">
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th w={220}>Run</Table.Th>
-                        <Table.Th w={120}>Version</Table.Th>
-                        <Table.Th w={140}>Items</Table.Th>
-                        {runEvaluatorColumns.map((column) => (
-                          <Table.Th key={`run-slot-${column.slot}`}>
-                            {column.evaluatorName}
-                          </Table.Th>
-                        ))}
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {runs.map((run) => {
-                        const slotMap = new Map(
-                          run.slots.map((slot) => [slot.slot, slot] as const),
-                        );
-                        return (
-                          <Table.Tr
-                            key={run.id}
-                            onClick={() => handleRunRowClick(run)}
-                            style={{
-                              cursor: run.versionId ? "pointer" : "default",
-                            }}
-                          >
-                            <Table.Td>
-                              <Stack gap={2} align="flex-start">
-                                <Text size="sm" fw={600}>
-                                  {formatDateTime(run.createdAt)}
-                                </Text>
-                                {run.createdByName || run.createdByEmail ? (
-                                  <Text size="xs" c="dimmed">
-                                    {run.createdByName ?? run.createdByEmail}
-                                  </Text>
-                                ) : null}
-                              </Stack>
-                            </Table.Td>
-                            <Table.Td>
-                              <Stack gap={2} align="flex-start">
-                                <Text size="sm">
-                                  {run.versionNumber
-                                    ? `v${run.versionNumber}`
-                                    : run.versionId
-                                      ? "Version"
-                                      : "—"}
-                                </Text>
-                                {run.versionCreatedAt ? (
-                                  <Text size="xs" c="dimmed">
-                                    {formatDateTime(run.versionCreatedAt)}
-                                  </Text>
-                                ) : null}
-                              </Stack>
-                            </Table.Td>
-                            <Table.Td>
-                              <Stack gap={2} align="flex-start">
-                                <Text size="sm">
-                                  {run.totalItems} item
-                                  {run.totalItems === 1 ? "" : "s"}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  {run.updatedItemCount} updated
-                                </Text>
-                              </Stack>
-                            </Table.Td>
-                            {runEvaluatorColumns.map((column) => (
-                              <Table.Td key={`${run.id}-slot-${column.slot}`}>
-                                {renderRunSlotCell(slotMap.get(column.slot))}
-                              </Table.Td>
-                            ))}
-                          </Table.Tr>
-                        );
-                      })}
-                    </Table.Tbody>
-                  </Table>
-                </Stack>
-              </Card>
-            </Stack>
-          )}
-        </Tabs.Panel>
-      </Tabs>
 
       <style jsx global>{`
         .dataset-table-editable {
