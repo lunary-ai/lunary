@@ -401,6 +401,26 @@ export default function RunInputOutput({
     run?.metadata ||
     canEnablePlayground;
 
+  const showOpenTraceButton = Boolean(run?.traceId) && withOpenTrace;
+
+  const renderOpenTraceButton = () => {
+    if (!run?.traceId) return null;
+    return (
+      <Button
+        variant="outline"
+        color="yellow"
+        size="xs"
+        w="fit-content"
+        display="inline"
+        rightSection={<IconBinaryTree2 size="14" />}
+        component={Link}
+        href={`/traces/${run.traceId}`}
+      >
+        Open parent Trace
+      </Button>
+    );
+  };
+
   function openModal() {
     modals.openConfirmModal({
       title: "Delete Log",
@@ -665,25 +685,18 @@ export default function RunInputOutput({
                           : "Open in Playground"}
                       </Button>
                     )}
-                    {run.traceId && withOpenTrace && (
-                      <Button
-                        variant="outline"
-                        color="yellow"
-                        size="xs"
-                        w="fit-content"
-                        display="inline"
-                        rightSection={<IconBinaryTree2 size="14" />}
-                        component={Link}
-                        href={`/traces/${run.traceId}`}
-                      >
-                        Open parent Trace
-                      </Button>
-                    )}
+                    {showOpenTraceButton && renderOpenTraceButton()}
                   </Group>
                 </Group>
               </Card>
             )}
           </>
+        )}
+
+        {showOpenTraceButton && !shouldDisplayCard && (
+          <Group mt="sm">
+            {renderOpenTraceButton()}
+          </Group>
         )}
 
         {run?.type !== "llm" &&

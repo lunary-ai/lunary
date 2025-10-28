@@ -7,6 +7,103 @@ import {
   useProjectSWR,
 } from "./core";
 
+function normalizeEvaluatorConfigs(
+  source?: Record<string, DatasetEvaluatorConfig> | null,
+): Record<number, DatasetEvaluatorConfig> | undefined {
+  if (!source) return undefined;
+  const result: Record<number, DatasetEvaluatorConfig> = {};
+  Object.entries(source).forEach(([key, value]) => {
+    const slot = Number(key);
+    if (!Number.isNaN(slot)) {
+      result[slot] = value;
+    }
+  });
+  return result;
+}
+
+function normalizeDataset<T extends DatasetV2 | DatasetV2WithItems | null>(
+  dataset: T,
+): T {
+  if (!dataset) return dataset;
+  const normalized = {
+    ...dataset,
+    evaluatorConfigs: normalizeEvaluatorConfigs(dataset.evaluatorConfigs),
+  } as any;
+  return normalized;
+}
+
+function normalizeRunSlot(slot: any): DatasetEvaluatorRunSlotSummary {
+  return {
+    slot: Number(slot?.slot ?? 0),
+    evaluatorId: slot?.evaluatorId ?? null,
+    evaluatorName: slot?.evaluatorName ?? null,
+    evaluatorKind: slot?.evaluatorKind ?? null,
+    evaluatorType: slot?.evaluatorType ?? null,
+    passCount: Number(slot?.passCount ?? 0),
+    failCount: Number(slot?.failCount ?? 0),
+    unknownCount: Number(slot?.unknownCount ?? 0),
+    evaluatedCount: Number(slot?.evaluatedCount ?? 0),
+    passRate:
+      slot?.passRate === null || typeof slot?.passRate === "undefined"
+        ? null
+        : Number(slot.passRate),
+    coverage:
+      slot?.coverage === null || typeof slot?.coverage === "undefined"
+        ? null
+        : Number(slot.coverage),
+    config:
+      slot?.config && typeof slot.config === "object"
+        ? (slot.config as DatasetEvaluatorConfig)
+        : null,
+  };
+}
+
+function normalizeEvaluatorRun(run: any): DatasetEvaluatorRun {
+  return {
+    id: String(run?.id ?? ""),
+    datasetId: String(run?.datasetId ?? run?.dataset_id ?? ""),
+    versionId: run?.versionId ?? run?.version_id ?? null,
+    createdBy: run?.createdBy ?? run?.created_by ?? null,
+    createdAt: run?.createdAt ?? run?.created_at ?? new Date().toISOString(),
+    updatedAt: run?.updatedAt ?? run?.updated_at ?? new Date().toISOString(),
+    totalItems: Number(run?.totalItems ?? run?.total_items ?? 0),
+    updatedItemCount: Number(
+      run?.updatedItemCount ?? run?.updated_item_count ?? 0,
+    ),
+    versionNumber:
+      typeof run?.versionNumber === "number"
+        ? run.versionNumber
+        : run?.version_number ?? null,
+    versionCreatedAt: run?.versionCreatedAt ?? run?.version_created_at ?? null,
+    createdByName: run?.createdByName ?? null,
+    createdByEmail: run?.createdByEmail ?? null,
+    slots: Array.isArray(run?.slots)
+      ? (run.slots as any[]).map((slot) => normalizeRunSlot(slot))
+      : [],
+  };
+}
+
+function normalizeRunAggregate(
+  entry: any,
+): DatasetEvaluatorRunAggregateEntry {
+  return {
+    slot: Number(entry?.slot ?? 0),
+    evaluatorId: entry?.evaluatorId ?? null,
+    evaluatorName: entry?.evaluatorName ?? null,
+    evaluatorKind: entry?.evaluatorKind ?? null,
+    evaluatorType: entry?.evaluatorType ?? null,
+    passCount: Number(entry?.passCount ?? 0),
+    failCount: Number(entry?.failCount ?? 0),
+    unknownCount: Number(entry?.unknownCount ?? 0),
+    evaluatedCount: Number(entry?.evaluatedCount ?? 0),
+    runCount: Number(entry?.runCount ?? 0),
+    passRate:
+      entry?.passRate === null || typeof entry?.passRate === "undefined"
+        ? null
+        : Number(entry.passRate),
+  };
+}
+
 export interface DatasetV2 {
   id: string;
   projectId: string;
@@ -23,6 +120,12 @@ export interface DatasetV2 {
   currentVersionCreatedAt?: string | null;
   currentVersionCreatedBy?: string | null;
   currentVersionRestoredFromVersionId?: string | null;
+  evaluatorSlot1Id?: string | null;
+  evaluatorSlot2Id?: string | null;
+  evaluatorSlot3Id?: string | null;
+  evaluatorSlot4Id?: string | null;
+  evaluatorSlot5Id?: string | null;
+  evaluatorConfigs?: Record<number, DatasetEvaluatorConfig>;
 }
 
 export interface DatasetV2Item {
@@ -30,9 +133,25 @@ export interface DatasetV2Item {
   datasetId: string;
   input: string;
   groundTruth: string | null;
+  output: string | null;
   createdAt: string;
   updatedAt: string;
+  evaluatorResult1?: unknown | null;
+  evaluatorResult2?: unknown | null;
+  evaluatorResult3?: unknown | null;
+  evaluatorResult4?: unknown | null;
+  evaluatorResult5?: unknown | null;
 }
+
+export type DatasetEvaluatorConfig =
+  | {
+      type: "model-labeler";
+      passLabels: string[];
+    }
+  | {
+      type: "model-scorer";
+      threshold: number;
+    };
 
 export interface DatasetV2WithItems extends DatasetV2 {
   items: DatasetV2Item[];
@@ -57,9 +176,60 @@ export interface DatasetV2VersionItem {
   itemIndex: number;
   input: string;
   groundTruth: string | null;
+  output: string | null;
   sourceItemId: string | null;
   sourceCreatedAt: string | null;
   sourceUpdatedAt: string | null;
+  evaluatorResult1?: unknown | null;
+  evaluatorResult2?: unknown | null;
+  evaluatorResult3?: unknown | null;
+  evaluatorResult4?: unknown | null;
+  evaluatorResult5?: unknown | null;
+}
+
+export interface DatasetEvaluatorRunSlotSummary {
+  slot: number;
+  evaluatorId: string | null;
+  evaluatorName: string | null;
+  evaluatorKind: string | null;
+  evaluatorType: string | null;
+  passCount: number;
+  failCount: number;
+  unknownCount: number;
+  evaluatedCount: number;
+  passRate: number | null;
+  coverage: number | null;
+  config: DatasetEvaluatorConfig | null;
+}
+
+export interface DatasetEvaluatorRun {
+  id: string;
+  datasetId: string;
+  versionId: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  totalItems: number;
+  updatedItemCount: number;
+  versionNumber?: number | null;
+  versionCreatedAt?: string | null;
+  createdByName?: string | null;
+  createdByEmail?: string | null;
+  slots: DatasetEvaluatorRunSlotSummary[];
+}
+
+export interface DatasetEvaluatorRunAggregateEntry {
+  slot: number;
+  evaluatorId: string | null;
+  evaluatorName: string | null;
+  evaluatorKind: string | null;
+  evaluatorType: string | null;
+  passCount: number;
+  failCount: number;
+  unknownCount: number;
+  evaluatedCount: number;
+  runCount: number;
+  passRate: number | null;
 }
 
 export interface DatasetV2Input {
@@ -70,6 +240,7 @@ export interface DatasetV2Input {
 export interface DatasetV2ItemInput {
   input?: string;
   groundTruth?: string | null;
+  output?: string | null;
 }
 
 export interface DatasetImportPayload {
@@ -111,7 +282,7 @@ export function useDatasetsV2(options: DatasetListOptions = {}) {
     `/datasets-v2${queryString ? `?${queryString}` : ""}`;
 
   const {
-    data,
+    data: rawData,
     isLoading,
     isValidating,
     mutate,
@@ -160,8 +331,13 @@ export function useDatasetsV2(options: DatasetListOptions = {}) {
     [projectId, mutate],
   );
 
+  const datasets = useMemo(
+    () => (rawData ?? []).map((dataset) => normalizeDataset(dataset)),
+    [rawData],
+  );
+
   return {
-    datasets: data ?? [],
+    datasets,
     isLoading,
     isValidating,
     mutate,
@@ -223,13 +399,18 @@ export function useDatasetV2(datasetId?: string) {
   const { projectId } = useContext(ProjectContext);
 
   const {
-    data: dataset,
+    data: rawDataset,
     isLoading,
     isValidating,
     mutate,
     error,
   } = useProjectSWR<DatasetV2WithItems>(
     datasetId ? `/datasets-v2/${datasetId}` : null,
+  );
+
+  const dataset = useMemo(
+    () => (rawDataset ? normalizeDataset(rawDataset) : rawDataset),
+    [rawDataset],
   );
 
   const { trigger: updateDataset, isMutating: isUpdating } =
@@ -387,6 +568,95 @@ export function useDatasetV2(datasetId?: string) {
     [datasetId, projectId],
   );
 
+  const addEvaluator = useCallback(
+    async (evaluatorId: string, config?: DatasetEvaluatorConfig | null) => {
+      if (!datasetId || !projectId) {
+        return null;
+      }
+
+      const url = generateKey(
+        `/datasets-v2/${datasetId}/evaluators`,
+        projectId,
+      );
+
+      if (!url) {
+        return null;
+      }
+
+      const updated = await fetcher.post(url, {
+        arg: { evaluatorId, config: config ?? undefined },
+      });
+
+      if (updated) {
+        const normalized = normalizeDataset(updated);
+        mutate(
+          (current) =>
+            current
+              ? {
+                  ...current,
+                  ...normalized,
+                  items: current.items,
+                }
+              : normalized,
+          { revalidate: false },
+        );
+      }
+
+      return updated;
+    },
+    [datasetId, projectId, mutate],
+  );
+
+  const removeEvaluator = useCallback(
+    async (slot: number) => {
+      if (!datasetId || !projectId) {
+        return null;
+      }
+
+      const url = generateKey(
+        `/datasets-v2/${datasetId}/evaluators/${slot}`,
+        projectId,
+      );
+
+      if (!url) {
+        return null;
+      }
+
+      const updated = await fetcher.delete(url);
+
+      if (updated) {
+        const normalized = normalizeDataset(updated);
+        mutate(normalized, { revalidate: false });
+      }
+
+      return updated;
+    },
+    [datasetId, projectId, mutate],
+  );
+
+  const runEvaluators = useCallback(async () => {
+    if (!datasetId || !projectId) {
+      return null;
+    }
+
+    const url = generateKey(
+      `/datasets-v2/${datasetId}/evaluators/run`,
+      projectId,
+    );
+
+    if (!url) {
+      return null;
+    }
+
+    const response = await fetcher.post(url, { arg: {} });
+
+    if (response?.dataset) {
+      mutate(normalizeDataset(response.dataset), { revalidate: false });
+    }
+
+    return response;
+  }, [datasetId, projectId, mutate]);
+
   return {
     dataset,
     isLoading,
@@ -403,6 +673,9 @@ export function useDatasetV2(datasetId?: string) {
     deleteItem,
     importItems,
     generateOutput,
+    addEvaluator,
+    removeEvaluator,
+    runEvaluators,
   };
 }
 
@@ -504,5 +777,44 @@ export function useDatasetV2VersionMutations(datasetId?: string) {
     isCreatingVersion,
     restoreVersion,
     isRestoring,
+  };
+}
+
+export function useDatasetV2EvaluatorRuns(
+  datasetId?: string,
+  options: { limit?: number } = {},
+) {
+  const { limit = 20 } = options;
+
+  const {
+    data,
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useProjectSWR<{ runs: any[]; aggregate?: any[] }>(
+    datasetId ? `/datasets-v2/${datasetId}/evaluator-runs?limit=${limit}` : null,
+  );
+
+  const runs = useMemo(
+    () => (data?.runs ?? []).map((run) => normalizeEvaluatorRun(run)),
+    [data?.runs],
+  );
+
+  const aggregate = useMemo(
+    () =>
+      (data?.aggregate ?? []).map((entry) =>
+        normalizeRunAggregate(entry),
+      ),
+    [data?.aggregate],
+  );
+
+  return {
+    runs,
+    aggregate,
+    isLoading,
+    isValidating,
+    error,
+    mutate,
   };
 }

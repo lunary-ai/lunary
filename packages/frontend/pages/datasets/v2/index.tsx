@@ -691,7 +691,7 @@ function DatasetV2List() {
   );
 
   return (
-    <Container size="lg" py="lg">
+    <Container fluid py="lg" px="lg">
       <Stack gap="lg">
         <Group align="center" justify="space-between">
           <Title order={2}>Datasets</Title>

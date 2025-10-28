@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/router";
 import {
   ActionIcon,
   Alert,
   Box,
+  Badge,
+  Card,
   Button,
   Checkbox,
   Container,
@@ -11,13 +20,20 @@ import {
   Loader,
   Menu,
   Modal,
+  NumberInput,
+  Progress,
+  Select,
+  SimpleGrid,
   Stack,
+  Switch,
   Table,
+  Tabs,
   Text,
   Textarea,
   TextInput,
   Title,
   Tooltip,
+  HoverCard,
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure, useDebouncedValue } from "@mantine/hooks";
@@ -29,42 +45,56 @@ import {
   IconChevronUp,
   IconCopy,
   IconChevronDown,
-  IconDeviceFloppy,
   IconDotsVertical,
   IconDownload,
   IconHistory,
   IconPlus,
   IconArrowBackUp,
   IconSearch,
-  IconSparkles,
+  IconPlayerPlayFilled,
+  IconSettings,
+  IconFilter,
+  IconFlask,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import {
   DatasetImportPayload,
+  DatasetV2,
   DatasetV2Item,
+  DatasetV2ItemInput,
   DatasetV2Version,
   DatasetV2VersionItem,
+  DatasetV2WithItems,
+  DatasetEvaluatorConfig,
   useDatasetV2,
   useDatasetV2Version,
   useDatasetV2VersionMutations,
   useDatasetV2Versions,
   useDatasetsV2,
+  useDatasetV2EvaluatorRuns,
+  type DatasetEvaluatorRun,
+  type DatasetEvaluatorRunSlotSummary,
 } from "@/utils/dataHooks/dataset";
+import { useEvaluators, type Evaluator } from "@/utils/dataHooks/evaluators";
 import { formatDateTime } from "@/utils/format";
 
 const DEFAULT_PREVIEW_MODEL = "gpt-5-mini";
+const DATASET_EVALUATOR_SLOTS = [1, 2, 3, 4, 5] as const;
 
 type EditableItem = {
   localId: string;
   id?: string;
+  datasetId?: string;
   input: string;
   groundTruth: string | null;
+  output: string | null;
   createdAt?: string;
   updatedAt?: string;
   isNew?: boolean;
   isDirty?: boolean;
+  evaluatorResults: Record<number, unknown | null>;
 };
 
 type EditingCell = {
@@ -84,6 +114,496 @@ const FIELD_LABEL: Record<"input" | "groundTruth", string> = {
   groundTruth: "Ground truth",
 };
 
+function extractEvaluatorResults(source: Record<string, any>) {
+  const results: Record<number, unknown | null> = {};
+  DATASET_EVALUATOR_SLOTS.forEach((slot) => {
+    const camelKey = `evaluatorResult${slot}`;
+    const snakeKey = `evaluator_result_${slot}`;
+    const value = Object.prototype.hasOwnProperty.call(source, camelKey)
+      ? (source[camelKey] as unknown | null)
+      : Object.prototype.hasOwnProperty.call(source, snakeKey)
+        ? (source[snakeKey] as unknown | null)
+        : null;
+    results[slot] = value;
+  });
+  return results;
+}
+
+type EvaluatorPassInfo = {
+  pass: boolean | null;
+  value?: string | null;
+};
+
+function computeEvaluatorPass(
+  result: unknown,
+  config?: DatasetEvaluatorConfig,
+): EvaluatorPassInfo {
+  if (!config || !result || typeof result !== "object") {
+    return { pass: null };
+  }
+
+  const record = result as Record<string, any>;
+
+  if (config.type === "model-labeler") {
+    const candidates: Array<string | undefined> = [];
+
+    if (typeof record.output === "string" && record.output.trim()) {
+      candidates.push(record.output.trim());
+    }
+
+    if (
+      typeof record.primaryLabel === "string" &&
+      record.primaryLabel.trim()
+    ) {
+      candidates.push(record.primaryLabel.trim());
+    }
+
+    if (Array.isArray(record.matches)) {
+      for (const match of record.matches) {
+        if (typeof match === "string" && match.trim()) {
+          candidates.push(match.trim());
+        } else if (
+          typeof match === "object" &&
+          typeof match?.label === "string" &&
+          match.label.trim()
+        ) {
+          candidates.push(match.label.trim());
+        }
+      }
+    }
+
+    const label = candidates.find((candidate) => candidate && candidate.length);
+
+    if (!label) {
+      return { pass: null };
+    }
+
+    const pass = config.passLabels.includes(label);
+    return { pass, value: label };
+  }
+
+  if (config.type === "model-scorer") {
+    let score: number | null = null;
+
+    if (typeof record.score === "number" && Number.isFinite(record.score)) {
+      score = record.score;
+    } else if (typeof record.output === "string") {
+      const parsed = Number(record.output);
+      if (Number.isFinite(parsed)) {
+        score = parsed;
+      }
+    }
+
+    if (score === null) {
+      return { pass: null };
+    }
+
+    return {
+      pass: score >= config.threshold,
+      value: score.toString(),
+    };
+  }
+
+  return { pass: null };
+}
+
+type DatasetEvaluatorConfigInput = DatasetEvaluatorConfig;
+
+type AddEvaluatorModalProps = {
+  opened: boolean;
+  onClose: () => void;
+  evaluators: Evaluator[];
+  isLoading: boolean;
+  loading: boolean;
+  onConfirm: (evaluatorId: string, config: DatasetEvaluatorConfigInput | null) => void;
+};
+
+function AddEvaluatorModal({
+  opened,
+  onClose,
+  evaluators,
+  isLoading,
+  loading,
+  onConfirm,
+}: AddEvaluatorModalProps) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [labelPassMap, setLabelPassMap] = useState<Record<string, boolean>>({});
+  const [scoreThreshold, setScoreThreshold] = useState<string>("");
+
+  useEffect(() => {
+    if (!opened) {
+      setSelectedId(null);
+      setLabelPassMap({});
+      setScoreThreshold("");
+    }
+  }, [opened]);
+
+  const options = useMemo(
+    () =>
+      evaluators.map((evaluator) => ({
+        value: evaluator.id,
+        label: evaluator.name,
+      })),
+    [evaluators],
+  );
+
+  const selectedEvaluator = useMemo(
+    () => evaluators.find((evaluator) => evaluator.id === selectedId),
+    [evaluators, selectedId],
+  );
+
+  useEffect(() => {
+    if (!selectedEvaluator) {
+      setLabelPassMap({});
+      setScoreThreshold("");
+      return;
+    }
+
+    if (selectedEvaluator.type === "model-labeler") {
+      const labels = Array.isArray(selectedEvaluator.params?.labels)
+        ? (selectedEvaluator.params.labels as string[])
+        : [];
+      const next: Record<string, boolean> = {};
+      labels.forEach((label) => {
+        next[label] = false;
+      });
+      setLabelPassMap(next);
+      setScoreThreshold("");
+    } else if (selectedEvaluator.type === "model-scorer") {
+      setLabelPassMap({});
+      if (typeof selectedEvaluator.params?.threshold === "number") {
+        setScoreThreshold(String(selectedEvaluator.params.threshold));
+      } else {
+        setScoreThreshold("");
+      }
+    } else {
+      setLabelPassMap({});
+      setScoreThreshold("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEvaluator]);
+
+  const handleClose = () => {
+    if (!loading) {
+      onClose();
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!selectedId) return;
+    const evaluator = selectedEvaluator;
+    let config: DatasetEvaluatorConfigInput | null = null;
+
+    if (evaluator?.type === "model-labeler") {
+      const labels = Object.keys(labelPassMap);
+      if (labels.length === 0) {
+        notifications.show({
+          title: "No labels available",
+          message:
+            "This evaluator has no labels configured. Update the evaluator before attaching it.",
+          color: "yellow",
+        });
+        return;
+      }
+
+      const passLabels = labels.filter((label) => labelPassMap[label]);
+
+      if (passLabels.length === 0) {
+        notifications.show({
+          title: "Select passing labels",
+          message: "Choose at least one label that should count as a pass.",
+          color: "yellow",
+        });
+        return;
+      }
+
+      config = {
+        type: "model-labeler",
+        passLabels,
+      };
+    } else if (evaluator?.type === "model-scorer") {
+      const thresholdValue = Number(scoreThreshold);
+      if (!Number.isFinite(thresholdValue)) {
+        notifications.show({
+          title: "Add a threshold",
+          message: "Enter a numeric pass threshold for this evaluator.",
+          color: "yellow",
+        });
+        return;
+      }
+
+      config = {
+        type: "model-scorer",
+        threshold: thresholdValue,
+      };
+    }
+
+    onConfirm(selectedId, config);
+  };
+
+  return (
+    <Modal opened={opened} onClose={handleClose} title="Add evaluator" centered>
+      <Stack gap="sm">
+        {isLoading ? (
+          <Group justify="center" py="md">
+            <Loader size="sm" />
+          </Group>
+        ) : options.length === 0 ? (
+          <Alert color="blue" title="No custom evaluators">
+            Create a custom evaluator in the Evaluators section to make it
+            available here.
+          </Alert>
+        ) : (
+          <Select
+            label="Evaluator"
+            placeholder="Select an evaluator"
+            data={options}
+            value={selectedId}
+            onChange={setSelectedId}
+            searchable
+            nothingFound="No evaluators"
+            disabled={loading}
+          />
+        )}
+
+        {selectedEvaluator?.type === "model-labeler" && (
+          <Stack gap="xs">
+            <Text size="sm" fw={500}>
+              Mark which labels count as a pass
+            </Text>
+            {Array.isArray(selectedEvaluator.params?.labels) &&
+            selectedEvaluator.params.labels.length > 0 ? (
+              <Stack gap={6}>
+                {(selectedEvaluator.params.labels as string[]).map((label) => (
+                  <Group key={label} justify="space-between">
+                    <Text size="sm">{label}</Text>
+                    <Group gap="xs">
+                      <Badge
+                        variant={labelPassMap[label] ? "filled" : "light"}
+                        color={labelPassMap[label] ? "green" : "gray"}
+                      >
+                        {labelPassMap[label] ? "Pass" : "Fail"}
+                      </Badge>
+                      <Switch
+                        size="sm"
+                        onLabel="Pass"
+                        offLabel="Fail"
+                        checked={Boolean(labelPassMap[label])}
+                        onChange={(event) =>
+                          setLabelPassMap((prev) => ({
+                            ...prev,
+                            [label]: event.currentTarget?.checked ?? false,
+                          }))
+                        }
+                      />
+                    </Group>
+                  </Group>
+                ))}
+              </Stack>
+            ) : (
+              <Text size="xs" c="dimmed">
+                This evaluator has no labels configured. Update the evaluator to
+                add labels first.
+              </Text>
+            )}
+          </Stack>
+        )}
+
+        {selectedEvaluator?.type === "model-scorer" && (
+          <Stack gap={6}>
+            <Text size="sm" fw={500}>
+              Set the minimum passing score
+            </Text>
+            <NumberInput
+              placeholder="Enter pass threshold"
+              value={scoreThreshold}
+              onChange={(value) =>
+                setScoreThreshold(value === null ? "" : String(value))
+              }
+              allowNegative={false}
+              disabled={loading}
+            />
+          </Stack>
+        )}
+
+        <Group justify="flex-end">
+          <Button variant="default" onClick={handleClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={
+              loading ||
+              isLoading ||
+              options.length === 0 ||
+              !selectedId ||
+              (selectedEvaluator?.type === "model-labeler" &&
+                Object.keys(labelPassMap).length === 0)
+            }
+            loading={loading}
+          >
+            Add
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}
+
+type EvaluatorResultSummary = {
+  display: string;
+  tooltip?: ReactNode | null;
+  tone?: "default" | "muted" | "success" | "danger";
+};
+
+function summarizeEvaluatorResult(value: unknown): EvaluatorResultSummary {
+  if (value === null || value === undefined) {
+    return { display: "—", tone: "muted" };
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return { display: "—", tone: "muted" };
+    }
+    const truncated = trimmed.length > 60 ? `${trimmed.slice(0, 57)}…` : trimmed;
+    return {
+      display: truncated,
+      tooltip: trimmed.length > 60 ? trimmed : null,
+    };
+  }
+
+  if (typeof value === "number") {
+    return {
+      display: Number.isInteger(value) ? value.toString() : value.toFixed(2),
+    };
+  }
+
+  if (typeof value === "boolean") {
+    return { display: value ? "True" : "False" };
+  }
+
+  if (Array.isArray(value)) {
+    const joined = value
+      .map((entry) =>
+        typeof entry === "string" ? entry : JSON.stringify(entry ?? ""),
+      )
+      .filter(Boolean)
+      .join(", ");
+    if (!joined) {
+      return { display: "—", tone: "muted" };
+    }
+    const truncated = joined.length > 60 ? `${joined.slice(0, 57)}…` : joined;
+    return {
+      display: truncated,
+      tooltip: joined.length > 60 ? joined : null,
+    };
+  }
+
+  if (typeof value === "object") {
+    const record = value as Record<string, any>;
+
+    const outputText =
+      typeof record.output === "string" ? record.output.trim() : "";
+    const reasoningText =
+      typeof record.reasoning === "string" ? record.reasoning.trim() : "";
+
+    if (outputText || reasoningText) {
+      const displaySource = outputText || reasoningText;
+      const truncated =
+        displaySource.length > 60
+          ? `${displaySource.slice(0, 57)}…`
+          : displaySource;
+
+      const modelName =
+        typeof record.model === "string" && record.model.trim().length
+          ? record.model.trim()
+          : null;
+
+      const tooltip = (
+        <Stack gap={6} maw={360}>
+          {outputText && (
+            <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+              {outputText}
+            </Text>
+          )}
+          {reasoningText && (
+            <Text size="xs" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
+              {reasoningText}
+            </Text>
+          )}
+          {modelName && (
+            <Text size="xs" c="dimmed">
+              Model: {modelName}
+            </Text>
+          )}
+        </Stack>
+      );
+
+      return {
+        display: truncated || "—",
+        tooltip,
+      };
+    }
+
+    if (typeof record.score === "number") {
+      const numeric = record.score as number;
+      const display = Number.isFinite(numeric)
+        ? Number.isInteger(numeric)
+          ? numeric.toString()
+          : numeric.toFixed(2)
+        : String(numeric);
+      return {
+        display,
+        tooltip: JSON.stringify(record),
+      };
+    }
+
+    if (typeof record.primaryLabel === "string" && record.primaryLabel.trim()) {
+      const label = record.primaryLabel.trim();
+      const truncated = label.length > 60 ? `${label.slice(0, 57)}…` : label;
+      return {
+        display: truncated,
+        tooltip: JSON.stringify(record),
+      };
+    }
+
+    if (Array.isArray(record.matches) && record.matches.length) {
+      const joined = record.matches.map((entry: any) => String(entry)).join(", ");
+      const truncated = joined.length > 60 ? `${joined.slice(0, 57)}…` : joined;
+      return {
+        display: truncated,
+        tooltip: JSON.stringify(record),
+      };
+    }
+
+    if (typeof record.passed === "boolean") {
+      return {
+        display: record.passed ? "Pass" : "Fail",
+        tone: record.passed ? "success" : "danger",
+        tooltip: JSON.stringify(record),
+      };
+    }
+
+    const json = JSON.stringify(record);
+    const truncated = json.length > 60 ? `${json.slice(0, 57)}…` : json;
+    return {
+      display: truncated,
+      tooltip: json.length > 60 ? json : null,
+    };
+  }
+
+  const fallback = String(value);
+  if (!fallback.trim()) {
+    return { display: "—", tone: "muted" };
+  }
+  const truncated = fallback.length > 60 ? `${fallback.slice(0, 57)}…` : fallback;
+  return {
+    display: truncated,
+    tooltip: fallback.length > 60 ? fallback : null,
+  };
+}
+
 function useEditableItems(items: DatasetV2Item[] | undefined) {
   const [localItems, setLocalItems] = useState<EditableItem[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
@@ -96,10 +616,12 @@ function useEditableItems(items: DatasetV2Item[] | undefined) {
       datasetId: item.datasetId,
       input: item.input,
       groundTruth: item.groundTruth,
+      output: item.output,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
       isNew: false,
       isDirty: false,
+      evaluatorResults: extractEvaluatorResults(item as unknown as Record<string, any>),
     }));
 
     setLocalItems(baseItems);
@@ -139,10 +661,13 @@ function useEditableItems(items: DatasetV2Item[] | undefined) {
   const addDuplicate = useCallback((source: EditableItem) => {
     const newItem: EditableItem = {
       localId: `temp-${crypto.randomUUID()}`,
+      datasetId: source.datasetId,
       input: source.input,
       groundTruth: source.groundTruth,
+      output: source.output,
       isNew: true,
       isDirty: true,
+      evaluatorResults: {},
     };
     setLocalItems((prev) => [...prev, newItem]);
   }, []);
@@ -168,10 +693,12 @@ function useEditableItems(items: DatasetV2Item[] | undefined) {
         datasetId: item.datasetId,
         input: item.input,
         groundTruth: item.groundTruth,
+        output: item.output,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
         isNew: false,
         isDirty: false,
+        evaluatorResults: extractEvaluatorResults(item as unknown as Record<string, any>),
       }));
       setLocalItems(baseItems);
       setDeletedIds(new Set());
@@ -449,10 +976,20 @@ export default function DatasetV2DetailPage() {
     deleteItem,
     importItems,
     generateOutput,
+    addEvaluator,
+    removeEvaluator,
+    runEvaluators,
   } = useDatasetV2(datasetId);
 
   const [selectedVersionId, setSelectedVersionId] = useState<"latest" | string>(
     "latest",
+  );
+
+  const initialTabParam = Array.isArray(router.query.tab)
+    ? router.query.tab[0]
+    : router.query.tab;
+  const [activeTab, setActiveTab] = useState<"data" | "runs">(
+    initialTabParam === "runs" ? "runs" : "data",
   );
 
   const {
@@ -475,6 +1012,65 @@ export default function DatasetV2DetailPage() {
 
   const { mutate: mutateDatasets } = useDatasetsV2();
 
+  const { evaluators: customEvaluators, isLoading: isLoadingEvaluators } =
+    useEvaluators({ kind: "custom" });
+
+  const {
+    runs,
+    aggregate: runAggregate,
+    isLoading: isLoadingRuns,
+    isValidating: isValidatingRuns,
+    mutate: mutateRuns,
+  } = useDatasetV2EvaluatorRuns(datasetId);
+
+  const [isAttachingEvaluator, setIsAttachingEvaluator] = useState(false);
+  const [isRunningEvaluators, setIsRunningEvaluators] = useState(false);
+
+  const [
+    addEvaluatorModalOpened,
+    { open: openAddEvaluatorModal, close: closeAddEvaluatorModal },
+  ] = useDisclosure(false);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const tabValue = Array.isArray(router.query.tab)
+      ? router.query.tab[0]
+      : router.query.tab;
+
+    if (tabValue === "runs" && activeTab !== "runs") {
+      setActiveTab("runs");
+    } else if (
+      (!tabValue || tabValue === "data") &&
+      activeTab !== "data"
+    ) {
+      setActiveTab("data");
+    }
+  }, [router.isReady, router.query.tab, activeTab]);
+
+  const handleTabChange = useCallback(
+    (value: string | null) => {
+      if (value !== "data" && value !== "runs") {
+        return;
+      }
+
+      setActiveTab(value);
+
+      const nextQuery: Record<string, any> = { ...router.query };
+      if (value === "data") {
+        delete nextQuery.tab;
+      } else {
+        nextQuery.tab = value;
+      }
+
+      router.replace(
+        { pathname: router.pathname, query: nextQuery },
+        undefined,
+        { shallow: true },
+      );
+    },
+    [router],
+  );
+
   const {
     localItems,
     updateItemValue,
@@ -484,6 +1080,216 @@ export default function DatasetV2DetailPage() {
     resetDirtyState,
     setLocalItems,
   } = useEditableItems(dataset?.items);
+
+  const evaluatorSlots = useMemo(
+    () => {
+      if (!dataset) return [] as Array<{
+        slot: number;
+        evaluatorId: string;
+        name: string;
+      }>;
+
+      return DATASET_EVALUATOR_SLOTS.map((slot) => {
+        const key = `evaluatorSlot${slot}Id` as keyof DatasetV2WithItems;
+        const evaluatorId = dataset[key] as string | null | undefined;
+        if (!evaluatorId) {
+          return null;
+        }
+        const evaluator = customEvaluators.find((ev) => ev.id === evaluatorId);
+        return {
+          slot,
+          evaluatorId,
+          name: evaluator?.name ?? "Evaluator",
+        };
+      }).filter(Boolean) as Array<{
+        slot: number;
+        evaluatorId: string;
+        name: string;
+      }>;
+    },
+    [dataset, customEvaluators],
+  );
+
+const availableEvaluators = useMemo(
+    () =>
+      customEvaluators.filter(
+        (evaluator) =>
+          !evaluatorSlots.some((slot) => slot.evaluatorId === evaluator.id),
+      ),
+    [customEvaluators, evaluatorSlots],
+  );
+
+  const hasEvaluatorCapacity =
+    evaluatorSlots.length < DATASET_EVALUATOR_SLOTS.length;
+
+  const displayEvaluatorSlots = useMemo(() => {
+    if (evaluatorSlots.length === 0) {
+      return evaluatorSlots;
+    }
+
+    const slots = [...evaluatorSlots];
+    const findIndexByName = (predicate: (name: string) => boolean) =>
+      slots.findIndex((entry) => predicate(entry.name?.toLowerCase() ?? ""));
+
+    const topicsIndex = findIndexByName((name) => name.includes("topic"));
+    const piiIndex = findIndexByName((name) => name.includes("pii"));
+
+    if (
+      topicsIndex !== -1 &&
+      piiIndex !== -1 &&
+      piiIndex !== topicsIndex + 1
+    ) {
+      const [piiSlot] = slots.splice(piiIndex, 1);
+      slots.splice(Math.min(topicsIndex + 1, slots.length), 0, piiSlot);
+    }
+
+    return slots;
+  }, [evaluatorSlots]);
+
+  const [evaluatorFilters, setEvaluatorFilters] = useState<
+    Record<number, "all" | "pass" | "fail">
+  >({});
+
+  const handleSetEvaluatorFilter = useCallback(
+    (slot: number, value: "all" | "pass" | "fail") => {
+      setEvaluatorFilters((prev) => {
+        if (value === "all") {
+          const { [slot]: _removed, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [slot]: value };
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    setEvaluatorFilters((prev) => {
+      const next: Record<number, "all" | "pass" | "fail"> = {};
+      displayEvaluatorSlots.forEach(({ slot }) => {
+        if (prev[slot] && prev[slot] !== "all") {
+          next[slot] = prev[slot];
+        }
+      });
+      return next;
+    });
+  }, [displayEvaluatorSlots]);
+
+  const runEvaluatorColumns = useMemo(() => {
+    const map = new Map<
+      number,
+      { slot: number; evaluatorId: string | null; evaluatorName: string }
+    >();
+
+    runs.forEach((run) => {
+      run.slots.forEach((slot) => {
+        if (!map.has(slot.slot)) {
+          map.set(slot.slot, {
+            slot: slot.slot,
+            evaluatorId: slot.evaluatorId,
+            evaluatorName: slot.evaluatorName ?? `Slot ${slot.slot}`,
+          });
+        }
+      });
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.slot - b.slot);
+  }, [runs]);
+
+  const overallRunStats = useMemo(() => {
+    const aggregateMap = new Map<
+      string,
+      {
+        slot: number;
+        evaluatorId: string | null;
+        evaluatorName: string | null;
+        evaluatorKind: string | null;
+        evaluatorType: string | null;
+        pass: number;
+        fail: number;
+        unknown: number;
+        evaluated: number;
+        runCount: number;
+      }
+    >();
+
+    runAggregate.forEach((entry) => {
+      const key = entry.evaluatorId ?? `slot-${entry.slot}`;
+      aggregateMap.set(key, {
+        slot: entry.slot,
+        evaluatorId: entry.evaluatorId,
+        evaluatorName: entry.evaluatorName,
+        evaluatorKind: entry.evaluatorKind ?? null,
+        evaluatorType: entry.evaluatorType ?? null,
+        pass: entry.passCount ?? 0,
+        fail: entry.failCount ?? 0,
+        unknown: entry.unknownCount ?? 0,
+        evaluated: entry.evaluatedCount ?? 0,
+        runCount: entry.runCount ?? 0,
+      });
+    });
+
+    if (aggregateMap.size === 0 && runs.length > 0) {
+      runs.forEach((run) => {
+        run.slots.forEach((slot) => {
+          const key = slot.evaluatorId ?? `slot-${slot.slot}`;
+          if (!aggregateMap.has(key)) {
+            aggregateMap.set(key, {
+              slot: slot.slot,
+              evaluatorId: slot.evaluatorId,
+              evaluatorName: slot.evaluatorName,
+              evaluatorKind: slot.evaluatorKind,
+              evaluatorType: slot.evaluatorType,
+              pass: slot.passCount,
+              fail: slot.failCount,
+              unknown: slot.unknownCount,
+              evaluated: slot.evaluatedCount,
+              runCount: 1,
+            });
+          }
+        });
+      });
+    }
+
+    return Array.from(aggregateMap.values())
+      .map((entry) => {
+        const passRate =
+          entry.evaluated > 0
+            ? Number(((entry.pass / entry.evaluated) * 100).toFixed(1))
+            : null;
+
+        return {
+          ...entry,
+          passRate,
+        };
+      })
+      .sort((a, b) => a.slot - b.slot);
+  }, [runAggregate, runs]);
+
+  const overallRunStatsColumnCount = useMemo(
+    () => Math.max(1, Math.min(3, overallRunStats.length || 1)),
+    [overallRunStats],
+  );
+
+  const formatPercentage = useCallback((value: number | null) => {
+    if (value === null || Number.isNaN(value)) {
+      return "—";
+    }
+
+    const rounded = Math.round(value);
+    if (Math.abs(value - rounded) < 0.1) {
+      return `${rounded}%`;
+    }
+
+    return `${value.toFixed(1)}%`;
+  }, []);
+
+  const dataColumnCount = 3 + displayEvaluatorSlots.length;
+  const fixedColumnWidthPx = 108; // checkbox + actions columns (46px + 62px)
+  const equalColumnWidth =
+    dataColumnCount > 0
+      ? `calc((100% - ${fixedColumnWidthPx}px) / ${dataColumnCount})`
+      : "auto";
 
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebouncedValue(search, 200);
@@ -510,6 +1316,31 @@ export default function DatasetV2DetailPage() {
     new Set(),
   );
   const isGeneratingPreview = generatingItemIds.size > 0;
+  const generatedOutputChanges = useMemo(() => {
+    if (!Object.keys(generatedOutputs).length) {
+      return {} as Record<string, string | null>;
+    }
+    const byId = new Map<string, EditableItem>();
+    localItems.forEach((item) => {
+      if (item.id) {
+        byId.set(item.id, item);
+      }
+    });
+
+    const changes: Record<string, string | null> = {};
+    Object.entries(generatedOutputs).forEach(([itemId, output]) => {
+      const target = byId.get(itemId);
+      if (!target) return;
+      const normalized = output.length > 0 ? output : null;
+      const current = target.output ?? null;
+      if (current !== normalized) {
+        changes[itemId] = normalized;
+      }
+    });
+
+    return changes;
+  }, [generatedOutputs, localItems]);
+
   const versionDisplayItems = useMemo<EditableItem[]>(() => {
     if (!selectedVersionItems) {
       return [];
@@ -521,10 +1352,12 @@ export default function DatasetV2DetailPage() {
       datasetId: item.datasetId,
       input: item.input,
       groundTruth: item.groundTruth,
+      output: item.output,
       createdAt: item.sourceCreatedAt ?? undefined,
       updatedAt: item.sourceUpdatedAt ?? undefined,
       isNew: false,
       isDirty: false,
+      evaluatorResults: extractEvaluatorResults(item as unknown as Record<string, any>),
     }));
   }, [selectedVersionItems]);
 
@@ -534,6 +1367,30 @@ export default function DatasetV2DetailPage() {
     () => (isViewingLatest ? localItems : versionDisplayItems),
     [isViewingLatest, localItems, versionDisplayItems],
   );
+
+  const evaluatorStats = useMemo(() => {
+    const stats: Record<number, { pass: number; fail: number }> = {};
+    displayEvaluatorSlots.forEach(({ slot }) => {
+      stats[slot] = { pass: 0, fail: 0 };
+    });
+
+    for (const item of displayItems) {
+      if (item.localId === "__add_row__") continue;
+      for (const { slot } of displayEvaluatorSlots) {
+        const passInfo = computeEvaluatorPass(
+          item.evaluatorResults?.[slot],
+          dataset?.evaluatorConfigs?.[slot],
+        );
+        if (passInfo.pass === true) {
+          stats[slot].pass += 1;
+        } else if (passInfo.pass === false) {
+          stats[slot].fail += 1;
+        }
+      }
+    }
+
+    return stats;
+  }, [displayEvaluatorSlots, displayItems, dataset?.evaluatorConfigs]);
 
   const hasPersistedItems = useMemo(
     () =>
@@ -545,6 +1402,60 @@ export default function DatasetV2DetailPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const theme = useMantineTheme();
   const isDark = theme.colorScheme === "dark";
+  const getSuccessColor = useCallback(
+    (percentage: number | null) => {
+      if (percentage === null) {
+        return isDark ? theme.colors.gray[5] : theme.colors.gray[6];
+      }
+      const hue = Math.max(
+        0,
+        Math.min(120, Math.round((percentage / 100) * 120)),
+      );
+      const saturation = 70;
+      const lightness = isDark ? 60 : 45;
+      return `hsl(${hue}deg ${saturation}% ${lightness}%)`;
+    },
+    [isDark, theme.colors.gray],
+  );
+
+  const neutralMetricColor = useMemo(
+    () => (isDark ? theme.colors.gray[5] : theme.colors.gray[6]),
+    [isDark, theme.colors.gray],
+  );
+
+  const renderEvaluatorSuccess = useCallback(
+    (slot: number) => {
+      const stats = evaluatorStats[slot];
+      if (!stats) return null;
+      const total = stats.pass + stats.fail;
+      const percentage = total > 0 ? Math.round((stats.pass / total) * 100) : null;
+      const color = getSuccessColor(percentage);
+      const displayValue = percentage === null ? "—" : `${percentage}%`;
+
+      return (
+        <HoverCard withArrow withinPortal>
+          <HoverCard.Target>
+            <Text
+              size="xs"
+              fw={600}
+              style={{ color, cursor: "default" }}
+              component="span"
+            >
+              {displayValue}
+            </Text>
+          </HoverCard.Target>
+          <HoverCard.Dropdown>
+            <Stack gap={4}>
+              <Text size="sm">{stats.pass} passed</Text>
+              <Text size="sm">{stats.fail} failed</Text>
+            </Stack>
+          </HoverCard.Dropdown>
+        </HoverCard>
+      );
+    },
+    [evaluatorStats, getSuccessColor],
+  );
+
   const checkboxStyles = useMemo(
     () => ({
       input: {
@@ -560,8 +1471,9 @@ export default function DatasetV2DetailPage() {
   const hasPendingChanges = useMemo(
     () =>
       localItems.some((item) => item.isDirty || item.isNew) ||
-      deletedIds.size > 0,
-    [localItems, deletedIds],
+      deletedIds.size > 0 ||
+      Object.keys(generatedOutputChanges).length > 0,
+    [localItems, deletedIds, generatedOutputChanges],
   );
 
   const isDirty = isViewingLatest && hasPendingChanges;
@@ -574,7 +1486,39 @@ export default function DatasetV2DetailPage() {
         const inputMatch = item.input?.toLowerCase().includes(term);
         const expectedMatch =
           item.groundTruth?.toLowerCase().includes(term) ?? false;
-        return inputMatch || expectedMatch;
+        const outputMatch =
+          item.output?.toLowerCase().includes(term) ?? false;
+        return inputMatch || expectedMatch || outputMatch;
+      });
+    }
+
+    const activeFilters = Object.entries(evaluatorFilters).filter(
+      ([, value]) => value !== "all",
+    );
+
+    if (activeFilters.length) {
+      base = base.filter((item) => {
+        if (item.localId === "__add_row__") {
+          return true;
+        }
+        return activeFilters.every(([slotKey, filterValue]) => {
+          const slot = Number(slotKey);
+          const config = dataset?.evaluatorConfigs?.[slot];
+          const passInfo = computeEvaluatorPass(
+            item.evaluatorResults?.[slot],
+            config,
+          );
+
+          if (filterValue === "pass") {
+            return passInfo.pass === true;
+          }
+
+          if (filterValue === "fail") {
+            return passInfo.pass === false;
+          }
+
+          return true;
+        });
       });
     }
 
@@ -582,12 +1526,20 @@ export default function DatasetV2DetailPage() {
       localId: "__add_row__",
       input: "",
       groundTruth: null,
+      output: null,
       isNew: false,
       isDirty: false,
+      evaluatorResults: {},
     } as EditableItem;
 
     return isViewingLatest ? [...base, addRowPlaceholder] : base;
-  }, [displayItems, debouncedSearch, isViewingLatest]);
+  }, [
+    displayItems,
+    debouncedSearch,
+    evaluatorFilters,
+    dataset?.evaluatorConfigs,
+    isViewingLatest,
+  ]);
 
   const selectableFilteredItems = useMemo(
     () => filteredItems.filter((item) => item.localId !== "__add_row__"),
@@ -906,8 +1858,10 @@ export default function DatasetV2DetailPage() {
         localId: `temp-${crypto.randomUUID()}`,
         input: "",
         groundTruth: null,
+        output: null,
         isNew: true,
         isDirty: true,
+        evaluatorResults: {},
       },
     ]);
   }, [setLocalItems, isViewingLatest]);
@@ -999,14 +1953,6 @@ export default function DatasetV2DetailPage() {
 
     setGeneratingItemIds(new Set());
 
-    if (successes.length > 0) {
-      notifications.show({
-        title: "Outputs generated",
-        message: `Generated previews for ${successes.length} item${successes.length === 1 ? "" : "s"}.`,
-        color: "green",
-      });
-    }
-
     if (unsavedCount > 0) {
       notifications.show({
         title: "Skipped unsaved rows",
@@ -1024,11 +1970,202 @@ export default function DatasetV2DetailPage() {
     }
   }, [generateOutput, localItems, isViewingLatest]);
 
+  const handleRunEvaluators = useCallback(async () => {
+    if (isRunningEvaluators) {
+      return;
+    }
+
+    if (!isViewingLatest) {
+      notifications.show({
+        title: "Switch to latest version",
+        message: "You can only run evaluators on the latest dataset version.",
+        color: "yellow",
+      });
+      return;
+    }
+
+    if (!evaluatorSlots.length) {
+      notifications.show({
+        title: "Add an evaluator",
+        message: "Attach at least one custom evaluator before running tests.",
+        color: "yellow",
+      });
+      return;
+    }
+
+    if (hasPendingChanges) {
+      notifications.show({
+        title: "Save changes first",
+        message: "Save or discard your unsaved edits before running evaluators.",
+        color: "yellow",
+      });
+      return;
+    }
+
+    if (!hasPersistedItems) {
+      notifications.show({
+        title: "No saved rows",
+        message: "Save at least one row with input text to run evaluators.",
+        color: "yellow",
+      });
+      return;
+    }
+
+    setIsRunningEvaluators(true);
+    try {
+      const response = await runEvaluators();
+      if (!response) {
+        return;
+      }
+
+      if (response.dataset?.items) {
+        resetDirtyState(response.dataset.items);
+      } else if (dataset?.items) {
+        resetDirtyState(dataset.items);
+      }
+
+      await mutateDatasets();
+      await mutateVersions();
+      await mutateRuns();
+
+      const updatedCount = response.updatedItemCount ?? 0;
+      const versionNumber =
+        typeof response.version?.versionNumber === "number"
+          ? response.version.versionNumber
+          : null;
+      const baseMessage =
+        updatedCount > 0
+          ? `Updated ${updatedCount} row${updatedCount === 1 ? "" : "s"}.`
+          : "No rows required updates.";
+      const message =
+        versionNumber !== null
+          ? `${baseMessage} Saved as version v${versionNumber}.`
+          : baseMessage;
+
+      notifications.show({
+        title: "Evaluators finished",
+        message,
+        color: updatedCount > 0 ? "green" : "blue",
+      });
+    } catch (error) {
+      // fetcher handles error notifications
+    } finally {
+      setIsRunningEvaluators(false);
+    }
+  }, [
+    isRunningEvaluators,
+    isViewingLatest,
+    evaluatorSlots,
+    hasPendingChanges,
+    hasPersistedItems,
+    runEvaluators,
+    resetDirtyState,
+    dataset?.items,
+    mutateDatasets,
+    mutateVersions,
+    mutateRuns,
+  ]);
+
+  const handleConfirmAddEvaluator = useCallback(
+    async (
+      evaluatorId: string,
+      config: DatasetEvaluatorConfigInput | null,
+    ) => {
+      if (!evaluatorId) return;
+
+      if (evaluatorSlots.some((slot) => slot.evaluatorId === evaluatorId)) {
+        notifications.show({
+          title: "Evaluator already added",
+          message: "This evaluator is already attached to the dataset.",
+          color: "blue",
+        });
+        return;
+      }
+
+      if (!hasEvaluatorCapacity) {
+        notifications.show({
+          title: "Maximum reached",
+          message: "You can attach up to five evaluators per dataset.",
+          color: "yellow",
+        });
+        return;
+      }
+
+      setIsAttachingEvaluator(true);
+      try {
+        await addEvaluator(evaluatorId, config ?? undefined);
+        await mutateDatasets();
+
+        notifications.show({
+          title: "Evaluator added",
+          message: "A new evaluator column was added to the dataset.",
+          color: "green",
+        });
+
+        closeAddEvaluatorModal();
+      } catch (error) {
+        // fetcher handles error notifications
+      } finally {
+        setIsAttachingEvaluator(false);
+      }
+    },
+    [
+      addEvaluator,
+      mutateDatasets,
+      evaluatorSlots,
+      hasEvaluatorCapacity,
+      closeAddEvaluatorModal,
+    ],
+  );
+
+  const handleRemoveEvaluator = useCallback(
+    async (slot: number) => {
+      if (!isViewingLatest) return;
+
+      const previousItems = localItems;
+
+      setLocalItems(
+        previousItems.map((item) => {
+          const nextResults = { ...item.evaluatorResults };
+          delete nextResults[slot];
+          return {
+            ...item,
+            evaluatorResults: nextResults,
+          };
+        }),
+      );
+
+      try {
+        await removeEvaluator(slot);
+        await mutateDatasets();
+
+        notifications.show({
+          title: "Evaluator removed",
+          message: "The evaluator column has been removed from the dataset.",
+          color: "green",
+        });
+      } catch (error) {
+        // error notifications handled by fetcher
+        setLocalItems(previousItems.map((item) => ({ ...item })));
+        await mutate();
+      }
+    },
+    [
+      isViewingLatest,
+      localItems,
+      removeEvaluator,
+      mutate,
+      mutateDatasets,
+      setLocalItems,
+    ],
+  );
+
   const handleSave = useCallback(async () => {
     if (!datasetId) return false;
     if (!isDirty) return true;
 
     setIsSaving(true);
+    const pendingGeneratedChanges = { ...generatedOutputChanges };
     let success = false;
     try {
       // Create new items
@@ -1037,6 +2174,7 @@ export default function DatasetV2DetailPage() {
           const payload = {
             input: item.input,
             groundTruth: item.groundTruth,
+            output: item.output,
           };
           await createItem(payload);
         }
@@ -1044,12 +2182,43 @@ export default function DatasetV2DetailPage() {
 
       // Update existing items
       for (const item of localItems) {
-        if (!item.isNew && item.isDirty && item.id) {
+        if (!item.id || item.isNew) {
+          continue;
+        }
+        const hasGeneratedChange = Object.prototype.hasOwnProperty.call(
+          pendingGeneratedChanges,
+          item.id,
+        );
+        if (!item.isDirty && !hasGeneratedChange) {
+          continue;
+        }
+
+        const payload: DatasetV2ItemInput = {};
+        if (item.isDirty) {
+          payload.input = item.input;
+          payload.groundTruth = item.groundTruth;
+        }
+        if (hasGeneratedChange) {
+          payload.output = pendingGeneratedChanges[item.id] ?? null;
+          delete pendingGeneratedChanges[item.id];
+        }
+
+        if (
+          Object.prototype.hasOwnProperty.call(payload, "input") ||
+          Object.prototype.hasOwnProperty.call(payload, "groundTruth") ||
+          Object.prototype.hasOwnProperty.call(payload, "output")
+        ) {
           await updateItem(item.id, {
-            input: item.input,
-            groundTruth: item.groundTruth,
+            ...payload,
           });
         }
+      }
+
+      // Apply remaining generated output updates (for items without other edits)
+      for (const [itemId, output] of Object.entries(pendingGeneratedChanges)) {
+        await updateItem(itemId, {
+          output: output ?? null,
+        });
       }
 
       // Delete removed items
@@ -1083,6 +2252,7 @@ export default function DatasetV2DetailPage() {
       }
 
       success = true;
+      setGeneratedOutputs({});
     } catch (error) {
       // fetcher handles error notification
       success = false;
@@ -1104,6 +2274,8 @@ export default function DatasetV2DetailPage() {
     mutateVersions,
     dataset,
     createVersion,
+    generatedOutputChanges,
+    setGeneratedOutputs,
   ]);
 
   const handleSaveAndLeave = useCallback(async () => {
@@ -1239,8 +2411,10 @@ export default function DatasetV2DetailPage() {
               localId: `temp-${crypto.randomUUID()}`,
               input: "",
               groundTruth: null,
+              output: null,
               isNew: true,
               isDirty: true,
+              evaluatorResults: {},
             };
             next.push(newItem);
             targetIndex = next.length - 1;
@@ -1306,15 +2480,7 @@ export default function DatasetV2DetailPage() {
 
   const renderGeneratedOutput = useCallback(
     (item: EditableItem) => {
-      if (!item.id) {
-        return (
-          <Text size="xs" c="dimmed">
-            —
-          </Text>
-        );
-      }
-
-      if (generatingItemIds.has(item.id)) {
+      if (item.id && generatingItemIds.has(item.id)) {
         return (
           <Text size="xs" c="dimmed">
             Running...
@@ -1322,21 +2488,191 @@ export default function DatasetV2DetailPage() {
         );
       }
 
-      const preview = generatedOutputs[item.id] ?? "";
+      const preview = item.id ? generatedOutputs[item.id] : undefined;
+      const saved = item.output ?? "";
+      const display = preview ?? saved;
+      const isPending = preview !== undefined && preview !== saved;
 
-      if (!preview) {
-        return;
+      if (!display) {
+        return (
+          <Text size="xs" c="dimmed">
+            —
+          </Text>
+        );
       }
 
       return (
-        <Tooltip label={preview} disabled={preview.length < 60}>
-          <Text size="sm" lineClamp={2}>
-            {preview}
+        <Tooltip label={display} disabled={display.length < 60}>
+          <Text
+            size="sm"
+            lineClamp={2}
+            style={{ fontStyle: isPending ? "italic" : undefined }}
+            c={isPending ? "teal" : undefined}
+          >
+            {display}
           </Text>
         </Tooltip>
       );
     },
     [generatedOutputs, generatingItemIds],
+  );
+
+  const renderEvaluatorResult = useCallback(
+    (item: EditableItem, slot: number) => {
+      const config = dataset?.evaluatorConfigs?.[slot];
+      const summary = summarizeEvaluatorResult(item.evaluatorResults?.[slot]);
+      const passInfo = computeEvaluatorPass(item.evaluatorResults?.[slot], config);
+
+      if (passInfo.pass !== null) {
+        const badge = (
+          <Badge
+            color={passInfo.pass ? "green" : "red"}
+            variant="light"
+            radius="sm"
+            size="sm"
+          >
+            {passInfo.pass ? "Pass" : "Fail"}
+          </Badge>
+        );
+
+        const tooltipContent = summary.tooltip ? (
+          summary.tooltip
+        ) : passInfo.value ? (
+          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+            {passInfo.value}
+          </Text>
+        ) : null;
+
+        return tooltipContent ? (
+          <Tooltip label={tooltipContent} maw={360} multiline>
+            {badge}
+          </Tooltip>
+        ) : (
+          badge
+        );
+      }
+
+      const color =
+        summary.tone === "muted"
+          ? "dimmed"
+          : summary.tone === "success"
+            ? "teal"
+            : summary.tone === "danger"
+              ? "red"
+              : undefined;
+
+      const content = (
+        <Text size="sm" c={color} lineClamp={1} style={{ maxWidth: 200 }}>
+          {summary.display}
+        </Text>
+      );
+
+      if (summary.tooltip) {
+        return (
+          <Tooltip label={summary.tooltip} maw={360} multiline>
+            {content}
+          </Tooltip>
+        );
+      }
+
+      return content;
+    },
+    [dataset?.evaluatorConfigs],
+  );
+
+  const renderRunSlotCell = useCallback(
+    (slot?: DatasetEvaluatorRunSlotSummary) => {
+      if (!slot) {
+        return (
+          <Text size="xs" c="dimmed">
+            —
+          </Text>
+        );
+      }
+
+      const hasResults =
+        slot.evaluatedCount > 0 ||
+        slot.passCount > 0 ||
+        slot.failCount > 0 ||
+        slot.unknownCount > 0;
+
+      if (!hasResults) {
+        return (
+          <Text size="xs" c="dimmed">
+            —
+          </Text>
+        );
+      }
+
+      const color =
+        slot.passRate === null
+          ? neutralMetricColor
+          : getSuccessColor(slot.passRate);
+
+      const label = formatPercentage(slot.passRate);
+
+      return (
+        <HoverCard withArrow withinPortal>
+          <HoverCard.Target>
+            <Text
+              size="sm"
+              fw={600}
+              style={{ color, cursor: "default" }}
+              component="span"
+            >
+              {label}
+            </Text>
+          </HoverCard.Target>
+          <HoverCard.Dropdown>
+            <Stack gap={4}>
+              <Text size="sm">{slot.passCount} passed</Text>
+              <Text size="sm">{slot.failCount} failed</Text>
+              <Text size="sm">{slot.unknownCount} unknown</Text>
+              <Text size="xs" c="dimmed">
+                {slot.evaluatedCount} evaluated
+              </Text>
+            </Stack>
+          </HoverCard.Dropdown>
+        </HoverCard>
+      );
+    },
+    [formatPercentage, getSuccessColor, neutralMetricColor],
+  );
+
+  const handleSelectVersion = useCallback(
+    (nextVersionId: "latest" | string) => {
+      if (nextVersionId === selectedVersionId) {
+        return true;
+      }
+
+      if (nextVersionId !== "latest" && hasPendingChanges) {
+        notifications.show({
+          title: "Save changes first",
+          message:
+            "Save or discard your unsaved changes before switching versions.",
+          color: "yellow",
+        });
+        return false;
+      }
+
+      setEditingCell(null);
+      setSelectedIds(new Set());
+      setLastSelectedIndex(null);
+      setSelectedVersionId(nextVersionId);
+      return true;
+    },
+    [selectedVersionId, hasPendingChanges],
+  );
+
+  const handleRunRowClick = useCallback(
+    (run: DatasetEvaluatorRun) => {
+      if (!run.versionId) return;
+      const switched = handleSelectVersion(run.versionId);
+      if (switched) {
+        handleTabChange("data");
+      }
+    },
+    [handleSelectVersion, handleTabChange],
   );
 
   const handleUpdateDataset = useCallback(
@@ -1371,30 +2707,6 @@ export default function DatasetV2DetailPage() {
       mutateVersions,
       closeUpdateModal,
     ],
-  );
-
-  const handleSelectVersion = useCallback(
-    (nextVersionId: "latest" | string) => {
-      if (nextVersionId === selectedVersionId) {
-        return;
-      }
-
-      if (nextVersionId !== "latest" && hasPendingChanges) {
-        notifications.show({
-          title: "Save changes first",
-          message:
-            "Save or discard your unsaved changes before switching versions.",
-          color: "yellow",
-        });
-        return;
-      }
-
-      setEditingCell(null);
-      setSelectedIds(new Set());
-      setLastSelectedIndex(null);
-      setSelectedVersionId(nextVersionId);
-    },
-    [selectedVersionId, hasPendingChanges],
   );
 
   const handleRestoreVersion = useCallback(async () => {
@@ -1451,13 +2763,16 @@ export default function DatasetV2DetailPage() {
 
       if (format === "csv") {
         const rows = [
-          `"input","ground_truth"`,
+          `"input","ground_truth","output"`,
           ...displayItems.map((item) => {
             const input = `"${(item.input ?? "").replace(/"/g, '""')}"`;
             const groundTruth = item.groundTruth
               ? `"${item.groundTruth.replace(/"/g, '""')}"`
               : '""';
-            return `${input},${groundTruth}`;
+            const outputValue = item.output
+              ? `"${item.output.replace(/"/g, '""')}"`
+              : '""';
+            return `${input},${groundTruth},${outputValue}`;
           }),
         ];
         const blob = new Blob([rows.join("\n")], {
@@ -1473,6 +2788,7 @@ export default function DatasetV2DetailPage() {
           JSON.stringify({
             input: item.input,
             ground_truth: item.groundTruth,
+            output: item.output,
           }),
         );
         const blob = new Blob([`${lines.join("\n")}\n`], {
@@ -1579,7 +2895,14 @@ export default function DatasetV2DetailPage() {
 
   return (
     <Container fluid py="lg" px="lg">
-      <Stack gap="md">
+      <Tabs value={activeTab} onChange={handleTabChange}>
+        <Tabs.List>
+          <Tabs.Tab value="data">Data</Tabs.Tab>
+          <Tabs.Tab value="runs">Runs</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="data" pt="lg">
+          <Stack gap="md">
         <Group justify="space-between" align="flex-start">
           <Group align="center" gap="sm">
             <ActionIcon
@@ -1602,14 +2925,15 @@ export default function DatasetV2DetailPage() {
           <Group gap="sm">
             <Menu withinPortal>
               <Menu.Target>
-                <Button
-                  variant="light"
-                  leftSection={<IconHistory size={16} />}
-                  rightSection={<IconChevronDown size={14} />}
-                  loading={versionMenuLoading}
-                >
-                  {versionMenuLabel}
-                </Button>
+                <Tooltip label={versionMenuLabel} withArrow>
+                  <ActionIcon
+                    variant="subtle"
+                    aria-label={`Select version (${versionMenuLabel})`}
+                    loading={versionMenuLoading}
+                  >
+                    <IconHistory size={16} />
+                  </ActionIcon>
+                </Tooltip>
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Item
@@ -1658,13 +2982,14 @@ export default function DatasetV2DetailPage() {
             </Menu>
             <Menu withinPortal>
               <Menu.Target>
-                <Button
-                  variant="subtle"
-                  leftSection={<IconDownload size={16} />}
-                  rightSection={<IconChevronDown size={14} />}
-                >
-                  Download
-                </Button>
+                <Tooltip label="Download dataset" withArrow>
+                  <ActionIcon
+                    variant="subtle"
+                    aria-label="Download dataset"
+                  >
+                    <IconDownload size={16} />
+                  </ActionIcon>
+                </Tooltip>
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Item onClick={() => handleDownload("csv")}>
@@ -1686,25 +3011,58 @@ export default function DatasetV2DetailPage() {
             </Button>
             <Button
               variant="light"
-              leftSection={<IconSparkles size={16} />}
+              leftSection={<IconPlayerPlayFilled size={16} />}
               onClick={handleGenerateOutputs}
               loading={isGeneratingPreview}
               disabled={
                 !isViewingLatest || !hasPersistedItems || isGeneratingPreview
               }
             >
-              Generate output playground
+              Generate output
             </Button>
             {isViewingLatest ? (
-              <Button
-                leftSection={<IconDeviceFloppy size={16} />}
-                color="blue"
-                onClick={handleSave}
-                disabled={!isDirty || isSaving}
-                loading={isSaving}
-              >
-                Save
-              </Button>
+              <>
+                <Menu withinPortal>
+                  <Menu.Target>
+                    <Button
+                      variant="default"
+                      leftSection={<IconFlask size={16} />}
+                      disabled={!isViewingLatest}
+                      loading={isRunningEvaluators}
+                    >
+                      Test
+                    </Button>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconPlayerPlayFilled size={16} />}
+                      onClick={handleRunEvaluators}
+                      disabled={isRunningEvaluators}
+                    >
+                      {isRunningEvaluators ? "Running…" : "Run all"}
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconPlus size={16} />}
+                      onClick={() => openAddEvaluatorModal()}
+                      disabled={
+                        !isViewingLatest ||
+                        !hasEvaluatorCapacity ||
+                        isRunningEvaluators
+                      }
+                    >
+                      Add evaluator
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+                <Button
+                  color="blue"
+                  onClick={handleSave}
+                  disabled={!isDirty || isSaving}
+                  loading={isSaving}
+                >
+                  Save
+                </Button>
+              </>
             ) : (
               <Button
                 leftSection={<IconArrowBackUp size={16} />}
@@ -1726,7 +3084,7 @@ export default function DatasetV2DetailPage() {
               leftSection={<IconSearch size={16} />}
               value={search}
               onChange={(event) => setSearch(event.currentTarget.value)}
-              w="50%"
+              w={220}
             />
             {selectedCount > 0 && (
               <Group gap="xs" align="center">
@@ -1755,316 +3113,643 @@ export default function DatasetV2DetailPage() {
           )}
         </Group>
 
-        <Box>
-          <Table
-            withColumnBorders
-            withRowBorders
-            highlightOnHover={false}
-            verticalSpacing="sm"
-            horizontalSpacing="md"
-            styles={(theme) => ({
-              thead: {
-                backgroundColor:
-                  theme.colorScheme === "dark"
-                    ? theme.colors.dark[6]
-                    : theme.colors.gray[1],
-              },
-              th: {
-                textTransform: "lowercase",
-                fontWeight: 600,
-                backgroundColor:
-                  theme.colorScheme === "dark"
-                    ? theme.colors.dark[6]
-                    : theme.colors.gray[1],
-                borderColor:
-                  theme.colorScheme === "dark"
-                    ? theme.colors.dark[5]
-                    : theme.colors.gray[3],
-                color:
-                  theme.colorScheme === "dark"
-                    ? theme.colors.gray[4]
-                    : theme.colors.dark[5],
-              },
-              td: {
-                backgroundColor:
-                  theme.colorScheme === "dark"
-                    ? theme.colors.dark[7]
-                    : theme.white,
-                borderColor:
-                  theme.colorScheme === "dark"
-                    ? theme.colors.dark[5]
-                    : theme.colors.gray[3],
-                fontSize: 14,
-                color:
-                  theme.colorScheme === "dark"
-                    ? theme.colors.gray[2]
-                    : theme.colors.dark[6],
-              },
-              tbody: {
-                backgroundColor:
-                  theme.colorScheme === "dark"
-                    ? theme.colors.dark[7]
-                    : theme.white,
-              },
-            })}
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th w={40}>
-                  <Checkbox
-                    aria-label="Select all rows"
-                    size="sm"
-                    radius="sm"
-                    styles={checkboxStyles}
-                    checked={
-                      allVisibleSelected && selectableFilteredItems.length > 0
-                    }
-                    indeterminate={!allVisibleSelected && someVisibleSelected}
-                    disabled={
-                      !isViewingLatest || selectableFilteredItems.length === 0
-                    }
-                    onChange={(event) => {
-                      event.stopPropagation();
-                      toggleSelectAllVisible();
-                    }}
-                    onClick={(event) => event.stopPropagation()}
-                  />
-                </Table.Th>
-                <Table.Th w="35%">Input</Table.Th>
-                <Table.Th w="30%">Ground Truth</Table.Th>
-                <Table.Th w="25%">Output</Table.Th>
-                <Table.Th w="10%" />
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {filteredItems.map((item) =>
-                item.localId === "__add_row__" ? (
-                  <Table.Tr key="__add_row__">
-                    <Table.Td colSpan={5}>
-                      <Button
-                        variant="subtle"
-                        onClick={handleAddRow}
-                        fullWidth
-                        styles={{
-                          root: {
-                            justifyContent: "flex-start",
-                            color: isDark
-                              ? theme.colors.gray[4]
-                              : theme.colors.gray[6],
-                            backgroundColor: "transparent",
-                            fontWeight: 500,
-                            "&:hover": {
-                              backgroundColor: isDark
-                                ? theme.colors.dark[6]
-                                : theme.colors.gray[0],
-                            },
-                          },
-                        }}
-                      >
-                        + Add row
-                      </Button>
-                    </Table.Td>
-                  </Table.Tr>
-                ) : (
-                  <Table.Tr key={item.localId}>
-                    <Table.Td
-                      w={40}
-                      onClick={(event) => event.stopPropagation()}
-                    >
+        <Card withBorder p={0}>
+          <Box>
+            <Table
+              withColumnBorders
+              withRowBorders
+              highlightOnHover={false}
+              verticalSpacing="sm"
+              horizontalSpacing="md"
+              style={{ tableLayout: "fixed" }}
+                styles={(theme) => ({
+                  thead: {
+                    backgroundColor:
+                      theme.colorScheme === "dark"
+                        ? theme.colors.dark[6]
+                        : theme.colors.gray[1],
+                  },
+                  th: {
+                    fontWeight: 600,
+                    backgroundColor:
+                      theme.colorScheme === "dark"
+                        ? theme.colors.dark[6]
+                        : theme.colors.gray[1],
+                    borderColor:
+                      theme.colorScheme === "dark"
+                        ? theme.colors.dark[5]
+                        : theme.colors.gray[3],
+                    color:
+                      theme.colorScheme === "dark"
+                        ? theme.colors.gray[4]
+                        : theme.colors.dark[5],
+                  },
+                  td: {
+                    backgroundColor:
+                      theme.colorScheme === "dark"
+                        ? theme.colors.dark[7]
+                        : theme.white,
+                    borderColor:
+                      theme.colorScheme === "dark"
+                        ? theme.colors.dark[5]
+                        : theme.colors.gray[3],
+                    fontSize: 14,
+                    color:
+                      theme.colorScheme === "dark"
+                        ? theme.colors.gray[2]
+                        : theme.colors.dark[6],
+                  },
+                  tbody: {
+                    backgroundColor:
+                      theme.colorScheme === "dark"
+                        ? theme.colors.dark[7]
+                        : theme.white,
+                  },
+                })}
+              >
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th w={46}>
                       <Checkbox
-                        aria-label="Select row"
-                        size="sm"
+                        aria-label="Select all visible rows"
+                        size="xs"
                         radius="sm"
                         styles={checkboxStyles}
-                        checked={selectedIds.has(item.localId)}
+                        checked={allVisibleSelected}
+                        indeterminate={!allVisibleSelected && someVisibleSelected}
                         disabled={!isViewingLatest}
                         onChange={(event) => {
                           event.stopPropagation();
-                          const nativeEvent = event.nativeEvent as
-                            | MouseEvent
-                            | PointerEvent
-                            | KeyboardEvent;
-                          const isShift =
-                            typeof nativeEvent?.shiftKey === "boolean"
-                              ? nativeEvent.shiftKey
-                              : false;
-                          updateRowSelection(
-                            item.localId,
-                            event.currentTarget.checked,
-                            isShift,
-                          );
+                          toggleSelectAllVisible();
                         }}
                         onClick={(event) => event.stopPropagation()}
                       />
-                    </Table.Td>
-                    <Table.Td
-                      className="dataset-table-editable"
-                      onClick={() => openCellEditor(item.localId, "input")}
+                    </Table.Th>
+                    <Table.Th
                       style={{
-                        cursor: isViewingLatest ? "pointer" : "default",
+                        width: equalColumnWidth,
+                        minWidth: equalColumnWidth,
+                        maxWidth: equalColumnWidth,
                       }}
                     >
-                      <Tooltip
-                        label={item.input}
-                        disabled={!item.input || item.input.length < 60}
-                      >
-                        <Text size="sm" lineClamp={2}>
-                          {item.input ?? ""}
-                        </Text>
-                      </Tooltip>
-                    </Table.Td>
-                    <Table.Td
-                      className="dataset-table-editable"
-                      onClick={() =>
-                        openCellEditor(item.localId, "groundTruth")
-                      }
+                      Input
+                    </Table.Th>
+                    <Table.Th
                       style={{
-                        cursor: isViewingLatest ? "pointer" : "default",
+                        width: equalColumnWidth,
+                        minWidth: equalColumnWidth,
+                        maxWidth: equalColumnWidth,
                       }}
                     >
-                      <Tooltip
-                        label={item.groundTruth ?? ""}
-                        disabled={
-                          !item.groundTruth || item.groundTruth.length < 60
-                        }
+                      Ground Truth
+                    </Table.Th>
+                    <Table.Th
+                      style={{
+                        width: equalColumnWidth,
+                        minWidth: equalColumnWidth,
+                        maxWidth: equalColumnWidth,
+                      }}
+                    >
+                      Output
+                    </Table.Th>
+                    {displayEvaluatorSlots.map(({ slot, name }) => (
+                      <Table.Th
+                        key={`eval-header-${slot}`}
+                        style={{
+                          width: equalColumnWidth,
+                          minWidth: equalColumnWidth,
+                          maxWidth: equalColumnWidth,
+                        }}
                       >
-                        <Text size="sm" lineClamp={2}>
-                          {item.groundTruth ?? ""}
-                        </Text>
-                      </Tooltip>
-                    </Table.Td>
-                    <Table.Td style={{ cursor: "default" }}>
-                      {renderGeneratedOutput(item)}
-                    </Table.Td>
-                    <Table.Td style={{ cursor: "default" }}>
-                      {isViewingLatest ? (
-                        <Group justify="flex-end">
-                          <Menu withinPortal>
+                        <Group gap="xs" justify="space-between" align="center">
+                          <Group
+                            gap={6}
+                            align="center"
+                            style={{ flex: 1, minWidth: 0 }}
+                          >
+                            <Text
+                              size="sm"
+                              fw={600}
+                              title={typeof name === "string" ? name : undefined}
+                              style={{
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                display: "block",
+                              }}
+                            >
+                              {name}
+                            </Text>
+                            {renderEvaluatorSuccess(slot)}
+                          </Group>
+                          <Menu withinPortal position="bottom-end">
                             <Menu.Target>
-                              <ActionIcon variant="subtle">
-                                <IconDotsVertical size={16} />
+                              <ActionIcon
+                                size="sm"
+                                variant="subtle"
+                                color={
+                                  evaluatorFilters[slot] &&
+                                  evaluatorFilters[slot] !== "all"
+                                    ? "blue"
+                                    : undefined
+                                }
+                                aria-label={`Filter evaluator ${name}`}
+                              >
+                                <IconFilter size={14} />
                               </ActionIcon>
                             </Menu.Target>
                             <Menu.Dropdown>
                               <Menu.Item
-                                leftSection={<IconCopy size={14} />}
-                                onClick={() => handleDuplicateRow(item)}
+                                onClick={() => handleSetEvaluatorFilter(slot, "all")}
+                                disabled={
+                                  !evaluatorFilters[slot] ||
+                                  evaluatorFilters[slot] === "all"
+                                }
                               >
-                                Duplicate
+                                Show all
                               </Menu.Item>
                               <Menu.Item
-                                color="red"
-                                leftSection={<IconTrash size={14} />}
-                                onClick={() => handleDeleteRow(item)}
+                                onClick={() => handleSetEvaluatorFilter(slot, "pass")}
+                                color="green"
+                                disabled={evaluatorFilters[slot] === "pass"}
                               >
-                                Delete
+                                Show pass
+                              </Menu.Item>
+                              <Menu.Item
+                                onClick={() => handleSetEvaluatorFilter(slot, "fail")}
+                                color="red"
+                                disabled={evaluatorFilters[slot] === "fail"}
+                              >
+                                Show fail
                               </Menu.Item>
                             </Menu.Dropdown>
                           </Menu>
+                          {isViewingLatest && (
+                            <Menu withinPortal position="bottom-end">
+                              <Menu.Target>
+                                <ActionIcon
+                                  size="sm"
+                                  variant="subtle"
+                                  aria-label={`Evaluator ${name} actions`}
+                                >
+                                  <IconSettings size={14} />
+                                </ActionIcon>
+                              </Menu.Target>
+                              <Menu.Dropdown>
+                                <Menu.Item
+                                  color="red"
+                                  leftSection={<IconTrash size={14} />}
+                                  onClick={() => handleRemoveEvaluator(slot)}
+                                >
+                                  Remove evaluator
+                                </Menu.Item>
+                              </Menu.Dropdown>
+                            </Menu>
+                          )}
                         </Group>
-                      ) : (
-                        <Text size="xs" c="dimmed">
-                          Read-only
-                        </Text>
-                      )}
-                    </Table.Td>
+                      </Table.Th>
+                    ))}
+                    <Table.Th style={{ width: 62 }} />
                   </Table.Tr>
-                ),
+                </Table.Thead>
+                <Table.Tbody>
+                  {filteredItems.map((item) =>
+                    item.localId === "__add_row__" ? (
+                      <Table.Tr key={item.localId}>
+                        <Table.Td colSpan={2 + dataColumnCount}>
+                          <Button
+                            variant="subtle"
+                            h={20}
+                            onClick={handleAddRow}
+                            fullWidth
+                            styles={{
+                              root: {
+                                justifyContent: "flex-start",
+                                color: isDark
+                                  ? theme.colors.gray[4]
+                                  : theme.colors.gray[6],
+                                backgroundColor: "transparent",
+                                fontWeight: 500,
+                                "&:hover": {
+                                  backgroundColor: isDark
+                                    ? theme.colors.dark[6]
+                                    : theme.colors.gray[0],
+                                },
+                              },
+                            }}
+                          >
+                            + Add row
+                          </Button>
+                        </Table.Td>
+                      </Table.Tr>
+                    ) : (
+                      <Table.Tr key={item.localId}>
+                        <Table.Td
+                          w={46}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Checkbox
+                            aria-label="Select row"
+                            size="xs"
+                            radius="sm"
+                            styles={checkboxStyles}
+                            checked={selectedIds.has(item.localId)}
+                            disabled={!isViewingLatest}
+                            onChange={(event) => {
+                              event.stopPropagation();
+                              const nativeEvent = event.nativeEvent as
+                                | MouseEvent
+                                | PointerEvent
+                                | KeyboardEvent;
+                              const isShift =
+                                typeof nativeEvent?.shiftKey === "boolean"
+                                  ? nativeEvent.shiftKey
+                                  : false;
+                              updateRowSelection(
+                                item.localId,
+                                event.currentTarget.checked,
+                                isShift,
+                              );
+                            }}
+                            onClick={(event) => event.stopPropagation()}
+                          />
+                        </Table.Td>
+                        <Table.Td
+                          className="dataset-table-editable"
+                          onClick={() => openCellEditor(item.localId, "input")}
+                          style={{
+                            cursor: isViewingLatest ? "pointer" : "default",
+                            width: equalColumnWidth,
+                            minWidth: equalColumnWidth,
+                            maxWidth: equalColumnWidth,
+                          }}
+                        >
+                          <Tooltip
+                            label={item.input}
+                            disabled={!item.input || item.input.length < 60}
+                          >
+                            <Text size="sm" lineClamp={2}>
+                              {item.input ?? ""}
+                            </Text>
+                          </Tooltip>
+                        </Table.Td>
+                        <Table.Td
+                          className="dataset-table-editable"
+                          onClick={() =>
+                            openCellEditor(item.localId, "groundTruth")
+                          }
+                          style={{
+                            cursor: isViewingLatest ? "pointer" : "default",
+                            width: equalColumnWidth,
+                            minWidth: equalColumnWidth,
+                            maxWidth: equalColumnWidth,
+                          }}
+                        >
+                          <Tooltip
+                            label={item.groundTruth ?? ""}
+                            disabled={
+                              !item.groundTruth || item.groundTruth.length < 60
+                            }
+                          >
+                            <Text size="sm" lineClamp={2}>
+                              {item.groundTruth ?? ""}
+                            </Text>
+                          </Tooltip>
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            cursor: "default",
+                            width: equalColumnWidth,
+                            minWidth: equalColumnWidth,
+                            maxWidth: equalColumnWidth,
+                          }}
+                        >
+                          {renderGeneratedOutput(item)}
+                        </Table.Td>
+                        {displayEvaluatorSlots.map(({ slot }) => (
+                          <Table.Td
+                            key={`${item.localId}-evaluator-${slot}`}
+                            style={{
+                              cursor: "default",
+                              width: equalColumnWidth,
+                              minWidth: equalColumnWidth,
+                              maxWidth: equalColumnWidth,
+                            }}
+                          >
+                            {renderEvaluatorResult(item, slot)}
+                          </Table.Td>
+                        ))}
+                        <Table.Td style={{ cursor: "default", width: 62 }}>
+                          {isViewingLatest ? (
+                            <Group justify="flex-end">
+                              <Menu withinPortal>
+                                <Menu.Target>
+                                  <ActionIcon variant="subtle">
+                                    <IconDotsVertical size={16} />
+                                  </ActionIcon>
+                                </Menu.Target>
+                                <Menu.Dropdown>
+                                  <Menu.Item
+                                    leftSection={<IconCopy size={14} />}
+                                    onClick={() => handleDuplicateRow(item)}
+                                  >
+                                    Duplicate
+                                  </Menu.Item>
+                                  <Menu.Item
+                                    color="red"
+                                    leftSection={<IconTrash size={14} />}
+                                    onClick={() => handleDeleteRow(item)}
+                                  >
+                                    Delete
+                                  </Menu.Item>
+                                </Menu.Dropdown>
+                              </Menu>
+                            </Group>
+                          ) : (
+                            <Text size="xs" c="dimmed">
+                              Read-only
+                            </Text>
+                          )}
+                        </Table.Td>
+                      </Table.Tr>
+                    ),
               )}
             </Table.Tbody>
           </Table>
-        </Box>
-      </Stack>
+          </Box>
+        </Card>
+    </Stack>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        hidden
-        accept=".csv,.jsonl"
-        onChange={handleFileInputChange}
-      />
+    <input
+      type="file"
+      ref={fileInputRef}
+      hidden
+      accept=".csv,.jsonl"
+      onChange={handleFileInputChange}
+    />
 
-      <CellEditorModal
-        opened={Boolean(editingCell)}
-        onClose={closeEditor}
-        field={editingCell?.field ?? "input"}
-        value={
-          editingCell
-            ? (filteredItems[editingCell.index]?.[editingCell.field] ?? "") ||
-              ""
-            : ""
-        }
-        rowIndex={
-          editingCell
-            ? filteredItems
-                .slice(0, editingCell.index)
-                .filter((item) => item.localId !== "__add_row__").length
-            : 0
-        }
-        rowCount={Math.max(rowCountExcludingAdd, 1)}
-        onChange={(newValue) => {
-          if (!editingCell) return;
-          const item = filteredItems[editingCell.index];
-          if (!item) return;
-          updateItemValue(item.localId, editingCell.field, newValue);
-        }}
-        onNavigate={handleNavigateEditor}
-        onDuplicate={() => {
-          if (!editingCell) return;
-          const item = filteredItems[editingCell.index];
-          if (!item) return;
-          addDuplicate(item);
-        }}
-        filteredIndex={editingCell?.index ?? 0}
-        onPasteTable={handleSpreadsheetPaste}
-      />
+    <AddEvaluatorModal
+      opened={addEvaluatorModalOpened}
+      onClose={closeAddEvaluatorModal}
+      evaluators={availableEvaluators}
+      isLoading={isLoadingEvaluators}
+      loading={isAttachingEvaluator}
+      onConfirm={handleConfirmAddEvaluator}
+    />
 
-      <UpdateDatasetModal
-        opened={updateModalOpened}
-        onClose={closeUpdateModal}
-        initialName={dataset.name}
-        initialDescription={dataset.description}
-        onSubmit={handleUpdateDataset}
-        loading={isUpdating}
-      />
+    <CellEditorModal
+      opened={Boolean(editingCell)}
+      onClose={closeEditor}
+      field={editingCell?.field ?? "input"}
+      value={
+        editingCell
+          ? (filteredItems[editingCell.index]?.[editingCell.field] ?? "") || ""
+          : ""
+      }
+      rowIndex={
+        editingCell
+          ? filteredItems
+              .slice(0, editingCell.index)
+              .filter((item) => item.localId !== "__add_row__").length
+          : 0
+      }
+      rowCount={Math.max(rowCountExcludingAdd, 1)}
+      onChange={(newValue) => {
+        if (!editingCell) return;
+        const item = filteredItems[editingCell.index];
+        if (!item) return;
+        updateItemValue(item.localId, editingCell.field, newValue);
+      }}
+      onNavigate={handleNavigateEditor}
+      onDuplicate={() => {
+        if (!editingCell) return;
+        const item = filteredItems[editingCell.index];
+        if (!item) return;
+        addDuplicate(item);
+      }}
+      filteredIndex={editingCell?.index ?? 0}
+      onPasteTable={handleSpreadsheetPaste}
+    />
 
-      <Modal
-        opened={leaveModalOpened}
-        onClose={closeLeaveModal}
-        title="Leave without saving?"
-      >
-        <Stack gap="sm">
-          <Text size="sm">
-            You have unsaved changes in your dataset. If you leave now, they
-            will be lost.
-          </Text>
-          <Group justify="space-between" mt="sm">
+    <UpdateDatasetModal
+      opened={updateModalOpened}
+      onClose={closeUpdateModal}
+      initialName={dataset.name}
+      initialDescription={dataset.description}
+      onSubmit={handleUpdateDataset}
+      loading={isUpdating}
+    />
+
+    <Modal
+      opened={leaveModalOpened}
+      onClose={closeLeaveModal}
+      title="Leave without saving?"
+    >
+      <Stack gap="sm">
+        <Text size="sm">
+          You have unsaved changes in your dataset. If you leave now, they will
+          be lost.
+        </Text>
+        <Group justify="space-between" mt="sm">
+          <Button
+            color="red"
+            onClick={handleLeaveWithoutSaving}
+            disabled={isSaving}
+          >
+            Leave
+          </Button>
+          <Group>
             <Button
-              color="red"
-              onClick={handleLeaveWithoutSaving}
+              variant="default"
+              onClick={handleCancelLeave}
               disabled={isSaving}
             >
-              Leave
+              Cancel
             </Button>
-            <Group>
-              <Button
-                variant="default"
-                onClick={handleCancelLeave}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSaveAndLeave}
-                loading={isSaving}
-                disabled={!isDirty || isSaving}
-              >
-                Save and Leave
-              </Button>
-            </Group>
+            <Button
+              onClick={handleSaveAndLeave}
+              loading={isSaving}
+              disabled={!isDirty || isSaving}
+            >
+              Save and Leave
+            </Button>
           </Group>
-        </Stack>
-      </Modal>
+        </Group>
+      </Stack>
+    </Modal>
+
+        </Tabs.Panel>
+
+        <Tabs.Panel value="runs" pt="lg">
+          {isLoadingRuns ? (
+            <Group justify="center" py="xl">
+              <Loader />
+            </Group>
+          ) : runs.length === 0 ? (
+            <Card withBorder>
+              <Stack gap="sm">
+                <Text size="sm" c="dimmed">
+                  No evaluator runs recorded yet.
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Run “Test → Run all” to generate the first evaluation summary.
+                </Text>
+              </Stack>
+            </Card>
+          ) : (
+            <Stack gap="md">
+              <Card withBorder>
+                <Stack gap="sm">
+                  <Group justify="space-between" align="center">
+                    <Text fw={600}>Overall performance</Text>
+                    {isValidatingRuns && <Loader size="xs" />}
+                  </Group>
+                  {overallRunStats.length ? (
+                    <SimpleGrid
+                      cols={{
+                        base: 1,
+                        sm: Math.min(2, overallRunStatsColumnCount),
+                        lg: overallRunStatsColumnCount,
+                      }}
+                      spacing="md"
+                    >
+                      {overallRunStats.map((entry) => {
+                        const color =
+                          entry.passRate === null
+                            ? neutralMetricColor
+                            : getSuccessColor(entry.passRate);
+                        const percentageLabel = formatPercentage(
+                          entry.passRate,
+                        );
+
+                        return (
+                          <Card
+                            key={`${entry.slot}-${entry.evaluatorId ?? "none"}`}
+                            withBorder
+                            padding="md"
+                          >
+                            <Stack gap={6}>
+                              <Group justify="space-between" align="center">
+                                <Text size="sm" fw={600}>
+                                  {entry.evaluatorName ?? `Evaluator ${entry.slot}`}
+                                </Text>
+                                <Text size="sm" fw={600} style={{ color }}>
+                                  {percentageLabel}
+                                </Text>
+                              </Group>
+                              <Progress
+                                value={
+                                  entry.passRate === null
+                                    ? 0
+                                    : Math.max(0, Math.min(100, entry.passRate))
+                                }
+                                styles={{ bar: { backgroundColor: color } }}
+                              />
+                              <Text size="xs" c="dimmed">
+                                {entry.pass} passed · {entry.fail} failed · {entry.runCount} run
+                                {entry.runCount === 1 ? "" : "s"}
+                              </Text>
+                            </Stack>
+                          </Card>
+                        );
+                      })}
+                    </SimpleGrid>
+                  ) : (
+                    <Text size="sm" c="dimmed">
+                      No evaluator results yet.
+                    </Text>
+                  )}
+                </Stack>
+              </Card>
+
+              <Card withBorder>
+                <Stack gap="sm">
+                  <Group justify="space-between" align="center">
+                    <Text fw={600}>Run history</Text>
+                    {isValidatingRuns && <Loader size="xs" />}
+                  </Group>
+                  <Table withColumnBorders highlightOnHover verticalSpacing="sm">
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th w={220}>Run</Table.Th>
+                        <Table.Th w={120}>Version</Table.Th>
+                        <Table.Th w={140}>Items</Table.Th>
+                        {runEvaluatorColumns.map((column) => (
+                          <Table.Th key={`run-slot-${column.slot}`}>
+                            {column.evaluatorName}
+                          </Table.Th>
+                        ))}
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {runs.map((run) => {
+                        const slotMap = new Map(
+                          run.slots.map((slot) => [slot.slot, slot] as const),
+                        );
+                        return (
+                          <Table.Tr
+                            key={run.id}
+                            onClick={() => handleRunRowClick(run)}
+                            style={{
+                              cursor: run.versionId ? "pointer" : "default",
+                            }}
+                          >
+                            <Table.Td>
+                              <Stack gap={2} align="flex-start">
+                                <Text size="sm" fw={600}>
+                                  {formatDateTime(run.createdAt)}
+                                </Text>
+                                {run.createdByName || run.createdByEmail ? (
+                                  <Text size="xs" c="dimmed">
+                                    {run.createdByName ?? run.createdByEmail}
+                                  </Text>
+                                ) : null}
+                              </Stack>
+                            </Table.Td>
+                            <Table.Td>
+                              <Stack gap={2} align="flex-start">
+                                <Text size="sm">
+                                  {run.versionNumber
+                                    ? `v${run.versionNumber}`
+                                    : run.versionId
+                                      ? "Version"
+                                      : "—"}
+                                </Text>
+                                {run.versionCreatedAt ? (
+                                  <Text size="xs" c="dimmed">
+                                    {formatDateTime(run.versionCreatedAt)}
+                                  </Text>
+                                ) : null}
+                              </Stack>
+                            </Table.Td>
+                            <Table.Td>
+                              <Stack gap={2} align="flex-start">
+                                <Text size="sm">
+                                  {run.totalItems} item
+                                  {run.totalItems === 1 ? "" : "s"}
+                                </Text>
+                                <Text size="xs" c="dimmed">
+                                  {run.updatedItemCount} updated
+                                </Text>
+                              </Stack>
+                            </Table.Td>
+                            {runEvaluatorColumns.map((column) => (
+                              <Table.Td key={`${run.id}-slot-${column.slot}`}>
+                                {renderRunSlotCell(slotMap.get(column.slot))}
+                              </Table.Td>
+                            ))}
+                          </Table.Tr>
+                        );
+                      })}
+                    </Table.Tbody>
+                  </Table>
+                </Stack>
+              </Card>
+            </Stack>
+          )}
+        </Tabs.Panel>
+      </Tabs>
+
       <style jsx global>{`
         .dataset-table-editable {
           transition: background-color 120ms ease !important;

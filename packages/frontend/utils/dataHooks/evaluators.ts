@@ -9,6 +9,7 @@ export interface Evaluator {
   type: string;
   name: string;
   kind?: "builtin" | "custom";
+  params?: Record<string, any>;
 }
 
 interface CreateEvaluatorData {

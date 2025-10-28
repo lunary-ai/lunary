@@ -10,11 +10,48 @@ import OpenAI from "openai";
 import { z } from "zod";
 import config from "@/src/utils/config";
 import type { Sql } from "postgres";
-import { createDatasetVersion, type CreateDatasetVersionOptions } from "./versioning";
+import evaluatorRegistry from "@/src/evaluators";
+import {
+  createDatasetVersion,
+  type CreateDatasetVersionOptions,
+} from "./versioning";
 
 const datasetsV2 = new Router({
   prefix: "/datasets-v2",
 });
+
+const MAX_DATASET_EVALUATORS = 5;
+const DEFAULT_EVALUATOR_MODEL = "gpt-5-mini";
+const DATASET_EVALUATOR_SLOTS = Array.from(
+  { length: MAX_DATASET_EVALUATORS },
+  (_, index) => index + 1,
+);
+
+const EVALUATOR_SLOT_COLUMNS = {
+  1: "evaluator_slot_1_id",
+  2: "evaluator_slot_2_id",
+  3: "evaluator_slot_3_id",
+  4: "evaluator_slot_4_id",
+  5: "evaluator_slot_5_id",
+} as const satisfies Record<number, string>;
+
+const EVALUATOR_RESULT_COLUMNS = {
+  1: "evaluator_result_1",
+  2: "evaluator_result_2",
+  3: "evaluator_result_3",
+  4: "evaluator_result_4",
+  5: "evaluator_result_5",
+} as const satisfies Record<number, string>;
+
+function getEvaluatorSlotColumn(slot: number): string {
+  return EVALUATOR_SLOT_COLUMNS[slot as keyof typeof EVALUATOR_SLOT_COLUMNS];
+}
+
+function getEvaluatorResultColumn(slot: number): string {
+  return EVALUATOR_RESULT_COLUMNS[
+    slot as keyof typeof EVALUATOR_RESULT_COLUMNS
+  ];
+}
 
 const DatasetIdParamsSchema = z.object({
   datasetId: z.string().uuid(),
@@ -31,11 +68,11 @@ const DatasetVersionIdParamsSchema = z.object({
 });
 
 const DatasetVersionListQuerySchema = z.object({
-  limit: z
-    .coerce.number()
-    .min(1)
-    .max(100)
-    .default(50),
+  limit: z.coerce.number().min(1).max(100).default(50),
+});
+
+const DatasetEvaluatorRunListQuerySchema = z.object({
+  limit: z.coerce.number().min(1).max(100).default(20),
 });
 
 const DatasetInputSchema = z.object({
@@ -49,20 +86,24 @@ const DatasetItemCreateSchema = z
   .object({
     input: z.string().optional(),
     groundTruth: z.string().nullable().optional(),
+    output: z.string().nullable().optional(),
   })
   .transform((value) => ({
     input: value.input ?? "",
     groundTruth: value.groundTruth ?? null,
+    output: value.output ?? null,
   }));
 
 const DatasetItemUpdateSchema = z
   .object({
     input: z.string().optional(),
     groundTruth: z.string().nullable().optional(),
+    output: z.string().nullable().optional(),
   })
   .transform((value) => ({
     input: value.input,
     groundTruth: value.groundTruth,
+    output: value.output,
   }));
 
 const DatasetImportSchema = z.object({
@@ -74,6 +115,32 @@ const DatasetGenerateSchema = z.object({
   model: z.string().trim().min(1).default("gpt-5-mini"),
   instructions: z.string().trim().max(10_000).optional(),
   input: z.string().optional(),
+});
+
+const EvaluatorConfigSchema = z
+  .object({
+    type: z.literal("model-labeler"),
+    passLabels: z.array(z.string()),
+  })
+  .or(
+    z.object({
+      type: z.literal("model-scorer"),
+      threshold: z.number(),
+    }),
+  );
+
+const DatasetEvaluatorAssignmentSchema = z.object({
+  evaluatorId: z.string().uuid(),
+  config: EvaluatorConfigSchema.optional(),
+});
+
+const DatasetEvaluatorSlotSchema = z.object({
+  slot: z.coerce.number().int().min(1).max(MAX_DATASET_EVALUATORS),
+});
+
+const DatasetEvaluatorRunIdParamsSchema = z.object({
+  datasetId: z.string().uuid(),
+  runId: z.string().uuid(),
 });
 
 function ensureProjectId(ctx: Context): string {
@@ -136,14 +203,17 @@ async function generateCopyName(
   }
 }
 
-type ParsedItem = { input: string; groundTruth: string | null };
+type ParsedItem = {
+  input: string;
+  groundTruth: string | null;
+  output: string | null;
+};
 
 type SqlClient = Sql<any> | typeof sql;
 
 function shouldSkipAutoVersion(ctx: Context) {
-  const raw = (ctx.request.query?.skipVersion ?? ctx.request.query?.skipVersioning) as
-    | string
-    | undefined;
+  const raw = (ctx.request.query?.skipVersion ??
+    ctx.request.query?.skipVersioning) as string | undefined;
   if (!raw) return false;
   const value = raw.toLowerCase();
   return value === "true" || value === "1" || value === "yes";
@@ -153,6 +223,11 @@ async function fetchDatasetMeta(client: SqlClient, datasetId: string) {
   const [dataset] = await client`
     select
       d.*,
+      d.evaluator_slot_1_id as "evaluatorSlot1Id",
+      d.evaluator_slot_2_id as "evaluatorSlot2Id",
+      d.evaluator_slot_3_id as "evaluatorSlot3Id",
+      d.evaluator_slot_4_id as "evaluatorSlot4Id",
+      d.evaluator_slot_5_id as "evaluatorSlot5Id",
       coalesce(item_stats.item_count, 0)::int as item_count,
       owner.name as owner_name,
       owner.email as owner_email,
@@ -171,7 +246,49 @@ async function fetchDatasetMeta(client: SqlClient, datasetId: string) {
     limit 1
   `;
 
-  return dataset ?? null;
+  if (!dataset) {
+    return null;
+  }
+
+  const configs = await client`
+    select slot, config
+    from dataset_v2_evaluator_config
+    where dataset_id = ${datasetId}
+  `;
+
+  const evaluatorConfigs = configs.reduce(
+    (acc: Record<number, any>, row: { slot: number; config: any }) => {
+      acc[row.slot] = row.config;
+      return acc;
+    },
+    {} as Record<number, any>,
+  );
+
+  return {
+    ...dataset,
+    evaluatorConfigs,
+  };
+}
+
+async function fetchDatasetItems(client: SqlClient, datasetId: string) {
+  return client`
+    select
+      di.id,
+      di.dataset_id as "datasetId",
+      di.input,
+      di.ground_truth as "groundTruth",
+      di.output,
+      di.created_at as "createdAt",
+      di.updated_at as "updatedAt",
+      di.evaluator_result_1 as "evaluatorResult1",
+      di.evaluator_result_2 as "evaluatorResult2",
+      di.evaluator_result_3 as "evaluatorResult3",
+      di.evaluator_result_4 as "evaluatorResult4",
+      di.evaluator_result_5 as "evaluatorResult5"
+    from dataset_v2_item di
+    where di.dataset_id = ${datasetId}
+    order by di.created_at asc
+  `;
 }
 
 async function fetchDatasetWithItems(datasetId: string) {
@@ -180,17 +297,375 @@ async function fetchDatasetWithItems(datasetId: string) {
     return null;
   }
 
-  const items = await sql`
-    select *
-    from dataset_v2_item
-    where dataset_id = ${datasetId}
-    order by created_at asc
-  `;
+  const items = await fetchDatasetItems(sql, datasetId);
 
   return {
     ...dataset,
     items,
   };
+}
+
+function getDatasetEvaluatorSlots(dataset: any) {
+  return DATASET_EVALUATOR_SLOTS.map((slot) => {
+    const camelKey = `evaluatorSlot${slot}Id`;
+    const snakeKey = `evaluator_slot_${slot}_id`;
+    const evaluatorId = dataset?.[camelKey] ?? dataset?.[snakeKey];
+    if (!evaluatorId) {
+      return null;
+    }
+    return { slot, evaluatorId };
+  }).filter((value): value is { slot: number; evaluatorId: string } =>
+    Boolean(value),
+  );
+}
+
+function findFirstAvailableEvaluatorSlot(dataset: any) {
+  for (const slot of DATASET_EVALUATOR_SLOTS) {
+    const camelKey = `evaluatorSlot${slot}Id`;
+    const snakeKey = `evaluator_slot_${slot}_id`;
+    if (!dataset?.[camelKey] && !dataset?.[snakeKey]) {
+      return slot;
+    }
+  }
+  return null;
+}
+
+function fillPromptTemplate(template: string, item: any) {
+  const replacements: Record<string, string> = {
+    "{{input}}": String(item?.input ?? ""),
+    "{{ground_truth}}": String(item?.groundTruth ?? ""),
+    "{{output}}": String(item?.output ?? ""),
+  };
+
+  return Object.entries(replacements).reduce((acc, [placeholder, value]) => {
+    return acc.split(placeholder).join(value);
+  }, template);
+}
+
+function prepareEvaluatorParams(rawParams: unknown, item: any) {
+  if (!rawParams || typeof rawParams !== "object") {
+    return {};
+  }
+
+  const params = { ...(rawParams as Record<string, any>) };
+
+  if (typeof params.prompt === "string") {
+    params.prompt = fillPromptTemplate(params.prompt, item);
+  }
+
+  return params;
+}
+
+function buildDatasetRun(projectId: string, datasetId: string, item: any) {
+  return {
+    id: item.id,
+    createdAt: item.createdAt ?? new Date().toISOString(),
+    projectId,
+    type: "dataset_v2_item",
+    isPublic: false,
+    input: item.input,
+    output: item.output,
+    idealOutput: item.groundTruth,
+    metadata: {
+      datasetId,
+      datasetItemId: item.id,
+    },
+  };
+}
+
+type DatasetEvaluatorConfigModelLabeler = {
+  type: "model-labeler";
+  passLabels: string[];
+};
+
+type DatasetEvaluatorConfigModelScorer = {
+  type: "model-scorer";
+  threshold: number;
+};
+
+type DatasetEvaluatorConfigUnion =
+  | DatasetEvaluatorConfigModelLabeler
+  | DatasetEvaluatorConfigModelScorer;
+
+type EvaluatorPassOutcome =
+  | { pass: true; value?: string | null }
+  | { pass: false; value?: string | null }
+  | { pass: null; value?: string | null };
+
+function computeEvaluatorPassOutcome(
+  result: unknown,
+  config: DatasetEvaluatorConfigUnion | undefined,
+): EvaluatorPassOutcome {
+  if (!config) {
+    return { pass: null, value: null };
+  }
+
+  if (!result || typeof result !== "object") {
+    return { pass: null, value: null };
+  }
+
+  const record = result as Record<string, any>;
+
+  if (config.type === "model-labeler") {
+    const candidates: string[] = [];
+
+    if (typeof record.output === "string" && record.output.trim()) {
+      candidates.push(record.output.trim());
+    }
+
+    if (
+      typeof record.primaryLabel === "string" &&
+      record.primaryLabel.trim()
+    ) {
+      candidates.push(record.primaryLabel.trim());
+    }
+
+    if (Array.isArray(record.matches)) {
+      for (const match of record.matches) {
+        if (typeof match === "string" && match.trim()) {
+          candidates.push(match.trim());
+        } else if (
+          typeof match === "object" &&
+          typeof match?.label === "string" &&
+          match.label.trim()
+        ) {
+          candidates.push(match.label.trim());
+        }
+      }
+    }
+
+    const label = candidates.find((candidate) => candidate.length > 0);
+
+    if (!label) {
+      return { pass: null, value: null };
+    }
+
+    const pass = config.passLabels.includes(label);
+    return { pass: pass ? true : false, value: label };
+  }
+
+  if (config.type === "model-scorer") {
+    let score: number | null = null;
+
+    if (typeof record.score === "number" && Number.isFinite(record.score)) {
+      score = record.score;
+    } else if (typeof record.output === "string") {
+      const parsed = Number(record.output);
+      if (Number.isFinite(parsed)) {
+        score = parsed;
+      }
+    }
+
+    if (score === null) {
+      return { pass: null, value: null };
+    }
+
+    const pass = score >= config.threshold;
+    return { pass: pass ? true : false, value: String(score) };
+  }
+
+  return { pass: null, value: null };
+}
+
+type RunSlotInfo = {
+  slot: number;
+  evaluatorId: string | null;
+  evaluatorName: string | null;
+  evaluatorType: string | null;
+  evaluatorKind: string | null;
+};
+
+type RunSlotSummary = RunSlotInfo & {
+  pass: number;
+  fail: number;
+  unknown: number;
+  evaluated: number;
+  passRate: number | null;
+  coverage: number | null;
+  config?: DatasetEvaluatorConfigUnion | null;
+};
+
+type RunSummary = {
+  totalItems: number;
+  slots: Record<number, RunSlotSummary>;
+};
+
+function readEvaluatorResultFromItem(item: any, slot: number) {
+  const camelKey = `evaluatorResult${slot}`;
+  const snakeKey = `evaluator_result_${slot}`;
+  if (Object.prototype.hasOwnProperty.call(item, camelKey)) {
+    return item[camelKey];
+  }
+  if (Object.prototype.hasOwnProperty.call(item, snakeKey)) {
+    return item[snakeKey];
+  }
+  return null;
+}
+
+function buildRunSummary(
+  items: any[],
+  slotInfos: RunSlotInfo[],
+  configs: Record<number, DatasetEvaluatorConfigUnion> | undefined,
+): RunSummary {
+  const summary: RunSummary = {
+    totalItems: items.length,
+    slots: {},
+  };
+
+  slotInfos.forEach((info) => {
+    summary.slots[info.slot] = {
+      ...info,
+      pass: 0,
+      fail: 0,
+      unknown: 0,
+      evaluated: 0,
+      passRate: null,
+      coverage: null,
+      config: configs?.[info.slot] ?? null,
+    };
+  });
+
+  for (const item of items) {
+    for (const info of slotInfos) {
+      const slotSummary = summary.slots[info.slot];
+      if (!slotSummary) continue;
+
+      const result = readEvaluatorResultFromItem(item, info.slot);
+      const outcome = computeEvaluatorPassOutcome(
+        result,
+        configs?.[info.slot],
+      );
+
+      if (outcome.pass === true) {
+        slotSummary.pass += 1;
+        slotSummary.evaluated += 1;
+      } else if (outcome.pass === false) {
+        slotSummary.fail += 1;
+        slotSummary.evaluated += 1;
+      } else if (result !== null && typeof result !== "undefined") {
+        slotSummary.unknown += 1;
+      }
+    }
+  }
+
+  for (const info of slotInfos) {
+    const slotSummary = summary.slots[info.slot];
+    if (!slotSummary) continue;
+    if (slotSummary.evaluated > 0) {
+      slotSummary.passRate =
+        Number(
+          ((slotSummary.pass / slotSummary.evaluated) * 100).toFixed(2),
+        ) ?? null;
+    } else {
+      slotSummary.passRate = null;
+    }
+
+    const evaluatedTotal =
+      slotSummary.evaluated + slotSummary.unknown > 0
+        ? slotSummary.evaluated + slotSummary.unknown
+        : 0;
+    slotSummary.coverage =
+      summary.totalItems > 0
+        ? Number(((evaluatedTotal / summary.totalItems) * 100).toFixed(2))
+        : null;
+  }
+
+  return summary;
+}
+
+function extractNumericScoreFromText(text: string | null | undefined) {
+  if (!text) {
+    return null;
+  }
+
+  const match = String(text).match(/-?\d+(?:\.\d+)?/);
+  if (!match) {
+    return null;
+  }
+
+  const value = Number(match[0]);
+  return Number.isFinite(value) ? value : null;
+}
+
+function normalizeScorerOpenAIResult(
+  result: { model: string; output: string | null; reasoning: string | null },
+  config: DatasetEvaluatorConfigUnion | undefined,
+) {
+  const score = extractNumericScoreFromText(result.output);
+  const pass =
+    config && config.type === "model-scorer" && score !== null
+      ? score >= config.threshold
+      : undefined;
+
+  return {
+    model: result.model ?? null,
+    output: result.output,
+    reasoning: result.reasoning,
+    score,
+    pass,
+  };
+}
+
+function isRelationMissingError(error: unknown) {
+  return Boolean(
+    error && typeof error === "object" && (error as any)?.code === "42P01",
+  );
+}
+
+async function fetchDatasetEvaluatorRunById(
+  client: SqlClient,
+  runId: string,
+) {
+  const [row] = await client`
+    select
+      r.id,
+      r.dataset_id as "datasetId",
+      r.version_id as "versionId",
+      r.created_by as "createdBy",
+      r.created_at as "createdAt",
+      r.updated_at as "updatedAt",
+      r.total_items as "totalItems",
+      r.updated_item_count as "updatedItemCount",
+      v.version_number as "versionNumber",
+      v.created_at as "versionCreatedAt",
+      creator.name as "createdByName",
+      creator.email as "createdByEmail"
+    from dataset_v2_evaluator_run r
+    left join dataset_v2_version v on v.id = r.version_id
+    left join account creator on creator.id = r.created_by
+    where r.id = ${runId}
+    limit 1
+  `;
+
+  return row ?? null;
+}
+
+async function fetchDatasetEvaluatorRunsForDataset(
+  client: SqlClient,
+  datasetId: string,
+  limit: number,
+) {
+  return client`
+    select
+      r.id,
+      r.dataset_id as "datasetId",
+      r.version_id as "versionId",
+      r.created_by as "createdBy",
+      r.created_at as "createdAt",
+      r.updated_at as "updatedAt",
+      r.total_items as "totalItems",
+      r.updated_item_count as "updatedItemCount",
+      v.version_number as "versionNumber",
+      v.created_at as "versionCreatedAt",
+      creator.name as "createdByName",
+      creator.email as "createdByEmail"
+    from dataset_v2_evaluator_run r
+    left join dataset_v2_version v on v.id = r.version_id
+    left join account creator on creator.id = r.created_by
+    where r.dataset_id = ${datasetId}
+    order by r.created_at desc
+    limit ${limit}
+  `;
 }
 
 async function maybeCreateAutoVersion(
@@ -271,6 +746,21 @@ function parseCsv(content: string): ParsedItem[] {
     }
     return -1;
   })();
+  const outputIndex = (() => {
+    const variants = [
+      "output",
+      "model_output",
+      "prediction",
+      "generated_output",
+    ];
+    for (const variant of variants) {
+      const idx = header.indexOf(variant);
+      if (idx !== -1) {
+        return idx;
+      }
+    }
+    return -1;
+  })();
 
   if (inputIndex === -1) {
     throw new Error(
@@ -283,6 +773,7 @@ function parseCsv(content: string): ParsedItem[] {
     const input = values[inputIndex] ?? "";
     const groundTruthValue =
       groundTruthIndex >= 0 ? (values[groundTruthIndex] ?? "") : null;
+    const outputValue = outputIndex >= 0 ? (values[outputIndex] ?? "") : null;
 
     return {
       input,
@@ -290,6 +781,7 @@ function parseCsv(content: string): ParsedItem[] {
         groundTruthValue === null || groundTruthValue === ""
           ? null
           : groundTruthValue,
+      output: outputValue === null || outputValue === "" ? null : outputValue,
     };
   });
 }
@@ -330,9 +822,23 @@ function parseJsonl(content: string): ParsedItem[] {
           ? null
           : String(groundTruthRaw);
 
+    const outputRaw =
+      parsed.output ??
+      parsed.model_output ??
+      parsed.prediction ??
+      parsed.generated_output ??
+      null;
+    const outputValue =
+      typeof outputRaw === "string"
+        ? outputRaw
+        : outputRaw == null
+          ? null
+          : String(outputRaw);
+
     items.push({
       input: parsed.input,
       groundTruth: groundTruthValue === "" ? null : groundTruthValue,
+      output: outputValue === "" ? null : outputValue,
     });
   }
 
@@ -366,6 +872,71 @@ function extractResponseText(response: any) {
   return "";
 }
 
+function extractReasoningText(response: any) {
+  if (!response) return "";
+
+  const segments: string[] = [];
+
+  const push = (value: unknown) => {
+    if (typeof value === "string" && value.trim().length) {
+      segments.push(value.trim());
+    }
+  };
+
+  if (Array.isArray(response.output)) {
+    for (const block of response.output) {
+      if (!Array.isArray(block?.content)) continue;
+      for (const part of block.content) {
+        if (typeof part?.type === "string" && part.type === "reasoning") {
+          push(part?.reasoning ?? part?.text ?? part?.content ?? "");
+        } else if (
+          typeof part?.reasoning === "string" &&
+          part.reasoning.trim().length
+        ) {
+          push(part.reasoning);
+        }
+      }
+    }
+  }
+
+  if (!segments.length && typeof response.reasoning === "string") {
+    push(response.reasoning);
+  }
+
+  if (!segments.length && Array.isArray(response.reasoning)) {
+    for (const entry of response.reasoning) {
+      if (typeof entry === "string") {
+        push(entry);
+      } else if (typeof entry?.text === "string") {
+        push(entry.text);
+      }
+    }
+  }
+
+  return segments.join("\n");
+}
+
+async function runOpenAIEvaluator(
+  client: OpenAI,
+  model: string,
+  prompt: string,
+) {
+  const response = await client.responses.create({
+    model,
+    input: [{ role: "user", content: prompt }],
+    reasoning: { effort: "medium" },
+  });
+
+  const output = extractResponseText(response).trim();
+  const reasoning = extractReasoningText(response).trim();
+
+  return {
+    model,
+    output: output.length ? output : null,
+    reasoning: reasoning.length ? reasoning : null,
+  };
+}
+
 async function insertDatasetItems(
   trx: typeof sql,
   datasetId: string,
@@ -384,15 +955,20 @@ async function insertDatasetItems(
     const parameters: any[] = [];
 
     chunk.forEach((item, index) => {
-      const paramIndex = index * 3;
+      const paramIndex = index * 4;
       values.push(
-        `($${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3})`,
+        `($${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4})`,
       );
-      parameters.push(datasetId, item.input ?? "", item.groundTruth);
+      parameters.push(
+        datasetId,
+        item.input ?? "",
+        item.groundTruth,
+        item.output,
+      );
     });
 
     await trx.unsafe(
-      `insert into dataset_v2_item (dataset_id, input, ground_truth) values ${values.join(", ")}`,
+      `insert into dataset_v2_item (dataset_id, input, ground_truth, output) values ${values.join(", ")}`,
       parameters,
     );
     inserted += chunk.length;
@@ -449,6 +1025,11 @@ datasetsV2.get("/", checkAccess("datasets", "list"), async (ctx: Context) => {
   const datasets = await sql`
     select
       d.*,
+      d.evaluator_slot_1_id as "evaluatorSlot1Id",
+      d.evaluator_slot_2_id as "evaluatorSlot2Id",
+      d.evaluator_slot_3_id as "evaluatorSlot3Id",
+      d.evaluator_slot_4_id as "evaluatorSlot4Id",
+      d.evaluator_slot_5_id as "evaluatorSlot5Id",
       coalesce(item_stats.item_count, 0)::int as item_count,
       owner.name as owner_name,
       owner.email as owner_email,
@@ -575,20 +1156,14 @@ datasetsV2.get("/:datasetId", async (ctx: Context) => {
     return;
   }
 
-  const datasetWithMeta = await fetchDatasetMeta(sql, datasetId);
+  const datasetWithItems = await fetchDatasetWithItems(datasetId);
 
-  if (!datasetWithMeta) {
+  if (!datasetWithItems) {
     ctx.throw(404, "Dataset not found");
     return;
   }
 
-  const items =
-    await sql`select * from dataset_v2_item where dataset_id = ${datasetId} order by created_at asc`;
-
-  ctx.body = {
-    ...datasetWithMeta,
-    items,
-  };
+  ctx.body = datasetWithItems;
 });
 
 /**
@@ -649,7 +1224,7 @@ datasetsV2.patch(
       ...(payload.description !== undefined
         ? { description: payload.description }
         : {}),
-      updatedAt: new Date(),
+      updated_at: new Date(),
     });
 
     const [updatedDataset] = await sql`
@@ -664,6 +1239,812 @@ datasetsV2.patch(
     const datasetWithMeta = await fetchDatasetMeta(sql, datasetId);
 
     ctx.body = datasetWithMeta ?? updatedDataset;
+  },
+);
+
+/**
+ * @openapi
+ * /v1/datasets-v2/{datasetId}/evaluators:
+ *   post:
+ *     summary: Attach an evaluator to a dataset
+ *     tags: [Datasets v2]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: datasetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               evaluatorId:
+ *                 type: string
+ *                 format: uuid
+ *             required:
+ *               - evaluatorId
+ *     responses:
+ *       200:
+ *         description: Updated dataset including evaluator slots
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetV2WithItems'
+ */
+datasetsV2.post(
+  "/:datasetId/evaluators",
+  checkAccess("datasets", "update"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId } = DatasetIdParamsSchema.parse(ctx.params);
+    const { evaluatorId, config } = DatasetEvaluatorAssignmentSchema.parse(
+      ctx.request.body ?? {},
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    const [evaluator] = await sql`
+      select id, project_id, kind, type, params
+      from evaluator
+      where id = ${evaluatorId} and project_id = ${projectId}
+    `;
+
+    if (!evaluator) {
+      ctx.throw(404, "Evaluator not found");
+      return;
+    }
+
+    if (evaluator.kind === "builtin") {
+      ctx.throw(400, "Builtin evaluators cannot be attached to datasets");
+      return;
+    }
+
+    if (config) {
+      if (
+        (config.type === "model-labeler" && evaluator.type !== "model-labeler") ||
+        (config.type === "model-scorer" && evaluator.type !== "model-scorer")
+      ) {
+        ctx.throw(400, "Configuration does not match evaluator type");
+        return;
+      }
+
+      if (config.type === "model-labeler" && config.passLabels.length === 0) {
+        ctx.throw(400, "Specify at least one passing label");
+        return;
+      }
+    }
+
+    const existingSlots = getDatasetEvaluatorSlots(dataset);
+    if (existingSlots.some((slot) => slot.evaluatorId === evaluatorId)) {
+      const datasetWithItems = await fetchDatasetWithItems(datasetId);
+      ctx.body = datasetWithItems ?? dataset;
+      return;
+    }
+
+    const availableSlot = findFirstAvailableEvaluatorSlot(dataset);
+
+    if (!availableSlot) {
+      ctx.throw(400, "Maximum number of evaluators reached for this dataset");
+      return;
+    }
+
+    const slotColumn = getEvaluatorSlotColumn(availableSlot);
+
+    await sql`
+      update dataset_v2
+      set ${sql({ [slotColumn]: evaluatorId, updated_at: new Date() })}
+      where id = ${datasetId}
+    `;
+
+    if (config) {
+      await sql`
+        insert into dataset_v2_evaluator_config (dataset_id, slot, config)
+        values (${datasetId}, ${availableSlot}, ${sql.json(config)})
+        on conflict (dataset_id, slot)
+        do update set config = excluded.config
+      `;
+    } else {
+      await sql`
+        delete from dataset_v2_evaluator_config
+        where dataset_id = ${datasetId} and slot = ${availableSlot}
+      `;
+    }
+
+    const datasetWithItems = await fetchDatasetWithItems(datasetId);
+    ctx.body = datasetWithItems ?? dataset;
+  },
+);
+
+/**
+ * @openapi
+ * /v1/datasets-v2/{datasetId}/evaluators/{slot}:
+ *   delete:
+ *     summary: Detach an evaluator from a dataset
+ *     tags: [Datasets v2]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: datasetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: slot
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 5
+ *     responses:
+ *       200:
+ *         description: Updated dataset with evaluator column removed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetV2WithItems'
+ */
+datasetsV2.delete(
+  "/:datasetId/evaluators/:slot",
+  checkAccess("datasets", "update"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId, slot } = DatasetEvaluatorSlotSchema.merge(
+      DatasetIdParamsSchema,
+    ).parse(ctx.params);
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    const slotColumn = getEvaluatorSlotColumn(slot);
+    const resultColumn = getEvaluatorResultColumn(slot);
+
+    await sql`
+      update dataset_v2
+      set ${sql({ [slotColumn]: null, updated_at: new Date() })}
+      where id = ${datasetId}
+    `;
+
+    await sql`
+      update dataset_v2_item
+      set ${sql({ [resultColumn]: null, updated_at: new Date() })}
+      where dataset_id = ${datasetId}
+    `;
+
+    await sql`
+      update dataset_v2_version_item
+      set ${sql({ [resultColumn]: null })}
+      where dataset_id = ${datasetId}
+    `;
+
+    await sql`
+      delete from dataset_v2_evaluator_config
+      where dataset_id = ${datasetId} and slot = ${slot}
+    `;
+
+    await touchDataset(datasetId);
+
+    const datasetWithItems = await fetchDatasetWithItems(datasetId);
+    ctx.body = datasetWithItems ?? dataset;
+  },
+);
+
+/**
+ * @openapi
+ * /v1/datasets-v2/{datasetId}/evaluators/run:
+ *   post:
+ *     summary: Run all evaluators attached to a dataset on every item
+ *     tags: [Datasets v2]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: datasetId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Evaluator results updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 updatedItemCount:
+ *                   type: integer
+ *                 dataset:
+ *                   $ref: '#/components/schemas/DatasetV2WithItems'
+ */
+datasetsV2.post(
+  "/:datasetId/evaluators/run",
+  checkAccess("datasets", "update"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId } = DatasetIdParamsSchema.parse(ctx.params);
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    const configRows = await sql`
+      select slot, config
+      from dataset_v2_evaluator_config
+      where dataset_id = ${datasetId}
+    `;
+
+    const evaluatorConfigMap = configRows.reduce(
+      (
+        acc: Record<number, DatasetEvaluatorConfigUnion>,
+        row: { slot: number; config: DatasetEvaluatorConfigUnion },
+      ) => {
+        acc[row.slot] = row.config;
+        return acc;
+      },
+      {} as Record<number, DatasetEvaluatorConfigUnion>,
+    );
+
+    const slots = getDatasetEvaluatorSlots(dataset);
+
+    if (!slots.length) {
+      ctx.throw(400, "No evaluators attached to this dataset");
+      return;
+    }
+
+    const evaluatorIds = slots.map((slot) => slot.evaluatorId);
+
+    const evaluators =
+      evaluatorIds.length > 0
+        ? await sql`
+            select *
+            from evaluator
+            where project_id = ${projectId}
+              and id = any(${sql.array(evaluatorIds)}::uuid[])
+          `
+        : [];
+
+    const evaluatorMap = new Map<string, any>();
+    for (const evaluator of evaluators) {
+      evaluatorMap.set(evaluator.id, evaluator);
+    }
+
+    const missing = evaluatorIds.filter((id) => !evaluatorMap.has(id));
+    if (missing.length) {
+      ctx.throw(400, "One or more evaluators are unavailable");
+      return;
+    }
+
+    const slotRunners: Array<{
+      slot: number;
+      evaluator: any;
+      runner: any;
+      config?: DatasetEvaluatorConfigUnion | undefined;
+    }> = [];
+
+    for (const slot of slots) {
+      const evaluator = evaluatorMap.get(slot.evaluatorId);
+      if (!evaluator) {
+        ctx.throw(404, "Evaluator not found");
+        return;
+      }
+
+      if (evaluator.kind === "builtin") {
+        ctx.throw(400, "Builtin evaluators cannot be used for dataset testing");
+        return;
+      }
+
+      const runner =
+        evaluatorRegistry[evaluator.type as keyof typeof evaluatorRegistry];
+
+      if (!runner || typeof runner.evaluate !== "function") {
+        ctx.throw(
+          400,
+          `Evaluator type '${evaluator.type}' is not supported for dataset testing`,
+        );
+        return;
+      }
+
+      slotRunners.push({
+        slot: slot.slot,
+        evaluator,
+        runner,
+        config: evaluatorConfigMap?.[slot.slot],
+      });
+    }
+
+    if (!slotRunners.length) {
+      ctx.throw(400, "No evaluators available to run");
+      return;
+    }
+
+    const items = await fetchDatasetItems(sql, datasetId);
+
+    if (!items.length) {
+      ctx.body = {
+        updatedItemCount: 0,
+        dataset: await fetchDatasetWithItems(datasetId),
+      };
+      return;
+    }
+
+    let updatedCount = 0;
+    let openAIClient: OpenAI | null = null;
+
+    const getOpenAIClient = () => {
+      if (!openAIClient) {
+        const openAIParams = getOpenAIParams();
+        if (!openAIParams) {
+          ctx.throw(400, "OpenAI API key is not configured");
+        }
+        openAIClient = new OpenAI(openAIParams);
+      }
+      return openAIClient;
+    };
+
+    for (const item of items) {
+      const run = buildDatasetRun(projectId, datasetId, item);
+      const updates: Record<string, any> = {};
+      let hasUpdate = false;
+
+      for (const { slot, evaluator, runner, config: slotConfig } of slotRunners) {
+        const params = prepareEvaluatorParams(evaluator.params, item);
+        const columnName = getEvaluatorResultColumn(slot);
+
+        const prompt =
+          typeof params.prompt === "string" ? params.prompt.trim() : "";
+
+        if (prompt.length > 0) {
+          try {
+            const client = getOpenAIClient();
+            const modelId =
+              typeof evaluator.params?.modelId === "string" &&
+              evaluator.params.modelId.trim().length
+                ? evaluator.params.modelId.trim()
+                : typeof evaluator.params?.model === "string" &&
+                    evaluator.params.model.trim().length
+                  ? evaluator.params.model.trim()
+                  : DEFAULT_EVALUATOR_MODEL;
+
+            const result = await runOpenAIEvaluator(client, modelId, prompt);
+            if (evaluator.type === "model-scorer") {
+              updates[columnName] = sql.json(
+                normalizeScorerOpenAIResult(result, slotConfig),
+              );
+            } else {
+              updates[columnName] = sql.json(result);
+            }
+          } catch (error) {
+            updates[columnName] = sql.json({
+              error: (error as Error)?.message ?? "Evaluator run failed",
+            });
+          }
+        } else {
+          try {
+            const result = await runner.evaluate(run, params);
+            const normalized = typeof result === "undefined" ? null : result;
+            if (normalized === null) {
+              updates[columnName] = null;
+            } else {
+              updates[columnName] = sql.json(normalized);
+            }
+          } catch (error) {
+            updates[columnName] = sql.json({
+              error: (error as Error)?.message ?? "Evaluator run failed",
+            });
+          }
+        }
+
+        hasUpdate = true;
+      }
+
+      if (hasUpdate) {
+        updates.updated_at = new Date();
+
+        await sql`
+          update dataset_v2_item
+          set ${sql(updates)}
+          where id = ${item.id} and dataset_id = ${datasetId}
+        `;
+        updatedCount += 1;
+      }
+    }
+
+    await touchDataset(datasetId);
+
+    const userId = ctx.state.userId as string | undefined;
+
+    const version = await createDatasetVersion(sql, datasetId, {
+      createdBy: userId ?? dataset.owner_id ?? null,
+    });
+
+    const datasetWithItems = await fetchDatasetWithItems(datasetId);
+
+    const slotInfos: RunSlotInfo[] = slotRunners.map(({ slot, evaluator }) => ({
+      slot,
+      evaluatorId: evaluator.id ?? null,
+      evaluatorName: evaluator.name ?? null,
+      evaluatorKind: evaluator.kind ?? null,
+      evaluatorType: evaluator.type ?? null,
+    }));
+
+    const summary = buildRunSummary(
+      datasetWithItems?.items ?? [],
+      slotInfos,
+      evaluatorConfigMap,
+    );
+
+    const slotEntries = Object.values(summary.slots);
+
+    let runPayload: any = null;
+
+    try {
+      const [runRecord] = await sql`
+        insert into dataset_v2_evaluator_run (
+          dataset_id,
+          version_id,
+          created_by,
+          total_items,
+          updated_item_count
+        ) values (
+          ${datasetId},
+          ${version.id},
+          ${userId ?? null},
+          ${summary.totalItems},
+          ${updatedCount}
+        )
+        returning *
+      `;
+
+      if (slotEntries.length) {
+        await sql`
+          insert into dataset_v2_evaluator_run_slot (
+            run_id,
+            slot,
+            evaluator_id,
+            evaluator_name,
+            evaluator_kind,
+            evaluator_type,
+            pass_count,
+            fail_count,
+            unknown_count,
+            evaluated_count,
+            pass_rate,
+            coverage,
+            config
+          ) values ${sql(
+            slotEntries.map(
+              (slot) => sql`(
+                ${runRecord.id},
+                ${slot.slot},
+                ${slot.evaluatorId},
+                ${slot.evaluatorName},
+                ${slot.evaluatorKind},
+                ${slot.evaluatorType},
+                ${slot.pass},
+                ${slot.fail},
+                ${slot.unknown},
+                ${slot.evaluated},
+                ${slot.passRate},
+                ${slot.coverage},
+                ${slot.config ? sql.json(slot.config) : null}
+              )`,
+            ),
+          )}
+        `;
+      }
+
+      const runWithRelations =
+        (await fetchDatasetEvaluatorRunById(sql, runRecord.id)) ?? runRecord;
+
+      const slotsForResponse = slotEntries.map((slot) => ({
+        slot: slot.slot,
+        evaluatorId: slot.evaluatorId,
+        evaluatorName: slot.evaluatorName,
+        evaluatorKind: slot.evaluatorKind,
+        evaluatorType: slot.evaluatorType,
+        passCount: slot.pass,
+        failCount: slot.fail,
+        unknownCount: slot.unknown,
+        evaluatedCount: slot.evaluated,
+        passRate: slot.passRate,
+        coverage: slot.coverage,
+        config: slot.config ?? null,
+      }));
+
+      runPayload = {
+        ...runWithRelations,
+        slots: slotsForResponse,
+      };
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        console.warn(
+          "dataset_v2_evaluator_run table missing; skipping run history persistence",
+          error,
+        );
+      } else {
+        throw error;
+      }
+    }
+
+    ctx.body = {
+      updatedItemCount: updatedCount,
+      dataset: datasetWithItems ?? dataset,
+      version,
+      run: runPayload,
+    };
+  },
+);
+
+datasetsV2.get(
+  "/:datasetId/evaluator-runs",
+  checkAccess("datasets", "list"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId } = DatasetIdParamsSchema.parse(ctx.params);
+    const { limit } = DatasetEvaluatorRunListQuerySchema.parse(
+      ctx.request.query ?? {},
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    let runs: any[] = [];
+    let slotRows: any[] = [];
+
+    try {
+      runs = await fetchDatasetEvaluatorRunsForDataset(sql, datasetId, limit);
+
+      if (!runs.length) {
+        ctx.body = { runs: [], aggregate: [] };
+        return;
+      }
+
+      const runIds = runs.map((run: any) => run.id);
+
+      slotRows = await sql`
+        select
+          run_id as "runId",
+          slot,
+          evaluator_id as "evaluatorId",
+          evaluator_name as "evaluatorName",
+          evaluator_kind as "evaluatorKind",
+          evaluator_type as "evaluatorType",
+          pass_count as "passCount",
+          fail_count as "failCount",
+          unknown_count as "unknownCount",
+          evaluated_count as "evaluatedCount",
+          pass_rate as "passRate",
+          coverage,
+          config
+        from dataset_v2_evaluator_run_slot
+        where run_id = any(${sql.array(runIds)}::uuid[])
+        order by slot asc
+      `;
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        console.warn(
+          "dataset_v2_evaluator_run table missing when listing runs; returning empty set",
+          error,
+        );
+        ctx.body = { runs: [], aggregate: [] };
+        return;
+      }
+      throw error;
+    }
+
+    const slotsByRun = new Map<string, any[]>();
+    for (const slot of slotRows as any[]) {
+      const collection = slotsByRun.get(slot.runId) ?? [];
+      collection.push({
+        slot: slot.slot,
+        evaluatorId: slot.evaluatorId,
+        evaluatorName: slot.evaluatorName,
+        evaluatorKind: slot.evaluatorKind,
+        evaluatorType: slot.evaluatorType,
+        passCount: Number(slot.passCount ?? 0),
+        failCount: Number(slot.failCount ?? 0),
+        unknownCount: Number(slot.unknownCount ?? 0),
+        evaluatedCount: Number(slot.evaluatedCount ?? 0),
+        passRate:
+          slot.passRate === null || typeof slot.passRate === "undefined"
+            ? null
+            : Number(slot.passRate),
+        coverage:
+          slot.coverage === null || typeof slot.coverage === "undefined"
+            ? null
+            : Number(slot.coverage),
+        config: slot.config ?? null,
+      });
+      slotsByRun.set(slot.runId, collection);
+    }
+
+    const runsWithSlots = runs.map((run: any) => ({
+      ...run,
+      slots: slotsByRun.get(run.id) ?? [],
+    }));
+
+    const aggregateMap = new Map<
+      string,
+      {
+        slot: number;
+        evaluatorId: string | null;
+        evaluatorName: string | null;
+        evaluatorKind: string | null;
+        evaluatorType: string | null;
+        passCount: number;
+        failCount: number;
+        unknownCount: number;
+        evaluatedCount: number;
+        runCount: number;
+      }
+    >();
+
+    for (const run of runsWithSlots) {
+      for (const slot of run.slots) {
+        const key = slot.evaluatorId ?? `slot-${slot.slot}`;
+        const existing =
+          aggregateMap.get(key) ??
+          {
+            slot: slot.slot,
+            evaluatorId: slot.evaluatorId,
+            evaluatorName: slot.evaluatorName,
+            evaluatorKind: slot.evaluatorKind,
+            evaluatorType: slot.evaluatorType,
+            passCount: 0,
+            failCount: 0,
+            unknownCount: 0,
+            evaluatedCount: 0,
+            runCount: 0,
+          };
+
+        existing.passCount += Number(slot.passCount ?? 0);
+        existing.failCount += Number(slot.failCount ?? 0);
+        existing.unknownCount += Number(slot.unknownCount ?? 0);
+        existing.evaluatedCount += Number(slot.evaluatedCount ?? 0);
+        existing.runCount += 1;
+
+        aggregateMap.set(key, existing);
+      }
+    }
+
+    const aggregate = Array.from(aggregateMap.values())
+      .map((entry) => ({
+        slot: entry.slot,
+        evaluatorId: entry.evaluatorId,
+        evaluatorName: entry.evaluatorName,
+        evaluatorKind: entry.evaluatorKind,
+        evaluatorType: entry.evaluatorType,
+        passCount: entry.passCount,
+        failCount: entry.failCount,
+        unknownCount: entry.unknownCount,
+        evaluatedCount: entry.evaluatedCount,
+        runCount: entry.runCount,
+        passRate:
+          entry.evaluatedCount > 0
+            ? Number(
+                ((entry.passCount / entry.evaluatedCount) * 100).toFixed(2),
+              )
+            : null,
+      }))
+      .sort((a, b) => a.slot - b.slot);
+
+    ctx.body = {
+      runs: runsWithSlots,
+      aggregate,
+    };
+  },
+);
+
+datasetsV2.get(
+  "/:datasetId/evaluator-runs/:runId",
+  checkAccess("datasets", "list"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId, runId } = DatasetEvaluatorRunIdParamsSchema.parse(
+      ctx.params,
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    let run;
+    try {
+      run = await fetchDatasetEvaluatorRunById(sql, runId);
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        ctx.throw(404, "Evaluator run not found");
+        return;
+      }
+      throw error;
+    }
+
+    if (!run || run.datasetId !== datasetId) {
+      ctx.throw(404, "Evaluator run not found");
+      return;
+    }
+
+    let slots;
+    try {
+      slots = await sql`
+        select
+          run_id as "runId",
+          slot,
+          evaluator_id as "evaluatorId",
+          evaluator_name as "evaluatorName",
+          evaluator_kind as "evaluatorKind",
+          evaluator_type as "evaluatorType",
+          pass_count as "passCount",
+          fail_count as "failCount",
+          unknown_count as "unknownCount",
+          evaluated_count as "evaluatedCount",
+          pass_rate as "passRate",
+          coverage,
+          config
+        from dataset_v2_evaluator_run_slot
+        where run_id = ${runId}
+        order by slot asc
+      `;
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        slots = [];
+      } else {
+        throw error;
+      }
+    }
+
+    ctx.body = {
+      run: {
+        ...run,
+        slots: (slots as any[]).map((slot) => ({
+          slot: slot.slot,
+          evaluatorId: slot.evaluatorId,
+          evaluatorName: slot.evaluatorName,
+          evaluatorKind: slot.evaluatorKind,
+          evaluatorType: slot.evaluatorType,
+          passCount: Number(slot.passCount ?? 0),
+          failCount: Number(slot.failCount ?? 0),
+          unknownCount: Number(slot.unknownCount ?? 0),
+          evaluatedCount: Number(slot.evaluatedCount ?? 0),
+          passRate:
+            slot.passRate === null || typeof slot.passRate === "undefined"
+              ? null
+              : Number(slot.passRate),
+          coverage:
+            slot.coverage === null || typeof slot.coverage === "undefined"
+              ? null
+              : Number(slot.coverage),
+          config: slot.config ?? null,
+        })),
+      },
+    };
   },
 );
 
@@ -839,8 +2220,8 @@ datasetsV2.post(
       `;
 
       await trx`
-        insert into dataset_v2_item (dataset_id, input, ground_truth)
-        select ${newDatasetId}, input, ground_truth
+        insert into dataset_v2_item (dataset_id, input, ground_truth, output)
+        select ${newDatasetId}, input, ground_truth, output
         from dataset_v2_item
         where dataset_id = ${datasetId}
       `;
@@ -1003,18 +2384,24 @@ datasetsV2.get(
 
     const items = await sql`
       select
-        id,
-        version_id,
-        dataset_id,
-        item_index,
-        input,
-        ground_truth,
-        source_item_id,
-        source_created_at,
-        source_updated_at
-      from dataset_v2_version_item
-      where version_id = ${versionId}
-      order by item_index asc
+        vi.id,
+        vi.version_id as "versionId",
+        vi.dataset_id as "datasetId",
+        vi.item_index as "itemIndex",
+        vi.input,
+        vi.ground_truth as "groundTruth",
+        vi.output,
+        vi.source_item_id as "sourceItemId",
+        vi.source_created_at as "sourceCreatedAt",
+        vi.source_updated_at as "sourceUpdatedAt",
+        vi.evaluator_result_1 as "evaluatorResult1",
+        vi.evaluator_result_2 as "evaluatorResult2",
+        vi.evaluator_result_3 as "evaluatorResult3",
+        vi.evaluator_result_4 as "evaluatorResult4",
+        vi.evaluator_result_5 as "evaluatorResult5"
+      from dataset_v2_version_item vi
+      where vi.version_id = ${versionId}
+      order by vi.item_index asc
     `;
 
     ctx.body = {
@@ -1067,7 +2454,8 @@ datasetsV2.post(
     }
 
     const version = await createDatasetVersion(sql, datasetId, {
-      createdBy: (ctx.state.userId as string | undefined) ?? dataset.ownerId ?? null,
+      createdBy:
+        (ctx.state.userId as string | undefined) ?? dataset.ownerId ?? null,
     });
 
     const datasetWithMeta = await fetchDatasetMeta(sql, datasetId);
@@ -1146,8 +2534,8 @@ datasetsV2.post(
       `;
 
       await trx`
-        insert into dataset_v2_item (dataset_id, input, ground_truth)
-        select ${datasetId}, input, ground_truth
+        insert into dataset_v2_item (dataset_id, input, ground_truth, output)
+        select ${datasetId}, input, ground_truth, output
         from dataset_v2_version_item
         where version_id = ${versionId}
         order by item_index asc
@@ -1389,7 +2777,7 @@ datasetsV2.post(
       return;
     }
 
-    const { input, groundTruth } = DatasetItemCreateSchema.parse(
+    const { input, groundTruth, output } = DatasetItemCreateSchema.parse(
       ctx.request.body ?? {},
     );
 
@@ -1399,6 +2787,7 @@ datasetsV2.post(
           datasetId,
           input,
           groundTruth,
+          output,
         }),
       )}
       returning *
@@ -1520,8 +2909,9 @@ datasetsV2.patch(
     const payload = DatasetItemUpdateSchema.parse(ctx.request.body ?? {});
     const hasInput = payload.input !== undefined;
     const hasGroundTruth = payload.groundTruth !== undefined;
+    const hasOutput = payload.output !== undefined;
 
-    if (!hasInput && !hasGroundTruth) {
+    if (!hasInput && !hasGroundTruth && !hasOutput) {
       ctx.throw(400, "No fields to update");
       return;
     }
@@ -1529,6 +2919,7 @@ datasetsV2.patch(
     const updates = clearUndefined({
       ...(hasInput ? { input: payload.input } : {}),
       ...(hasGroundTruth ? { groundTruth: payload.groundTruth } : {}),
+      ...(hasOutput ? { output: payload.output } : {}),
       updatedAt: new Date(),
     });
 
@@ -1661,6 +3052,26 @@ datasetsV2.delete(
  *           type: string
  *           format: uuid
  *           nullable: true
+ *         evaluatorSlot1Id:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         evaluatorSlot2Id:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         evaluatorSlot3Id:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         evaluatorSlot4Id:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
+ *         evaluatorSlot5Id:
+ *           type: string
+ *           format: uuid
+ *           nullable: true
  *     DatasetV2Input:
  *       type: object
  *       properties:
@@ -1694,6 +3105,24 @@ datasetsV2.delete(
  *         groundTruth:
  *           type: string
  *           nullable: true
+ *         output:
+ *           type: string
+ *           nullable: true
+ *         evaluatorResult1:
+ *           type: object
+ *           nullable: true
+ *         evaluatorResult2:
+ *           type: object
+ *           nullable: true
+ *         evaluatorResult3:
+ *           type: object
+ *           nullable: true
+ *         evaluatorResult4:
+ *           type: object
+ *           nullable: true
+ *         evaluatorResult5:
+ *           type: object
+ *           nullable: true
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -1706,6 +3135,9 @@ datasetsV2.delete(
  *         input:
  *           type: string
  *         groundTruth:
+ *           type: string
+ *           nullable: true
+ *         output:
  *           type: string
  *           nullable: true
  *     DatasetV2ImportRequest:
@@ -1766,6 +3198,9 @@ datasetsV2.delete(
  *         input:
  *           type: string
  *         groundTruth:
+ *           type: string
+ *           nullable: true
+ *         output:
  *           type: string
  *           nullable: true
  *         sourceItemId:
