@@ -100,8 +100,30 @@ export function RenderCheckNode({
         if (!CustomInput) return null;
 
         const isParamNotLabel = param.type !== "label";
+        const paramsBag = s.params || {};
 
-        const paramData = isParamNotLabel ? s.params[param.id] : null;
+        const hasMissingDependency =
+          isParamNotLabel &&
+          Array.isArray(param.requires) &&
+          param.requires.some((requiredParam) => {
+            const dependencyValue = paramsBag?.[requiredParam];
+            if (dependencyValue === undefined || dependencyValue === null) {
+              return true;
+            }
+            if (typeof dependencyValue === "string") {
+              return dependencyValue.trim().length === 0;
+            }
+            if (Array.isArray(dependencyValue)) {
+              return dependencyValue.length === 0;
+            }
+            return false;
+          });
+
+        if (hasMissingDependency) {
+          return null;
+        }
+
+        const paramData = isParamNotLabel ? paramsBag[param.id] : null;
 
         const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"];
 
@@ -119,14 +141,28 @@ export function RenderCheckNode({
         const width = getWidth();
 
         const onChangeParam = (value) => {
-          isParamNotLabel &&
-            setNode({
-              id: s.id,
-              params: {
-                ...(s.params || {}),
-                [param.id]: value,
-              },
-            });
+          if (!isParamNotLabel) {
+            return;
+          }
+
+          const nextParams = {
+            ...(s.params || {}),
+            [param.id]: value,
+          };
+
+          if (param.resetParams?.length) {
+            for (const resetParam of param.resetParams) {
+              if (resetParam === param.id) continue;
+              if (resetParam in nextParams) {
+                delete nextParams[resetParam];
+              }
+            }
+          }
+
+          setNode({
+            id: s.id,
+            params: nextParams,
+          });
         };
 
         return (
@@ -134,6 +170,7 @@ export function RenderCheckNode({
             <ErrorBoundary>
               <CustomInput
                 {...param}
+                params={s.params || {}}
                 // Allow setting custom renderers for inputs like Selects
                 renderListItem={UIItem.renderListItem}
                 renderLabel={UIItem.renderLabel}

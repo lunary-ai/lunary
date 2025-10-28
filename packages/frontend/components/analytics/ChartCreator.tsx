@@ -2,6 +2,7 @@ import {
   Alert,
   Box,
   Button,
+  Center,
   Container,
   Group,
   Input,
@@ -312,49 +313,55 @@ export function CustomChartCreator({
         </Box>
       )}
 
-      {appliedSecondaryDimension === "date" &&
-        chartData.length &&
-        chartType === "area" && (
-          <AreaChartComponent
-            data={chartData}
-            granularity={isCustomEventsMetric ? "daily" : granularity}
-            color={null}
-            aggregationMethod={null}
-            stat={null}
-          />
+      <Box pos="relative" mih={320} w="100%">
+        {chartLoading && (
+          <Center h={320}>
+            <Loader />
+          </Center>
         )}
 
-      {appliedSecondaryDimension === "date" &&
-        chartData.length &&
-        chartType === "bar" && (
-          <BarChartComponent
-            data={chartData}
-            granularity={isCustomEventsMetric ? "daily" : granularity}
-            color={null}
-            aggregationMethod={null}
-            stat={null}
-          />
+        {!chartLoading && chartData.length > 0 && (
+          <>
+            {appliedSecondaryDimension === "date" && chartType === "area" && (
+              <AreaChartComponent
+                data={chartData}
+                granularity={isCustomEventsMetric ? "daily" : granularity}
+                color={null}
+                aggregationMethod={null}
+                stat={null}
+              />
+            )}
+
+            {appliedSecondaryDimension === "date" && chartType === "bar" && (
+              <BarChartComponent
+                data={chartData}
+                granularity={isCustomEventsMetric ? "daily" : granularity}
+                color={null}
+                aggregationMethod={null}
+                stat={null}
+              />
+            )}
+
+            {appliedSecondaryDimension !== "date" && (
+              <BarChart
+                h={300}
+                withYAxis={false}
+                data={chartData}
+                dataKey="value"
+                type="stacked"
+                series={series}
+                withLegend
+              />
+            )}
+          </>
         )}
 
-      {chartData.length > 0 && appliedSecondaryDimension !== "date" && (
-        <BarChart
-          h={300}
-          withYAxis={false}
-          data={data?.data || []}
-          dataKey="value"
-          type="stacked"
-          series={series}
-          withLegend
-        />
-      )}
-
-      {chartLoading && <Loader h="400px" w="100%" />}
-
-      {!chartLoading && chartData.length === 0 && (
-        <Alert title="No Data" color="yellow">
-          No data available for this period.
-        </Alert>
-      )}
+        {!chartLoading && chartData.length === 0 && (
+          <Alert title="No Data" color="yellow">
+            No data available for this period.
+          </Alert>
+        )}
+      </Box>
 
       <Group gap="sm" justify="right" mt="xl">
         <Button onClick={handleSave}>{isEditing ? "Update" : "Save"}</Button>

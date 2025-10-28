@@ -222,6 +222,98 @@ filters.get("/users", async (ctx) => {
   ctx.body = rows;
 });
 
+filters.get("/user-props/keys", async (ctx) => {
+  const { projectId } = ctx.state;
+  const querySchema = z.object({
+    search: z.string().optional(),
+    limit: z.coerce.number().optional().default(100),
+  });
+  const { search, limit } = querySchema.parse(ctx.request.query);
+
+  const rows = await sql`
+    with distinct_keys as (
+      select distinct jsonb_object_keys(props) as key
+      from external_user
+      where project_id = ${projectId}
+    )
+    select key
+    from distinct_keys
+    where ${search ? sql`key ilike ${"%" + search + "%"}` : sql`true`}
+    order by key
+    limit ${limit}
+  `;
+
+  ctx.body = rows.map((row) => ({
+    label: row.key,
+    value: row.key,
+  }));
+});
+
+filters.get("/user-props/values", async (ctx) => {
+  const { projectId } = ctx.state;
+  const querySchema = z.object({
+    key: z.string(),
+    limit: z.coerce.number().optional().default(100),
+  });
+
+  const { key, limit } = querySchema.parse(ctx.request.query);
+
+  const rows = await sql`
+    select
+      distinct props->>${key} as raw_value 
+    from
+      external_user
+    where
+      project_id = ${projectId}
+      and props ? ${key}
+    order by
+      raw_value asc nulls last
+    limit ${limit}
+  `;
+
+  const formatLabel = (value: any): string => {
+    if (value === null || typeof value === "undefined") {
+      return "null";
+    }
+
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (typeof value === "number" || typeof value === "boolean") {
+      return value.toString();
+    }
+
+    try {
+      return JSON.stringify(value);
+    } catch (error) {
+      return String(value);
+    }
+  };
+
+  ctx.body = rows.map((row) => {
+    const label = formatLabel(row.rawValue);
+    let value: string;
+
+    if (row.rawValue !== null && row.rawValue !== undefined) {
+      value = row.rawValue;
+    } else if (row.rawValue === null || typeof row.rawValue === "undefined") {
+      value = "null";
+    } else {
+      try {
+        value = JSON.stringify(row.raw_value);
+      } catch (error) {
+        value = String(row.raw_value);
+      }
+    }
+
+    return {
+      label,
+      value,
+    };
+  });
+});
+
 filters.get("/templates", async (ctx) => {
   const { projectId } = ctx.state;
 

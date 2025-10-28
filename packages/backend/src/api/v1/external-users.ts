@@ -4,7 +4,10 @@ import { Context } from "koa";
 import Router from "koa-router";
 import { deserializeLogic } from "shared";
 import { z } from "zod";
-import { buildFiltersQuery } from "./analytics/utils";
+import {
+  buildFiltersQuery,
+  buildUserPropsFiltersQuery,
+} from "./analytics/utils";
 
 const users = new Router({
   prefix: "/external-users",
@@ -110,11 +113,13 @@ users.get(
       timeZone,
       sortDirection,
       sortField,
-      checks,
     } = querySchema.parse(ctx.request.query);
 
     const deserializedChecks = deserializeLogic(ctx.querystring);
     const filtersQuery = buildFiltersQuery(deserializedChecks);
+    const userPropsFiltersQuery = buildUserPropsFiltersQuery(
+      deserializedChecks,
+    );
 
     let searchQuery = sql``;
     if (search) {
@@ -149,9 +154,11 @@ users.get(
           coalesce(sum(cost), 0) as cost
         from
           run r
+          left join external_user eu on r.external_user_id = eu.id
         where
           ${filtersQuery}
-          and project_id = ${projectId}
+          and (${userPropsFiltersQuery})
+          and r.project_id = ${projectId}
           ${createAtQuery}
         group by
           external_user_id
@@ -169,6 +176,7 @@ users.get(
       where
         eu.project_id = ${projectId}
         ${searchQuery}
+        and (${userPropsFiltersQuery})
       order by
         ${sql.unsafe(orderByClause)}
       limit ${limit}
@@ -179,6 +187,7 @@ users.get(
       from public.external_user eu
       where eu.project_id = ${projectId}
       ${searchQuery}
+      and (${userPropsFiltersQuery})
     `,
     ]);
 

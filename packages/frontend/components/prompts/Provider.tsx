@@ -89,6 +89,7 @@ export const ParamItem = ({
           min={min}
           max={max}
           step={step}
+          w="100%"
           size="xs"
           variant="unstyled"
           styles={{

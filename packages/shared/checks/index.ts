@@ -390,6 +390,41 @@ export const CHECKS: Check[] = [
     ],
   },
   {
+    id: "user-props",
+    name: "User Property",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "User property",
+      },
+      {
+        type: "select",
+        id: "key",
+        width: 120,
+        searchable: true,
+        options: () => "/filters/user-props/keys",
+        resetParams: ["value"],
+      },
+      {
+        type: "label",
+        label: "is",
+      },
+      {
+        type: "select",
+        id: "value",
+        width: 180,
+        searchable: true,
+        requires: ["key"],
+        options: (_projectId, _type, params) =>
+          params?.key
+            ? `/filters/user-props/values?key=${encodeURIComponent(params.key)}`
+            : null,
+      },
+    ],
+  },
+  {
     id: "regex",
     name: "Regex",
     uiType: "smart",

@@ -18,9 +18,15 @@ export type CheckParam = {
   getItemValue?: (item: any) => string; // custom function to get value from item, for selects
   customSearch?: (query: string, item: any) => boolean; // custom search function for search in selects
   multiple?: boolean;
+  resetParams?: string[];
+  requires?: string[];
   options?:
     | Array<{ label: string; value: string }>
-    | ((projectId: string, type: string) => string);
+    | ((
+        projectId: string,
+        type: string | undefined,
+        params?: Record<string, any>,
+      ) => string | null);
 };
 
 export type Check = {

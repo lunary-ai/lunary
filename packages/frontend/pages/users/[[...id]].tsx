@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Card,
+  Code,
   Drawer,
   Flex,
   Group,
@@ -20,12 +21,8 @@ import AppUserAvatar from "@/components/blocks/AppUserAvatar";
 import CopyText from "@/components/blocks/CopyText";
 import SearchBar from "@/components/blocks/SearchBar";
 import Empty from "@/components/layout/Empty";
-import SmartViewer from "@/components/SmartViewer";
+import CheckPicker from "@/components/checks/Picker";
 import { useProjectSWR } from "@/utils/dataHooks";
-import {
-  useAnalyticsChartData,
-  useTopModels,
-} from "@/utils/dataHooks/analytics";
 import { useExternalUsers } from "@/utils/dataHooks/external-users";
 import { fetcher } from "@/utils/fetcher";
 import { formatAppUser } from "@/utils/format";
@@ -42,14 +39,21 @@ import {
 } from "@tabler/icons-react";
 import { NextSeo } from "@/utils/seo";
 import Router, { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { Fragment, ReactNode, useEffect, useMemo, useState } from "react";
 import analytics from "../../utils/analytics";
 
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import ChartComponent from "@/components/analytics/Charts/ChartComponent";
 import Link from "next/link";
-import { parseAsString, useQueryState } from "nuqs";
-import { deserializeLogic, getDefaultDateRange } from "shared";
+import { createParser, parseAsString, useQueryState } from "nuqs";
+import {
+  Chart,
+  DEFAULT_CHARTS,
+  LogicNode,
+  deserializeLogic,
+  serializeLogic,
+  getDefaultDateRange,
+} from "shared";
 
 const columns = [
   {
@@ -82,16 +86,118 @@ const columns = [
   costColumn(),
 ];
 
+const DEFAULT_FILTERS: LogicNode = ["AND"];
+
+const filtersParser = createParser({
+  parse: deserializeLogic,
+  serialize: serializeLogic,
+});
+
 function SelectedUser({ id, onClose }) {
   const { data: user, isLoading: userLoading } = useProjectSWR(
     id && `/external-users/${id}`,
   );
-  const { data: topModels, isLoading: topModelsLoading } = useTopModels(
-    id && {
-      userId: id,
-    },
-  );
   const { name, email, ...extraProps } = user?.props || ({} as any);
+  const extraPropEntries = Object.entries(extraProps);
+
+  const renderPropValue = (value: unknown): ReactNode => {
+    if (value === null || typeof value === "undefined") {
+      return (
+        <Text size="sm" c="dimmed">
+          —
+        </Text>
+      );
+    }
+
+    if (typeof value === "string") {
+      return (
+        <Text
+          size="sm"
+          style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+        >
+          {value}
+        </Text>
+      );
+    }
+
+    if (typeof value === "number" || typeof value === "boolean") {
+      return <Text size="sm">{String(value)}</Text>;
+    }
+
+    return (
+      <Code
+        fz="xs"
+        style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+      >
+        {JSON.stringify(value, null, 2)}
+      </Code>
+    );
+  };
+
+  const toChart = (chartDef: (typeof DEFAULT_CHARTS)[string]): Chart => ({
+    id: chartDef.id,
+    createdAt: "",
+    updatedAt: "",
+    projectId: "",
+    dashboardId: null,
+    name: chartDef.name,
+    description: chartDef.description ?? null,
+    type: chartDef.type,
+    dataKey: chartDef.dataKey,
+    aggregationMethod: chartDef.aggregationMethod ?? null,
+    primaryDimension: chartDef.splitBy ?? null,
+    secondaryDimension: null,
+    isCustom: false,
+    color: chartDef.color ?? null,
+  });
+
+  const runTypesChart = toChart(DEFAULT_CHARTS["run-types"]);
+  const tokensChart = toChart(DEFAULT_CHARTS["tokens"]);
+  const topModelsChart = toChart(DEFAULT_CHARTS["models/top"]);
+
+  const baseUserChecks: LogicNode | undefined = id
+    ? (["AND", { id: "users", params: { users: [id] } }] as LogicNode)
+    : undefined;
+
+  const chatUserChecks: LogicNode | undefined = id
+    ? ([
+        "AND",
+        { id: "users", params: { users: [id] } },
+        { id: "type", params: { type: "chat" } },
+      ] as LogicNode)
+    : undefined;
+
+  const userPropEntries: Array<[string, ReactNode]> = [
+    [
+      "ID",
+      <CopyText key="user-id" value={user?.externalId ?? ""} />,
+    ],
+  ];
+
+  if (user?.email) {
+    userPropEntries.push([
+      "Email",
+      <CopyText key="user-email" value={user.email} />,
+    ]);
+  }
+
+  if (user?.lastSeen) {
+    userPropEntries.push([
+      "Last seen",
+      <Text key="user-last-seen" size="sm" c="dimmed">
+        {new Date(user.lastSeen).toLocaleString(undefined, {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+        })}
+      </Text>,
+    ]);
+  }
+
+  extraPropEntries.forEach(([key, value]) => {
+    userPropEntries.push([key, renderPropValue(value)]);
+  });
 
   function confirmDelete() {
     modals.openConfirmModal({
@@ -131,28 +237,14 @@ function SelectedUser({ id, onClose }) {
     });
   }
 
-  const [startDate, endDate] = getDefaultDateRange(90);
+  const [startDate, endDate] = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setFullYear(start.getFullYear() - 1);
+    return [start, end];
+  }, []);
 
   const [granularity] = useState("daily");
-
-  const { data: tokensData, isLoading: tokensDataLoading } =
-    useAnalyticsChartData(
-      id && "tokens",
-      startDate,
-      endDate,
-      granularity,
-      deserializeLogic(`users=${id}`),
-    );
-
-  const commonChartData: {
-    startDate: Date;
-    endDate: Date;
-    granularity: "daily";
-  } = {
-    startDate,
-    endDate,
-    granularity: "daily",
-  };
 
   return (
     <Drawer
@@ -180,7 +272,7 @@ function SelectedUser({ id, onClose }) {
                   leftSection={<IconActivity size={16} />}
                   size="xs"
                   component={Link}
-                  href={`/logs?filters=users=${id}`}
+                  href={`/logs?type=thread&filters=users=${id}`}
                   variant="outline"
                 >
                   Activity
@@ -204,87 +296,106 @@ function SelectedUser({ id, onClose }) {
                 </ActionIcon>
               </Group>
             </Group>
-            <Stack gap="md">
-              <Group gap={3}>
-                <Text>ID:</Text>
-                <CopyText value={user?.externalId} />
-              </Group>
-              {user?.email && (
-                <Group gap={3}>
-                  <Text>Email:</Text>
-                  <CopyText value={user?.email} />
-                </Group>
-              )}
-              {user?.lastSeen && (
-                <Group>
-                  <Text c="dimmed">{`Last seen:  ${new Date(
-                    user.lastSeen,
-                  ).toLocaleString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "numeric",
-                  })}`}</Text>
-                </Group>
-              )}
-
-              {Object.keys(extraProps).length > 0 && (
-                <SmartViewer data={extraProps} />
-              )}
+            <Stack gap="md" w="100%">
+              <Box
+                component="dl"
+                w="100%"
+                style={{
+                  width: "100%",
+                  alignSelf: "stretch",
+                  display: "grid",
+                  gridTemplateColumns: "max-content 1fr",
+                  rowGap: 8,
+                  columnGap: 24,
+                }}
+              >
+                {userPropEntries.map(([label, value], index) => (
+                  <Fragment key={`${label}-${index}`}>
+                    <Text component="dt" size="sm" fw={500} c="dimmed">
+                      {`${label}:`}
+                    </Text>
+                    <Box
+                      component="dd"
+                      style={{
+                        margin: 0,
+                        textAlign: "right",
+                        minWidth: 0,
+                      }}
+                    >
+                      {value}
+                    </Box>
+                  </Fragment>
+                ))}
+              </Box>
             </Stack>
 
-            <Box w={"100%"}>
-              <AnalyticsCard
-                title="Chat Messages"
-                description="Number of chat messages sent by the user"
-              >
-                <ChartComponent
-                  dataKey="run-types"
-                  startDate={startDate}
-                  endDate={endDate}
-                  granularity={"daily"}
-                  checks={[
-                    "AND",
-                    { id: "users", params: { users: id } },
-                    { id: "type", params: { type: "chat" } },
-                  ]}
-                  aggregationMethod="sum"
-                  isCustom={false}
-                />
-              </AnalyticsCard>
-            </Box>
-            <Box w={"100%"}>
-              <AnalyticsCard
-                title="Tokens"
-                description="Number of tokens generated by the user's LLM calls"
-              >
-                <ChartComponent
-                  dataKey="tokens"
-                  startDate={startDate}
-                  endDate={endDate}
-                  granularity={"daily"}
-                  checks={["AND", { id: "users", params: { users: id } }]}
-                  aggregationMethod="sum"
-                  isCustom={false}
-                />
-              </AnalyticsCard>
-            </Box>
+            {chatUserChecks && (
+              <Box w={"100%"}>
+                <AnalyticsCard
+                  title="Chat Messages"
+                  description="Number of chat messages sent by the user"
+                >
+                  <ChartComponent
+                    id={runTypesChart.id}
+                    chart={runTypesChart}
+                    dataKey={runTypesChart.dataKey}
+                    startDate={startDate}
+                    endDate={endDate}
+                    granularity={"daily"}
+                    checks={chatUserChecks!}
+                    color={runTypesChart.color}
+                    primaryDimension={runTypesChart.primaryDimension}
+                    aggregationMethod={runTypesChart.aggregationMethod}
+                    isCustom={false}
+                  />
+                </AnalyticsCard>
+              </Box>
+            )}
+            {baseUserChecks && (
+              <Box w={"100%"}>
+                <AnalyticsCard
+                  title="Tokens"
+                  description="Number of tokens generated by the user's LLM calls"
+                >
+                  <ChartComponent
+                    id={tokensChart.id}
+                    chart={tokensChart}
+                    dataKey={tokensChart.dataKey}
+                    startDate={startDate}
+                    endDate={endDate}
+                    granularity={"daily"}
+                    checks={baseUserChecks!}
+                    color={tokensChart.color}
+                    primaryDimension={tokensChart.primaryDimension}
+                    aggregationMethod={tokensChart.aggregationMethod}
+                    isCustom={false}
+                  />
+                </AnalyticsCard>
+              </Box>
+            )}
 
-            <Box w={"100%"}>
-              <AnalyticsCard
-                title="Top Models"
-                description="The top models used by the user"
-              >
-                <ChartComponent
-                  dataKey="models/top"
-                  startDate={startDate}
-                  endDate={endDate}
-                  granularity={"daily"}
-                  checks={["AND", { id: "users", params: { users: id } }]}
-                  isCustom={false}
-                />
-              </AnalyticsCard>
-            </Box>
+            {baseUserChecks && (
+              <Box w={"100%"}>
+                <AnalyticsCard
+                  title="Top Models"
+                  description="The top models used by the user"
+                >
+                  <ChartComponent
+                    id={topModelsChart.id}
+                    chart={topModelsChart}
+                    dataKey={topModelsChart.dataKey}
+                    startDate={startDate}
+                    endDate={endDate}
+                    granularity={"daily"}
+                    checks={baseUserChecks!}
+                    color={topModelsChart.color}
+                    primaryDimension={topModelsChart.primaryDimension}
+                    aggregationMethod={topModelsChart.aggregationMethod}
+                    isCustom={false}
+                  />
+                </AnalyticsCard>
+              </Box>
+            )}
             <Button
               leftSection={<IconTrash size={14} />}
               size="xs"
@@ -294,7 +405,7 @@ function SelectedUser({ id, onClose }) {
                 confirmDelete();
               }}
             >
-              Remove Data
+              Delete User Data
             </Button>
           </Stack>
         </>
@@ -318,6 +429,16 @@ export default function Users() {
     "sortDirection",
     parseAsString,
   );
+  const [checks, setChecks] = useQueryState(
+    "filters",
+    filtersParser.withDefault(DEFAULT_FILTERS).withOptions({ clearOnDefault: true }),
+  );
+
+  const serializedChecks = useMemo(
+    () =>
+      checks && checks.length > 1 ? serializeLogic(checks) : undefined,
+    [checks],
+  );
 
   const [debouncedSearch] = useDebouncedValue(search, 200);
   const [columnVisibility, setColumnVisibility] = useLocalStorage({
@@ -327,6 +448,7 @@ export default function Users() {
 
   const { users, loading, validating, loadMore } = useExternalUsers({
     search: debouncedSearch,
+    checks: serializedChecks,
   });
 
   const router = useRouter();
@@ -350,8 +472,8 @@ export default function Users() {
       <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
         <NextSeo title="Users" />
 
-        <Flex justify="space-between">
-          <Card withBorder p={2} px="sm" w={"100%"}>
+        <Stack gap="sm">
+          <Card withBorder p={2} px="sm">
             <SearchBar
               query={search ?? ""}
               setQuery={(value) => setSearch(value || undefined)}
@@ -360,7 +482,14 @@ export default function Users() {
               size="sm"
             />
           </Card>
-        </Flex>
+          <CheckPicker
+            minimal
+            value={checks ?? DEFAULT_FILTERS}
+            onChange={(next) => setChecks(next as LogicNode)}
+            restrictTo={(check) => check.id === "user-props"}
+            buttonText="Add Filter"
+          />
+        </Stack>
 
         <DataTable
           type="users"
@@ -372,10 +501,19 @@ export default function Users() {
             analytics.trackOnce("OpenUser");
 
             setSelectedUserId(row.id);
+            const nextQuery: Record<string, string | undefined> = {
+              sortField: sortField || undefined,
+              sortDirection: sortDirection || undefined,
+              search: search || undefined,
+            };
+
+            if (serializedChecks) {
+              nextQuery.filters = serializedChecks;
+            }
 
             router.replace({
               pathname: `/users/${row.id}`,
-              query: { sortField, sortDirection },
+              query: nextQuery,
             });
           }}
           loading={loading || validating}
@@ -386,9 +524,19 @@ export default function Users() {
           id={selectedUserId}
           onClose={() => {
             setSelectedUserId(null);
+            const nextQuery: Record<string, string | undefined> = {
+              sortField: sortField || undefined,
+              sortDirection: sortDirection || undefined,
+              search: search || undefined,
+            };
+
+            if (serializedChecks) {
+              nextQuery.filters = serializedChecks;
+            }
+
             router.replace({
               pathname: "/users",
-              query: { sortField, sortDirection },
+              query: nextQuery,
             });
           }}
         />
