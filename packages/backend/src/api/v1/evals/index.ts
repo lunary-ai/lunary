@@ -13,6 +13,7 @@ import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { z } from "zod";
 import openai from "@/src/utils/openai";
+import { normalizeTemperature } from "shared";
 
 const evals = new Router({
   prefix: "/evals",
@@ -164,6 +165,7 @@ evals.post(
       const completion = await openai.chat.completions.create({
         model: evaluation.model,
         messages: p.messages,
+        temperature: normalizeTemperature(evaluation.model, undefined),
       });
 
       const modelOutput = completion.choices[0].message.content ?? "";

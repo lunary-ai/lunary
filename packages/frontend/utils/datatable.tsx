@@ -122,7 +122,7 @@ export function statusColumn() {
 export function tagsColumn() {
   return columnHelper.accessor("tags", {
     header: "Tags",
-    size: 120,
+    size: 220,
     minSize: 80,
     enableSorting: false,
     cell: (props) => {
@@ -195,7 +195,7 @@ export function outputColumn(label = "Response") {
 
 export function templateColumn() {
   return columnHelper.accessor("templateVersionId", {
-    header: "Template",
+    header: "Prompt",
     enableSorting: false,
     cell: (props) => {
       const templateVersionId = props.getValue();

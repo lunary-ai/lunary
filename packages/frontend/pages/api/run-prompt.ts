@@ -1,5 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next"
 import { OpenAI } from "openai"
+import {
+  getMaxTokenParam,
+  normalizeOpenAIReasoningEffort,
+  normalizeTemperature,
+} from "shared"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -21,6 +26,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const prompt = `${userMessage}\n\nContext: ${context || ""}`
 
+    const reasoningEffort = normalizeOpenAIReasoningEffort(
+      version.model,
+      version.reasoning_effort as any,
+    )
     const response = await openai.chat.completions.create({
       model: version.model,
       messages: [
@@ -33,9 +42,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           content: prompt,
         },
       ],
-      temperature: version.temperature,
-      max_tokens: version.max_tokens,
+      temperature: normalizeTemperature(version.model, version.temperature),
       top_p: version.top_p,
+      ...getMaxTokenParam(version.model, version.max_tokens),
+      ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
     })
 
     return res.status(200).json({ response: response.choices[0]?.message?.content || "No response generated" })

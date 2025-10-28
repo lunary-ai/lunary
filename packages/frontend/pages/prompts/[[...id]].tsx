@@ -66,7 +66,18 @@ import { openConfirmModal } from "@mantine/modals";
 
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
 import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
-import { hasAccess } from "shared";
+import {
+  FIXED_TEMPERATURE_VALUE,
+  getMaxTokenParam,
+  hasAccess,
+  normalizeAnthropicThinking,
+  normalizeOpenAIReasoningEffort,
+  normalizeTemperature,
+  requiresFixedTemperature,
+  shouldUseMaxCompletionTokens,
+  supportsAnthropicThinking,
+  supportsOpenAIThinking,
+} from "shared";
 
 function NotepadButton({ value, onChange }) {
   const [modalOpened, setModalOpened] = useState(false);
@@ -233,11 +244,37 @@ function Playground() {
     };
 
     if (templateVersion.extra) {
-      protectedPayload.model_params = {
-        temperature: templateVersion.extra.temperature,
-        max_tokens: templateVersion.extra.max_tokens,
-        model: templateVersion.extra.model,
+      const modelId = templateVersion.extra.model;
+      const normalizedTemperature = normalizeTemperature(
+        modelId,
+        templateVersion.extra.temperature,
+      );
+      const reasoningEffort = normalizeOpenAIReasoningEffort(
+        modelId,
+        templateVersion.extra.reasoning_effort as any,
+      );
+      const thinking = normalizeAnthropicThinking(
+        modelId,
+        templateVersion.extra.thinking as any,
+      );
+
+      const modelParams: Record<string, any> = {
+        ...getMaxTokenParam(modelId, templateVersion.extra.max_tokens),
+        temperature: requiresFixedTemperature(modelId)
+          ? FIXED_TEMPERATURE_VALUE
+          : normalizedTemperature,
+        model: modelId,
       };
+
+      if (reasoningEffort) {
+        modelParams.reasoning_effort = reasoningEffort;
+      }
+
+      if (thinking) {
+        modelParams.thinking = thinking;
+      }
+
+      protectedPayload.model_params = modelParams;
     }
 
     return protectedPayload;
@@ -544,6 +581,26 @@ function Playground() {
       // Original LLM playground logic
       const model = templateVersion?.extra?.model;
 
+      const normalizedExtra = {
+        ...templateVersion?.extra,
+        ...getMaxTokenParam(model, templateVersion?.extra?.max_tokens),
+        temperature: normalizeTemperature(
+          model,
+          templateVersion?.extra?.temperature,
+        ),
+      };
+
+      if (requiresFixedTemperature(model)) {
+        normalizedExtra.temperature = FIXED_TEMPERATURE_VALUE;
+      }
+
+      if (
+        requiresFixedTemperature(model) ||
+        shouldUseMaxCompletionTokens(model)
+      ) {
+        delete normalizedExtra.max_tokens;
+      }
+
       if (org?.plan === "free" || !org?.playAllowance) {
         return openUpgrade("playground");
       }
@@ -566,7 +623,7 @@ function Playground() {
           `/orgs/${org?.id}/playground`,
           {
             content: templateVersion.content,
-            extra: templateVersion.extra,
+            extra: normalizedExtra,
             variables: templateVersion.testValues,
           },
           (chunk) => {
@@ -634,7 +691,54 @@ function Playground() {
         // Generate the protected payload with interpolated variables
         const variables = templateVersion?.testValues || {};
         const content = templateVersion?.content;
-        const extra = templateVersion?.extra || {};
+        const modelId = templateVersion?.extra?.model;
+        const extra = {
+          ...templateVersion?.extra,
+          ...getMaxTokenParam(modelId, templateVersion?.extra?.max_tokens),
+          temperature: normalizeTemperature(
+            modelId,
+            templateVersion?.extra?.temperature,
+          ),
+        };
+
+        if (requiresFixedTemperature(modelId)) {
+          extra.temperature = FIXED_TEMPERATURE_VALUE;
+        }
+
+        if (
+          requiresFixedTemperature(modelId) ||
+          shouldUseMaxCompletionTokens(modelId)
+        ) {
+          delete extra.max_tokens;
+        }
+
+        const reasoningEffort = normalizeOpenAIReasoningEffort(
+          modelId,
+          templateVersion?.extra?.reasoning_effort as any,
+        );
+        if (supportsOpenAIThinking(modelId)) {
+          if (reasoningEffort) {
+            extra.reasoning_effort = reasoningEffort;
+          } else {
+            delete extra.reasoning_effort;
+          }
+        } else {
+          delete extra.reasoning_effort;
+        }
+
+        const thinking = normalizeAnthropicThinking(
+          modelId,
+          templateVersion?.extra?.thinking as any,
+        );
+        if (supportsAnthropicThinking(modelId)) {
+          if (thinking) {
+            extra.thinking = thinking;
+          } else {
+            delete extra.thinking;
+          }
+        } else {
+          delete extra.thinking;
+        }
 
         // Compile the content with variables
         let compiledContent;

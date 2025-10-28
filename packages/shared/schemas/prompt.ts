@@ -19,6 +19,17 @@ export const promptVersionSchema = z.object({
     model: z.string(),
     max_tokens: z.number().default(4096),
     temperature: z.number().default(1),
+    reasoning_effort: z
+      .enum(["none", "minimal", "low", "medium", "high"])
+      .optional()
+      .nullable(),
+    thinking: z
+      .object({
+        type: z.enum(["disabled", "enabled"]),
+        budget_tokens: z.number().positive().optional(),
+      })
+      .optional()
+      .nullable(),
   }),
   content: z.array(MessageSchema),
   version: z.number(),

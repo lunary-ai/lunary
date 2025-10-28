@@ -2,7 +2,14 @@ import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import Anthropic from "@anthropic-ai/sdk";
 import { generateText } from "ai";
 import OpenAI, { AzureOpenAI } from "openai";
-import { Model } from "shared";
+import {
+  MODELS,
+  Model,
+  getMaxTokenParam,
+  normalizeAnthropicThinking,
+  normalizeOpenAIReasoningEffort,
+  normalizeTemperature,
+} from "shared";
 import { ReadableStream } from "stream/web";
 import sql from "./db";
 import watsonxAi from "./ibm";
@@ -331,6 +338,21 @@ interface AzureClientOptions {
   apiKey: string;
   resourceName: string;
 }
+
+function inferProvider(modelId: string) {
+  if (!modelId) return "openai";
+
+  const normalized = modelId.toLowerCase();
+
+  if (normalized.startsWith("claude")) return "anthropic";
+  if (normalized.includes("mistral")) return "mistral";
+  if (normalized.startsWith("o1") || normalized.startsWith("o3") || normalized.startsWith("o4"))
+    return "openai";
+  if (normalized.startsWith("gpt")) return "openai";
+  if (normalized.startsWith("o")) return "openai";
+
+  return "openai";
+}
 async function runAzureOpenAI(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   params: any = {},
@@ -363,18 +385,27 @@ async function runAzureOpenAI(
     endpoint,
   });
 
+  const temperature = normalizeTemperature(modelName, params?.temperature);
+  const maxTokens =
+    params?.max_tokens ?? params?.max_completion_tokens ?? undefined;
+  const reasoningEffort = normalizeOpenAIReasoningEffort(
+    modelName,
+    params?.reasoning_effort,
+  );
+
   const chatCompletion = await client.chat.completions.create({
     model: modelName,
     messages: messages,
     stream: stream,
-    temperature: params?.temperature,
-    max_tokens: params?.max_tokens,
+    temperature,
     top_p: params?.top_p,
     stop: params?.stop,
     functions: params?.functions,
     tools: validateToolCalls("gpt", params?.tools),
     seed: params?.seed,
     response_format: params?.response_format,
+    ...getMaxTokenParam(modelName, maxTokens),
+    ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
   });
 
   return chatCompletion;
@@ -384,11 +415,27 @@ export async function runAImodel(
   content: any,
   completionsParams: any,
   variables: Record<string, string> | undefined = undefined,
-  model: Model,
+  model: Model | string,
   stream: boolean = false,
   orgId: string,
   projectId: string,
 ) {
+  const resolvedModel: Model =
+    typeof model === "string"
+      ? (MODELS.find((m) => m.id === model) ??
+          ({
+            id: model,
+            name: model,
+            provider: inferProvider(model),
+            isCustom: false,
+          } as Model))
+      : model;
+
+  const modelId = resolvedModel.id;
+  const modelName = resolvedModel.name;
+  const modelProvider = resolvedModel.provider || inferProvider(modelId);
+  const isCustomModel = resolvedModel.isCustom === true;
+
   if (orgId) {
     const [{ stripeCustomer }] =
       await sql`select stripe_customer from org where id = ${orgId}`;
@@ -414,22 +461,22 @@ export async function runAImodel(
   const messages = convertInputToOpenAIMessages(copy);
 
   let providerConfig;
-  if (model.isCustom) {
+  if (isCustomModel) {
     [providerConfig] =
-      await sql`select * from provider_config where id = ${model.providerConfigId}`;
+      await sql`select * from provider_config where id = ${resolvedModel.providerConfigId}`;
   }
 
-  if (model.isCustom && model.provider === "azure_openai") {
+  if (isCustomModel && modelProvider === "azure_openai") {
     const chatCompletion = await runAzureOpenAI(
       messages,
       completionsParams,
       stream,
-      model.id,
+      modelId,
     );
     return chatCompletion;
   }
 
-  if (model.isCustom && model.provider === "amazon_bedrock") {
+  if (isCustomModel && modelProvider === "amazon_bedrock") {
     const extraConfig = providerConfig.extraConfig || {};
     const accessKeyId = extraConfig.accessKeyId;
     const secretAccessKey = extraConfig.secretAccessKey;
@@ -445,11 +492,15 @@ export async function runAImodel(
       region,
     });
 
+    const maxTokens =
+      completionsParams?.max_tokens ??
+      completionsParams?.max_completion_tokens;
+
     const { response } = await generateText({
-      model: bedrock(model.name),
+      model: bedrock(modelName),
       messages,
       temperature: completionsParams?.temperature,
-      maxTokens: completionsParams?.max_tokens,
+      maxTokens,
       topP: completionsParams?.top_p,
     });
 
@@ -462,8 +513,7 @@ export async function runAImodel(
     };
   }
 
-  const useAnthropic = model?.provider === "anthropic";
-  if (useAnthropic) {
+  if (modelProvider === "anthropic") {
     if (!process.env.ANTHROPIC_API_KEY)
       throw Error("No Anthropic API key found");
 
@@ -471,34 +521,57 @@ export async function runAImodel(
       apiKey: process.env.ANTHORPIC_API_KEY,
     });
 
+    const temperature =
+      completionsParams?.temperature === null
+        ? undefined
+        : completionsParams?.temperature;
+    const topP =
+      temperature === undefined && completionsParams?.top_p !== null
+        ? completionsParams?.top_p
+        : undefined;
+
+    const maxTokens =
+      completionsParams?.max_tokens ??
+      completionsParams?.max_completion_tokens;
+
+    const thinking = normalizeAnthropicThinking(
+      modelId,
+      completionsParams?.thinking,
+    );
+
     const res = await anthropic.messages.create({
-      model: model.id,
+      model: modelId,
       messages: messages
         .filter((m) => m.role !== "system")
         .map(getAnthropicMessage),
       system: messages.filter((m) => m.role === "system")[0]?.content,
       stream: false,
-      temperature: completionsParams?.temperature,
-      max_tokens: completionsParams?.max_tokens || 4096,
-      top_p: completionsParams?.top_p,
+      temperature,
+      top_p: topP,
+      max_tokens: maxTokens || 4096,
       functions: completionsParams?.functions,
-      tools: validateToolCalls(model.name, completionsParams?.tools),
+      tools: validateToolCalls(modelName, completionsParams?.tools),
       seed: completionsParams?.seed,
+      ...(thinking ? { thinking } : {}),
     });
 
     return getOpenAIMessage(res);
   }
 
-  if (model?.provider === "ibm-watsonx-ai") {
+  if (modelProvider === "ibm-watsonx-ai") {
     if (!watsonxAi) {
       throw Error("Environment variables for WatsonX AI not found");
     }
+    const maxTokens =
+      completionsParams?.max_tokens ??
+      completionsParams?.max_completion_tokens;
+
     const { result } = await watsonxAi.textChat({
-      modelId: model.name,
+      modelId: modelName,
       projectId: process.env.WATSONX_AI_PROJECT_ID,
       messages,
       temperature: completionsParams?.temperature,
-      maxTokens: completionsParams?.max_tokens,
+      maxTokens,
       topP: completionsParams?.top_p,
     });
 
@@ -508,9 +581,9 @@ export async function runAImodel(
   let clientParams = {};
   let paramsOverwrite = {};
 
-  switch (model?.provider) {
+  switch (modelProvider) {
     case "openai":
-      if (model.isCustom) {
+      if (isCustomModel) {
         clientParams.apiKey = providerConfig.apiKey;
         break;
       }
@@ -546,7 +619,7 @@ export async function runAImodel(
       };
       break;
     case "x_ai":
-      if (model.isCustom) {
+      if (isCustomModel) {
         clientParams = {
           apiKey: providerConfig.apiKey,
           baseURL: "https://api.x.ai/v1/",
@@ -559,7 +632,7 @@ export async function runAImodel(
 
   let res;
 
-  if (model.id === "o3-pro") {
+  if (modelId === "o3-pro") {
     stream = false;
 
     // Convert messages to a single prompt for the responses API
@@ -577,11 +650,15 @@ export async function runAImodel(
       .join("\n\n");
 
     // Use the OpenAI SDK's responses.create method
+    const maxTokens =
+      completionsParams?.max_tokens ??
+      completionsParams?.max_completion_tokens;
+
     const response = await openai.responses.create({
-      model: model.id,
+      model: modelId,
       input: prompt,
       temperature: completionsParams?.temperature,
-      max_output_tokens: completionsParams?.max_tokens,
+      max_output_tokens: maxTokens,
       top_p: completionsParams?.top_p,
       ...paramsOverwrite,
     });
@@ -609,23 +686,37 @@ export async function runAImodel(
       },
     };
   } else {
+    const modelIdentifier = modelId || modelName;
+    const temperature = normalizeTemperature(
+      modelIdentifier,
+      completionsParams?.temperature,
+    );
+    const maxTokens =
+      completionsParams?.max_tokens ??
+      completionsParams?.max_completion_tokens;
+    const reasoningEffort = normalizeOpenAIReasoningEffort(
+      modelIdentifier,
+      completionsParams?.reasoning_effort,
+    );
+
     res = await openai.chat.completions.create({
-      model: model.id || "gpt-5",
+      model: modelIdentifier || "gpt-5",
       messages,
       stream: stream,
-      temperature: completionsParams?.temperature,
-      max_tokens: completionsParams?.max_tokens,
+      temperature,
       top_p: completionsParams?.top_p,
       stop: completionsParams?.stop,
       functions: completionsParams?.functions,
-      tools: validateToolCalls(model.name, completionsParams?.tools),
+      tools: validateToolCalls(modelName, completionsParams?.tools),
       seed: completionsParams?.seed,
       response_format: completionsParams?.response_format,
       ...paramsOverwrite,
+      ...getMaxTokenParam(modelIdentifier, maxTokens),
+      ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
     });
   }
 
-  const useOpenRouter = model?.provider === "openrouter";
+  const useOpenRouter = modelProvider === "openrouter";
 
   // openrouter requires a second request to get usage
   if (!stream && useOpenRouter && res.id) {

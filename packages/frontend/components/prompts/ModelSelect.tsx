@@ -1,50 +1,99 @@
 import { Group, Pill, Select, Text } from "@mantine/core";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Model, MODELS, PROVIDERS } from "shared";
 import classes from "./ModelSelect.module.css";
 import { useCustomModels } from "@/utils/dataHooks/provider-configs";
 
 export default function ModelSelect({ handleChange }) {
-  const [models, setModels] = useState<Model[]>(MODELS);
+  const defaultModel = MODELS[0];
   const [selectedModel, setSelectedModel] = useState<{
     label: string;
     value: string;
     isCustom: boolean;
-  }>({
-    label: MODELS[0].name,
-    value: MODELS[0].id,
-    isCustom: false,
-  });
+  }>(() => ({
+    label: defaultModel?.name ?? "",
+    value: defaultModel?.id ?? "",
+    isCustom: Boolean(defaultModel?.isCustom),
+  }));
   const { customModels, isLoading } = useCustomModels();
 
-  useEffect(() => {
-    if (customModels.length) {
-      const dedupedCustom = Array.from(
-        new Map(customModels.map((model) => [model.id, model])).values(),
-      );
-      setModels([...models, ...dedupedCustom]);
-    }
+  const models = useMemo(() => {
+    const modelsMap = new Map<string, Model>();
+
+    MODELS.forEach((model) => {
+      modelsMap.set(model.id, model);
+    });
+
+    customModels.forEach((model) => {
+      modelsMap.set(model.id, model);
+    });
+
+    return Array.from(modelsMap.values());
   }, [customModels]);
 
-  if (isLoading) {
-    return <Text>Loading...</Text>;
-  }
-
   const groupedModels = groupModelsByProvider(models);
+  const modelsById = useMemo(
+    () => new Map(models.map((model) => [model.id, model])),
+    [models],
+  );
 
-  const uniqueOptions = Array.from(
-    new Map(
-      models.map((model) => [
-        model.id,
-        { value: model.id, label: model.name, isCustom: model.isCustom },
-      ]),
-    ),
-  ).map((entry) => entry[1]);
+  useEffect(() => {
+    const fallback = models[0];
+
+    if (!selectedModel.value) {
+      if (fallback) {
+        setSelectedModel({
+          value: fallback.id,
+          label: fallback.name,
+          isCustom: Boolean(fallback.isCustom),
+        });
+        handleChange(fallback);
+      }
+      return;
+    }
+
+    const matchingModel = modelsById.get(selectedModel.value);
+
+    if (!matchingModel) {
+      if (fallback) {
+        setSelectedModel({
+          value: fallback.id,
+          label: fallback.name,
+          isCustom: Boolean(fallback.isCustom),
+        });
+        handleChange(fallback);
+      } else {
+        setSelectedModel({ value: "", label: "", isCustom: false });
+      }
+      return;
+    }
+
+    if (
+      matchingModel.name !== selectedModel.label ||
+      Boolean(matchingModel.isCustom) !== selectedModel.isCustom
+    ) {
+      setSelectedModel({
+        value: matchingModel.id,
+        label: matchingModel.name,
+        isCustom: Boolean(matchingModel.isCustom),
+      });
+    }
+  }, [
+    handleChange,
+    models,
+    modelsById,
+    selectedModel.label,
+    selectedModel.isCustom,
+    selectedModel.value,
+  ]);
+
+  const selectedValue = modelsById.has(selectedModel.value)
+    ? selectedModel.value
+    : null;
 
   return (
     <Select
-      data={uniqueOptions}
+      data={groupedModels}
       classNames={{
         groupLabel: classes["group-label"],
       }}
@@ -63,55 +112,66 @@ export default function ModelSelect({ handleChange }) {
       size="sm"
       searchable
       inputMode="search"
-      value={selectedModel.value}
+      value={selectedValue}
       rightSection={selectedModel.isCustom ? <Pill>Custom</Pill> : null}
       rightSectionWidth={selectedModel.isCustom ? 80 : 30}
       rightSectionPointerEvents="none"
       onChange={(_value, model) => {
         if (model) {
+          const matchingModel = modelsById.get(model.value);
           setSelectedModel({
             value: model.value,
             label: model.label,
-            isCustom: models.find((m) => m.id === model.value)?.isCustom,
+            isCustom: matchingModel?.isCustom ?? false,
           });
-          handleChange(models.find((m) => m.id === model.value));
+          if (matchingModel) {
+            handleChange(matchingModel);
+          }
         }
       }}
     />
   );
 }
 
+interface ModelOption {
+  value: string;
+  label: string;
+  isCustom?: boolean;
+}
+
 interface GroupedData {
   group: string;
-  items: { value: string; label: string }[];
+  items: ModelOption[];
 }
+
 function groupModelsByProvider(models: Model[]) {
-  const groupedData: GroupedData[] = [];
-  const providerGroups = {};
+  const grouped = new Map<string, ModelOption[]>();
 
-  for (const model of models) {
-    const provider = model.provider;
-
-    if (!providerGroups[provider]) {
-      providerGroups[provider] = [];
-      groupedData.push({
-        group: provider,
-        items: providerGroups[provider],
-      });
+  models.forEach((model) => {
+    if (!grouped.has(model.provider)) {
+      grouped.set(model.provider, []);
     }
 
-    providerGroups[provider].push({
+    grouped.get(model.provider)!.push({
       value: model.id,
       label: model.name,
       isCustom: model.isCustom,
     });
-  }
-
-  return groupedData.map(({ group, items }) => {
-    const provider = PROVIDERS.find((provider) => provider.name === group);
-    return {
-      group: provider?.displayName || provider?.name,
-      items,
-    };
   });
+
+  const knownProviders = PROVIDERS.filter(({ name }) => grouped.has(name)).map(
+    (provider) => ({
+      group: provider.displayName,
+      items: grouped.get(provider.name)!,
+    }),
+  );
+
+  const remainingProviders = Array.from(grouped.entries())
+    .filter(([providerName]) => !PROVIDERS.some(({ name }) => name === providerName))
+    .map(([providerName, items]) => ({
+      group: providerName,
+      items,
+    }));
+
+  return [...knownProviders, ...remainingProviders];
 }
