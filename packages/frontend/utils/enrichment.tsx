@@ -31,14 +31,22 @@ import { useMemo } from "react";
 import { getPIIColor } from "./colors";
 import { useProjectRules } from "./dataHooks";
 
+type EnrichmentRenderOptions = {
+  hideIntentSummary?: boolean;
+};
+
 export function renderEnrichment(
   data: EnrichmentData,
   type: EvaluatorType,
   maskPII = false,
+  options?: EnrichmentRenderOptions,
 ) {
-  const renderers: Record<EvaluatorType, (data: any) => any> = {
+  const renderers: Record<
+    EvaluatorType,
+    (payload: any, options?: EnrichmentRenderOptions) => any
+  > = {
     language: renderLanguageEnrichment,
-    pii: () => renderPIIEnrichment(data, maskPII),
+    pii: renderPIIEnrichment,
     topics: renderTopicsEnrichment,
     sentiment: renderSentimentEnrichment,
     assertion: renderAssertionEnrichment,
@@ -47,25 +55,32 @@ export function renderEnrichment(
     replies: renderRepliesEnrichment,
     toxicity: renderToxicityEnrichment,
     llm: renderLLMEnrichment,
-    intent: renderIntentEnrichment,
+    intent: (payload, renderOptions) =>
+      renderIntentEnrichment(payload, {
+        hideSummary: renderOptions?.hideIntentSummary,
+      }),
     "text-similarity": renderTextSimilarityEnrichment,
     "model-labeler": renderModelLabelerEnrichment,
     "model-scorer": renderModelScorerEnrichment,
   };
 
-  const renderer = renderers[type] || JSON.stringify;
-  return <ErrorBoundary>{renderer(data)}</ErrorBoundary>;
+  const renderer = renderers[type];
+  if (!renderer) {
+    return <ErrorBoundary>{JSON.stringify(data)}</ErrorBoundary>;
+  }
+  return <ErrorBoundary>{renderer(data, options)}</ErrorBoundary>;
 }
 
-function renderIntentEnrichment(data: EnrichmentData) {
+function renderIntentEnrichment(
+  data: EnrichmentData,
+  options?: { hideSummary?: boolean },
+) {
   if (!data?.input?.length) return null;
 
   const payload = data.input[0] as IntentDetectionPayload | undefined;
   const intents = payload?.intents ?? [];
 
   if (!Array.isArray(intents) || intents.length === 0) return null;
-
-  const summary = payload?.summary;
 
   const isOtherIntent = (intent: IntentLabel) => {
     const label =
@@ -75,10 +90,12 @@ function renderIntentEnrichment(data: EnrichmentData) {
 
   const otherIntents = intents.filter(isOtherIntent);
   const primaryIntents = intents.filter((intent) => !isOtherIntent(intent));
+  const summary = options?.hideSummary ? undefined : payload?.summary;
+  const showSummary = !!summary && !options?.hideSummary;
 
   return (
-    <Stack gap={summary ? 6 : 0} align="center" justify="center">
-      <Group gap="xs" wrap="wrap" justify="center">
+    <Stack gap={showSummary ? 6 : 0}>
+      <Group gap="xs" wrap="wrap">
         {primaryIntents.map((intent: IntentLabel, index) => {
           const displayLabel =
             intent.label ?? intent.canonicalLabel ?? intent.aliasLabel;
@@ -144,13 +161,13 @@ function renderIntentEnrichment(data: EnrichmentData) {
             <Badge color="gray" variant="light">
               {otherIntents.length > 1
                 ? `Other (${otherIntents.length})`
-                : otherIntents[0].label ?? "Other"}
+                : (otherIntents[0].label ?? "Other")}
             </Badge>
           </Tooltip>
         )}
       </Group>
 
-      {summary && (
+      {showSummary && (
         <Text size="xs" c="dimmed" ta="center">
           {summary}
         </Text>
@@ -204,10 +221,14 @@ function renderModelLabelerEnrichment(data: any) {
       ? data.primaryLabel
       : undefined;
   const matches = Array.isArray(data.matches)
-    ? data.matches.filter((label: any) => typeof label === "string" && label.trim().length)
+    ? data.matches.filter(
+        (label: any) => typeof label === "string" && label.trim().length,
+      )
     : [];
   const labels = Array.isArray(data.labels)
-    ? data.labels.filter((label: any) => typeof label === "string" && label.trim().length)
+    ? data.labels.filter(
+        (label: any) => typeof label === "string" && label.trim().length,
+      )
     : [];
 
   if (!primary && !matches.length && !labels.length) return null;
@@ -225,7 +246,8 @@ function renderModelLabelerEnrichment(data: any) {
       )}
       {matches.length > 1 && (
         <Text size="xs" c="dimmed">
-          Also matched: {matches.filter((label) => label !== primary).join(", ")}
+          Also matched:{" "}
+          {matches.filter((label) => label !== primary).join(", ")}
         </Text>
       )}
       {!primary && labels.length > 0 && (
@@ -243,9 +265,13 @@ function renderModelScorerEnrichment(data: any) {
 
   const score = Number(data.score).toFixed(2);
   const minScore =
-    typeof data.minScore === "number" ? Number(data.minScore).toFixed(2) : undefined;
+    typeof data.minScore === "number"
+      ? Number(data.minScore).toFixed(2)
+      : undefined;
   const maxScore =
-    typeof data.maxScore === "number" ? Number(data.maxScore).toFixed(2) : undefined;
+    typeof data.maxScore === "number"
+      ? Number(data.maxScore).toFixed(2)
+      : undefined;
 
   return (
     <Stack gap={2} align="center">

@@ -27,6 +27,7 @@ export default function SmartCheckSelect({
   getItemValue = (item) => (typeof item === "object" ? `${item?.value}` : item),
   value,
   onChange,
+  params = {},
 }) {
   const router = useRouter();
   const combobox = useCombobox({
@@ -43,11 +44,20 @@ export default function SmartCheckSelect({
   const useSWRforData = typeof options === "function";
 
   const [localData, setLocalData] = useState(
-    useSWRforData ? [] : options || [],
+    !useSWRforData && Array.isArray(options) ? options : [],
   );
 
+  const endpoint =
+    useSWRforData && typeof options === "function"
+      ? options(
+          null as unknown as string,
+          router.query.type as string | undefined,
+          params,
+        )
+      : null;
+
   const { data: swrCheckData, isLoading } = useProjectSWR(
-    useSWRforData ? options(null, router.query.type) : null,
+    typeof endpoint === "string" && endpoint.length ? endpoint : null,
   );
 
   const data = useSWRforData ? swrCheckData || [] : localData;
@@ -84,13 +94,16 @@ export default function SmartCheckSelect({
     }
   }, [localData, value, allowCustom]);
   const handleValueSelect = (val: string) => {
-    return multiple
-      ? onChange(
+    if (multiple) {
+      return onChange(
           fixedValue.includes(val)
             ? fixedValue.filter((v) => v !== val)
             : [...fixedValue, val],
-        )
-      : onChange(val);
+        );
+    }
+
+    combobox.closeDropdown();
+    return onChange(val);
   };
 
   const handleValueRemove = (val: string) => {

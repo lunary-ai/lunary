@@ -170,7 +170,7 @@ export function messageCountColumn(
     {
       id: accessorKey,
       header: label,
-      size: 110,
+      size: 120,
       enableSorting: true,
       sortingFn: (a, b) => (a.getValue() ?? 0) - (b.getValue() ?? 0),
       cell: (props) => props.getValue() ?? 0,
@@ -342,7 +342,9 @@ export function enrichmentColumn(
       if (!data) {
         return null;
       }
-      return renderEnrichment(data.result, evaluatorType, maskPII);
+      return renderEnrichment(data.result, evaluatorType, maskPII, {
+        hideIntentSummary: evaluatorType === "intent",
+      });
     },
   });
 }

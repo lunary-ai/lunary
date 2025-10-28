@@ -294,7 +294,8 @@ analytics.get("/users/new", async (ctx: Context) => {
         )
         select
           date,
-          users as value
+          users as value,
+          'Count' as name
         from
           weekly_new_users
         order by

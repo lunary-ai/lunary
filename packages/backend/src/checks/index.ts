@@ -9,6 +9,7 @@ import rouge from "rouge";
 import { and, or } from "../utils/checks";
 import { CleanRun } from "../utils/ingest";
 import aiSentiment from "./ai/sentiment";
+import { normalizeUserPropertyValue } from "./normalize-user-prop";
 
 export const isOpenAIMessage = (field: any) =>
   field &&
@@ -398,42 +399,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         return sql`true`;
       }
 
-      const normalizedValue = (() => {
-        if (typeof value !== "string") {
-          return value;
-        }
-
-        const trimmed = value.trim();
-
-        if (!trimmed.length) {
-          return value;
-        }
-
-        try {
-          const parsed = JSON.parse(trimmed);
-          if (
-            parsed &&
-            typeof parsed === "object" &&
-            "type" in parsed &&
-            "value" in parsed
-          ) {
-            return parsed.type === "null" ? null : parsed.value;
-          }
-          return parsed;
-        } catch (error) {
-          const lowered = trimmed.toLowerCase();
-          if (lowered === "true") return true;
-          if (lowered === "false") return false;
-          if (lowered === "null") return null;
-
-          const numericRegex = /^-?(0|[1-9]\d*)(\.\d+)?$/;
-          if (numericRegex.test(trimmed)) {
-            return Number(trimmed);
-          }
-
-          return trimmed;
-        }
-      })();
+      const normalizedValue = normalizeUserPropertyValue(value);
 
       return sql`(
         eu.props @> ${sql.json({ [key]: normalizedValue })}

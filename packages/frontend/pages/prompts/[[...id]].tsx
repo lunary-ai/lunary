@@ -769,9 +769,9 @@ function Playground() {
       buttonLabel="Create first template"
       onClick={createTemplate}
     >
-      <Flex 
-        w="100%" 
-        h="100vh" 
+      <Flex
+        w="100%"
+        h="100vh"
         style={{ position: "relative" }}
         data-current-template-slug={template?.slug || ""}
         data-testid="prompts-playground"
@@ -1042,7 +1042,7 @@ function Playground() {
                                 cursor: "pointer",
                                 borderColor:
                                   selectedEndpointId === endpoint.id
-                                    ? "var(--mantine-color-black-6)"
+                                    ? "var(--mantine-color-blue-7)"
                                     : undefined,
                                 borderWidth:
                                   selectedEndpointId === endpoint.id ? 2 : 1,
