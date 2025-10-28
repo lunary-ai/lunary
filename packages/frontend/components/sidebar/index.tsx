@@ -299,13 +299,6 @@ export default function Sidebar() {
             : false,
         },
         {
-          label: "Tests",
-          icon: IconFlask2,
-          link: "/tests",
-          resource: "evaluations", // TODO: use tests resource when available
-          disabled: !org?.datasetV2Enabled,
-        },
-        {
           label: "Checklists",
           icon: IconChecklist,
           link: "/checklists",

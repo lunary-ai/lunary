@@ -71,6 +71,10 @@ const DatasetVersionListQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(50),
 });
 
+const DatasetEvaluatorRunListQuerySchema = z.object({
+  limit: z.coerce.number().min(1).max(100).default(20),
+});
+
 const DatasetInputSchema = z.object({
   name: z.string().trim().min(1),
   description: z.string().trim().max(10_000).nullable().optional(),
@@ -132,6 +136,11 @@ const DatasetEvaluatorAssignmentSchema = z.object({
 
 const DatasetEvaluatorSlotSchema = z.object({
   slot: z.coerce.number().int().min(1).max(MAX_DATASET_EVALUATORS),
+});
+
+const DatasetEvaluatorRunIdParamsSchema = z.object({
+  datasetId: z.string().uuid(),
+  runId: z.string().uuid(),
 });
 
 function ensureProjectId(ctx: Context): string {
@@ -362,6 +371,301 @@ function buildDatasetRun(projectId: string, datasetId: string, item: any) {
       datasetItemId: item.id,
     },
   };
+}
+
+type DatasetEvaluatorConfigModelLabeler = {
+  type: "model-labeler";
+  passLabels: string[];
+};
+
+type DatasetEvaluatorConfigModelScorer = {
+  type: "model-scorer";
+  threshold: number;
+};
+
+type DatasetEvaluatorConfigUnion =
+  | DatasetEvaluatorConfigModelLabeler
+  | DatasetEvaluatorConfigModelScorer;
+
+type EvaluatorPassOutcome =
+  | { pass: true; value?: string | null }
+  | { pass: false; value?: string | null }
+  | { pass: null; value?: string | null };
+
+function computeEvaluatorPassOutcome(
+  result: unknown,
+  config: DatasetEvaluatorConfigUnion | undefined,
+): EvaluatorPassOutcome {
+  if (!config) {
+    return { pass: null, value: null };
+  }
+
+  if (!result || typeof result !== "object") {
+    return { pass: null, value: null };
+  }
+
+  const record = result as Record<string, any>;
+
+  if (config.type === "model-labeler") {
+    const candidates: string[] = [];
+
+    if (typeof record.output === "string" && record.output.trim()) {
+      candidates.push(record.output.trim());
+    }
+
+    if (
+      typeof record.primaryLabel === "string" &&
+      record.primaryLabel.trim()
+    ) {
+      candidates.push(record.primaryLabel.trim());
+    }
+
+    if (Array.isArray(record.matches)) {
+      for (const match of record.matches) {
+        if (typeof match === "string" && match.trim()) {
+          candidates.push(match.trim());
+        } else if (
+          typeof match === "object" &&
+          typeof match?.label === "string" &&
+          match.label.trim()
+        ) {
+          candidates.push(match.label.trim());
+        }
+      }
+    }
+
+    const label = candidates.find((candidate) => candidate.length > 0);
+
+    if (!label) {
+      return { pass: null, value: null };
+    }
+
+    const pass = config.passLabels.includes(label);
+    return { pass: pass ? true : false, value: label };
+  }
+
+  if (config.type === "model-scorer") {
+    let score: number | null = null;
+
+    if (typeof record.score === "number" && Number.isFinite(record.score)) {
+      score = record.score;
+    } else if (typeof record.output === "string") {
+      const parsed = Number(record.output);
+      if (Number.isFinite(parsed)) {
+        score = parsed;
+      }
+    }
+
+    if (score === null) {
+      return { pass: null, value: null };
+    }
+
+    const pass = score >= config.threshold;
+    return { pass: pass ? true : false, value: String(score) };
+  }
+
+  return { pass: null, value: null };
+}
+
+type RunSlotInfo = {
+  slot: number;
+  evaluatorId: string | null;
+  evaluatorName: string | null;
+  evaluatorType: string | null;
+  evaluatorKind: string | null;
+};
+
+type RunSlotSummary = RunSlotInfo & {
+  pass: number;
+  fail: number;
+  unknown: number;
+  evaluated: number;
+  passRate: number | null;
+  coverage: number | null;
+  config?: DatasetEvaluatorConfigUnion | null;
+};
+
+type RunSummary = {
+  totalItems: number;
+  slots: Record<number, RunSlotSummary>;
+};
+
+function readEvaluatorResultFromItem(item: any, slot: number) {
+  const camelKey = `evaluatorResult${slot}`;
+  const snakeKey = `evaluator_result_${slot}`;
+  if (Object.prototype.hasOwnProperty.call(item, camelKey)) {
+    return item[camelKey];
+  }
+  if (Object.prototype.hasOwnProperty.call(item, snakeKey)) {
+    return item[snakeKey];
+  }
+  return null;
+}
+
+function buildRunSummary(
+  items: any[],
+  slotInfos: RunSlotInfo[],
+  configs: Record<number, DatasetEvaluatorConfigUnion> | undefined,
+): RunSummary {
+  const summary: RunSummary = {
+    totalItems: items.length,
+    slots: {},
+  };
+
+  slotInfos.forEach((info) => {
+    summary.slots[info.slot] = {
+      ...info,
+      pass: 0,
+      fail: 0,
+      unknown: 0,
+      evaluated: 0,
+      passRate: null,
+      coverage: null,
+      config: configs?.[info.slot] ?? null,
+    };
+  });
+
+  for (const item of items) {
+    for (const info of slotInfos) {
+      const slotSummary = summary.slots[info.slot];
+      if (!slotSummary) continue;
+
+      const result = readEvaluatorResultFromItem(item, info.slot);
+      const outcome = computeEvaluatorPassOutcome(
+        result,
+        configs?.[info.slot],
+      );
+
+      if (outcome.pass === true) {
+        slotSummary.pass += 1;
+        slotSummary.evaluated += 1;
+      } else if (outcome.pass === false) {
+        slotSummary.fail += 1;
+        slotSummary.evaluated += 1;
+      } else if (result !== null && typeof result !== "undefined") {
+        slotSummary.unknown += 1;
+      }
+    }
+  }
+
+  for (const info of slotInfos) {
+    const slotSummary = summary.slots[info.slot];
+    if (!slotSummary) continue;
+    if (slotSummary.evaluated > 0) {
+      slotSummary.passRate =
+        Number(
+          ((slotSummary.pass / slotSummary.evaluated) * 100).toFixed(2),
+        ) ?? null;
+    } else {
+      slotSummary.passRate = null;
+    }
+
+    const evaluatedTotal =
+      slotSummary.evaluated + slotSummary.unknown > 0
+        ? slotSummary.evaluated + slotSummary.unknown
+        : 0;
+    slotSummary.coverage =
+      summary.totalItems > 0
+        ? Number(((evaluatedTotal / summary.totalItems) * 100).toFixed(2))
+        : null;
+  }
+
+  return summary;
+}
+
+function extractNumericScoreFromText(text: string | null | undefined) {
+  if (!text) {
+    return null;
+  }
+
+  const match = String(text).match(/-?\d+(?:\.\d+)?/);
+  if (!match) {
+    return null;
+  }
+
+  const value = Number(match[0]);
+  return Number.isFinite(value) ? value : null;
+}
+
+function normalizeScorerOpenAIResult(
+  result: { model: string; output: string | null; reasoning: string | null },
+  config: DatasetEvaluatorConfigUnion | undefined,
+) {
+  const score = extractNumericScoreFromText(result.output);
+  const pass =
+    config && config.type === "model-scorer" && score !== null
+      ? score >= config.threshold
+      : undefined;
+
+  return {
+    model: result.model ?? null,
+    output: result.output,
+    reasoning: result.reasoning,
+    score,
+    pass,
+  };
+}
+
+function isRelationMissingError(error: unknown) {
+  return Boolean(
+    error && typeof error === "object" && (error as any)?.code === "42P01",
+  );
+}
+
+async function fetchDatasetEvaluatorRunById(
+  client: SqlClient,
+  runId: string,
+) {
+  const [row] = await client`
+    select
+      r.id,
+      r.dataset_id as "datasetId",
+      r.version_id as "versionId",
+      r.created_by as "createdBy",
+      r.created_at as "createdAt",
+      r.updated_at as "updatedAt",
+      r.total_items as "totalItems",
+      r.updated_item_count as "updatedItemCount",
+      v.version_number as "versionNumber",
+      v.created_at as "versionCreatedAt",
+      creator.name as "createdByName",
+      creator.email as "createdByEmail"
+    from dataset_v2_evaluator_run r
+    left join dataset_v2_version v on v.id = r.version_id
+    left join account creator on creator.id = r.created_by
+    where r.id = ${runId}
+    limit 1
+  `;
+
+  return row ?? null;
+}
+
+async function fetchDatasetEvaluatorRunsForDataset(
+  client: SqlClient,
+  datasetId: string,
+  limit: number,
+) {
+  return client`
+    select
+      r.id,
+      r.dataset_id as "datasetId",
+      r.version_id as "versionId",
+      r.created_by as "createdBy",
+      r.created_at as "createdAt",
+      r.updated_at as "updatedAt",
+      r.total_items as "totalItems",
+      r.updated_item_count as "updatedItemCount",
+      v.version_number as "versionNumber",
+      v.created_at as "versionCreatedAt",
+      creator.name as "createdByName",
+      creator.email as "createdByEmail"
+    from dataset_v2_evaluator_run r
+    left join dataset_v2_version v on v.id = r.version_id
+    left join account creator on creator.id = r.created_by
+    where r.dataset_id = ${datasetId}
+    order by r.created_at desc
+    limit ${limit}
+  `;
 }
 
 async function maybeCreateAutoVersion(
@@ -1183,6 +1487,23 @@ datasetsV2.post(
       return;
     }
 
+    const configRows = await sql`
+      select slot, config
+      from dataset_v2_evaluator_config
+      where dataset_id = ${datasetId}
+    `;
+
+    const evaluatorConfigMap = configRows.reduce(
+      (
+        acc: Record<number, DatasetEvaluatorConfigUnion>,
+        row: { slot: number; config: DatasetEvaluatorConfigUnion },
+      ) => {
+        acc[row.slot] = row.config;
+        return acc;
+      },
+      {} as Record<number, DatasetEvaluatorConfigUnion>,
+    );
+
     const slots = getDatasetEvaluatorSlots(dataset);
 
     if (!slots.length) {
@@ -1192,14 +1513,15 @@ datasetsV2.post(
 
     const evaluatorIds = slots.map((slot) => slot.evaluatorId);
 
-    const evaluators = evaluatorIds.length
-      ? await sql`
-          select *
-          from evaluator
-          where project_id = ${projectId}
-            and id = any(${sql.array(evaluatorIds)}::uuid[])
-        `
-      : [];
+    const evaluators =
+      evaluatorIds.length > 0
+        ? await sql`
+            select *
+            from evaluator
+            where project_id = ${projectId}
+              and id = any(${sql.array(evaluatorIds)}::uuid[])
+          `
+        : [];
 
     const evaluatorMap = new Map<string, any>();
     for (const evaluator of evaluators) {
@@ -1212,8 +1534,12 @@ datasetsV2.post(
       return;
     }
 
-    const slotRunners: Array<{ slot: number; evaluator: any; runner: any }> =
-      [];
+    const slotRunners: Array<{
+      slot: number;
+      evaluator: any;
+      runner: any;
+      config?: DatasetEvaluatorConfigUnion | undefined;
+    }> = [];
 
     for (const slot of slots) {
       const evaluator = evaluatorMap.get(slot.evaluatorId);
@@ -1238,7 +1564,12 @@ datasetsV2.post(
         return;
       }
 
-      slotRunners.push({ slot: slot.slot, evaluator, runner });
+      slotRunners.push({
+        slot: slot.slot,
+        evaluator,
+        runner,
+        config: evaluatorConfigMap?.[slot.slot],
+      });
     }
 
     if (!slotRunners.length) {
@@ -1275,7 +1606,7 @@ datasetsV2.post(
       const updates: Record<string, any> = {};
       let hasUpdate = false;
 
-      for (const { slot, evaluator, runner } of slotRunners) {
+      for (const { slot, evaluator, runner, config: slotConfig } of slotRunners) {
         const params = prepareEvaluatorParams(evaluator.params, item);
         const columnName = getEvaluatorResultColumn(slot);
 
@@ -1295,7 +1626,13 @@ datasetsV2.post(
                   : DEFAULT_EVALUATOR_MODEL;
 
             const result = await runOpenAIEvaluator(client, modelId, prompt);
-            updates[columnName] = sql.json(result);
+            if (evaluator.type === "model-scorer") {
+              updates[columnName] = sql.json(
+                normalizeScorerOpenAIResult(result, slotConfig),
+              );
+            } else {
+              updates[columnName] = sql.json(result);
+            }
           } catch (error) {
             updates[columnName] = sql.json({
               error: (error as Error)?.message ?? "Evaluator run failed",
@@ -1334,11 +1671,379 @@ datasetsV2.post(
 
     await touchDataset(datasetId);
 
+    const userId = ctx.state.userId as string | undefined;
+
+    const version = await createDatasetVersion(sql, datasetId, {
+      createdBy: userId ?? dataset.owner_id ?? null,
+    });
+
     const datasetWithItems = await fetchDatasetWithItems(datasetId);
+
+    const slotInfos: RunSlotInfo[] = slotRunners.map(({ slot, evaluator }) => ({
+      slot,
+      evaluatorId: evaluator.id ?? null,
+      evaluatorName: evaluator.name ?? null,
+      evaluatorKind: evaluator.kind ?? null,
+      evaluatorType: evaluator.type ?? null,
+    }));
+
+    const summary = buildRunSummary(
+      datasetWithItems?.items ?? [],
+      slotInfos,
+      evaluatorConfigMap,
+    );
+
+    const slotEntries = Object.values(summary.slots);
+
+    let runPayload: any = null;
+
+    try {
+      const [runRecord] = await sql`
+        insert into dataset_v2_evaluator_run (
+          dataset_id,
+          version_id,
+          created_by,
+          total_items,
+          updated_item_count
+        ) values (
+          ${datasetId},
+          ${version.id},
+          ${userId ?? null},
+          ${summary.totalItems},
+          ${updatedCount}
+        )
+        returning *
+      `;
+
+      if (slotEntries.length) {
+        await sql`
+          insert into dataset_v2_evaluator_run_slot (
+            run_id,
+            slot,
+            evaluator_id,
+            evaluator_name,
+            evaluator_kind,
+            evaluator_type,
+            pass_count,
+            fail_count,
+            unknown_count,
+            evaluated_count,
+            pass_rate,
+            coverage,
+            config
+          ) values ${sql(
+            slotEntries.map(
+              (slot) => sql`(
+                ${runRecord.id},
+                ${slot.slot},
+                ${slot.evaluatorId},
+                ${slot.evaluatorName},
+                ${slot.evaluatorKind},
+                ${slot.evaluatorType},
+                ${slot.pass},
+                ${slot.fail},
+                ${slot.unknown},
+                ${slot.evaluated},
+                ${slot.passRate},
+                ${slot.coverage},
+                ${slot.config ? sql.json(slot.config) : null}
+              )`,
+            ),
+          )}
+        `;
+      }
+
+      const runWithRelations =
+        (await fetchDatasetEvaluatorRunById(sql, runRecord.id)) ?? runRecord;
+
+      const slotsForResponse = slotEntries.map((slot) => ({
+        slot: slot.slot,
+        evaluatorId: slot.evaluatorId,
+        evaluatorName: slot.evaluatorName,
+        evaluatorKind: slot.evaluatorKind,
+        evaluatorType: slot.evaluatorType,
+        passCount: slot.pass,
+        failCount: slot.fail,
+        unknownCount: slot.unknown,
+        evaluatedCount: slot.evaluated,
+        passRate: slot.passRate,
+        coverage: slot.coverage,
+        config: slot.config ?? null,
+      }));
+
+      runPayload = {
+        ...runWithRelations,
+        slots: slotsForResponse,
+      };
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        console.warn(
+          "dataset_v2_evaluator_run table missing; skipping run history persistence",
+          error,
+        );
+      } else {
+        throw error;
+      }
+    }
 
     ctx.body = {
       updatedItemCount: updatedCount,
       dataset: datasetWithItems ?? dataset,
+      version,
+      run: runPayload,
+    };
+  },
+);
+
+datasetsV2.get(
+  "/:datasetId/evaluator-runs",
+  checkAccess("datasets", "list"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId } = DatasetIdParamsSchema.parse(ctx.params);
+    const { limit } = DatasetEvaluatorRunListQuerySchema.parse(
+      ctx.request.query ?? {},
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    let runs: any[] = [];
+    let slotRows: any[] = [];
+
+    try {
+      runs = await fetchDatasetEvaluatorRunsForDataset(sql, datasetId, limit);
+
+      if (!runs.length) {
+        ctx.body = { runs: [], aggregate: [] };
+        return;
+      }
+
+      const runIds = runs.map((run: any) => run.id);
+
+      slotRows = await sql`
+        select
+          run_id as "runId",
+          slot,
+          evaluator_id as "evaluatorId",
+          evaluator_name as "evaluatorName",
+          evaluator_kind as "evaluatorKind",
+          evaluator_type as "evaluatorType",
+          pass_count as "passCount",
+          fail_count as "failCount",
+          unknown_count as "unknownCount",
+          evaluated_count as "evaluatedCount",
+          pass_rate as "passRate",
+          coverage,
+          config
+        from dataset_v2_evaluator_run_slot
+        where run_id = any(${sql.array(runIds)}::uuid[])
+        order by slot asc
+      `;
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        console.warn(
+          "dataset_v2_evaluator_run table missing when listing runs; returning empty set",
+          error,
+        );
+        ctx.body = { runs: [], aggregate: [] };
+        return;
+      }
+      throw error;
+    }
+
+    const slotsByRun = new Map<string, any[]>();
+    for (const slot of slotRows as any[]) {
+      const collection = slotsByRun.get(slot.runId) ?? [];
+      collection.push({
+        slot: slot.slot,
+        evaluatorId: slot.evaluatorId,
+        evaluatorName: slot.evaluatorName,
+        evaluatorKind: slot.evaluatorKind,
+        evaluatorType: slot.evaluatorType,
+        passCount: Number(slot.passCount ?? 0),
+        failCount: Number(slot.failCount ?? 0),
+        unknownCount: Number(slot.unknownCount ?? 0),
+        evaluatedCount: Number(slot.evaluatedCount ?? 0),
+        passRate:
+          slot.passRate === null || typeof slot.passRate === "undefined"
+            ? null
+            : Number(slot.passRate),
+        coverage:
+          slot.coverage === null || typeof slot.coverage === "undefined"
+            ? null
+            : Number(slot.coverage),
+        config: slot.config ?? null,
+      });
+      slotsByRun.set(slot.runId, collection);
+    }
+
+    const runsWithSlots = runs.map((run: any) => ({
+      ...run,
+      slots: slotsByRun.get(run.id) ?? [],
+    }));
+
+    const aggregateMap = new Map<
+      string,
+      {
+        slot: number;
+        evaluatorId: string | null;
+        evaluatorName: string | null;
+        evaluatorKind: string | null;
+        evaluatorType: string | null;
+        passCount: number;
+        failCount: number;
+        unknownCount: number;
+        evaluatedCount: number;
+        runCount: number;
+      }
+    >();
+
+    for (const run of runsWithSlots) {
+      for (const slot of run.slots) {
+        const key = slot.evaluatorId ?? `slot-${slot.slot}`;
+        const existing =
+          aggregateMap.get(key) ??
+          {
+            slot: slot.slot,
+            evaluatorId: slot.evaluatorId,
+            evaluatorName: slot.evaluatorName,
+            evaluatorKind: slot.evaluatorKind,
+            evaluatorType: slot.evaluatorType,
+            passCount: 0,
+            failCount: 0,
+            unknownCount: 0,
+            evaluatedCount: 0,
+            runCount: 0,
+          };
+
+        existing.passCount += Number(slot.passCount ?? 0);
+        existing.failCount += Number(slot.failCount ?? 0);
+        existing.unknownCount += Number(slot.unknownCount ?? 0);
+        existing.evaluatedCount += Number(slot.evaluatedCount ?? 0);
+        existing.runCount += 1;
+
+        aggregateMap.set(key, existing);
+      }
+    }
+
+    const aggregate = Array.from(aggregateMap.values())
+      .map((entry) => ({
+        slot: entry.slot,
+        evaluatorId: entry.evaluatorId,
+        evaluatorName: entry.evaluatorName,
+        evaluatorKind: entry.evaluatorKind,
+        evaluatorType: entry.evaluatorType,
+        passCount: entry.passCount,
+        failCount: entry.failCount,
+        unknownCount: entry.unknownCount,
+        evaluatedCount: entry.evaluatedCount,
+        runCount: entry.runCount,
+        passRate:
+          entry.evaluatedCount > 0
+            ? Number(
+                ((entry.passCount / entry.evaluatedCount) * 100).toFixed(2),
+              )
+            : null,
+      }))
+      .sort((a, b) => a.slot - b.slot);
+
+    ctx.body = {
+      runs: runsWithSlots,
+      aggregate,
+    };
+  },
+);
+
+datasetsV2.get(
+  "/:datasetId/evaluator-runs/:runId",
+  checkAccess("datasets", "list"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId, runId } = DatasetEvaluatorRunIdParamsSchema.parse(
+      ctx.params,
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    let run;
+    try {
+      run = await fetchDatasetEvaluatorRunById(sql, runId);
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        ctx.throw(404, "Evaluator run not found");
+        return;
+      }
+      throw error;
+    }
+
+    if (!run || run.datasetId !== datasetId) {
+      ctx.throw(404, "Evaluator run not found");
+      return;
+    }
+
+    let slots;
+    try {
+      slots = await sql`
+        select
+          run_id as "runId",
+          slot,
+          evaluator_id as "evaluatorId",
+          evaluator_name as "evaluatorName",
+          evaluator_kind as "evaluatorKind",
+          evaluator_type as "evaluatorType",
+          pass_count as "passCount",
+          fail_count as "failCount",
+          unknown_count as "unknownCount",
+          evaluated_count as "evaluatedCount",
+          pass_rate as "passRate",
+          coverage,
+          config
+        from dataset_v2_evaluator_run_slot
+        where run_id = ${runId}
+        order by slot asc
+      `;
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        slots = [];
+      } else {
+        throw error;
+      }
+    }
+
+    ctx.body = {
+      run: {
+        ...run,
+        slots: (slots as any[]).map((slot) => ({
+          slot: slot.slot,
+          evaluatorId: slot.evaluatorId,
+          evaluatorName: slot.evaluatorName,
+          evaluatorKind: slot.evaluatorKind,
+          evaluatorType: slot.evaluatorType,
+          passCount: Number(slot.passCount ?? 0),
+          failCount: Number(slot.failCount ?? 0),
+          unknownCount: Number(slot.unknownCount ?? 0),
+          evaluatedCount: Number(slot.evaluatedCount ?? 0),
+          passRate:
+            slot.passRate === null || typeof slot.passRate === "undefined"
+              ? null
+              : Number(slot.passRate),
+          coverage:
+            slot.coverage === null || typeof slot.coverage === "undefined"
+              ? null
+              : Number(slot.coverage),
+          config: slot.config ?? null,
+        })),
+      },
     };
   },
 );
