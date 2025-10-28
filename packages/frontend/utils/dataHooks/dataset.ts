@@ -7,6 +7,31 @@ import {
   useProjectSWR,
 } from "./core";
 
+function normalizeEvaluatorConfigs(
+  source?: Record<string, DatasetEvaluatorConfig> | null,
+): Record<number, DatasetEvaluatorConfig> | undefined {
+  if (!source) return undefined;
+  const result: Record<number, DatasetEvaluatorConfig> = {};
+  Object.entries(source).forEach(([key, value]) => {
+    const slot = Number(key);
+    if (!Number.isNaN(slot)) {
+      result[slot] = value;
+    }
+  });
+  return result;
+}
+
+function normalizeDataset<T extends DatasetV2 | DatasetV2WithItems | null>(
+  dataset: T,
+): T {
+  if (!dataset) return dataset;
+  const normalized = {
+    ...dataset,
+    evaluatorConfigs: normalizeEvaluatorConfigs(dataset.evaluatorConfigs),
+  } as any;
+  return normalized;
+}
+
 export interface DatasetV2 {
   id: string;
   projectId: string;
@@ -23,6 +48,12 @@ export interface DatasetV2 {
   currentVersionCreatedAt?: string | null;
   currentVersionCreatedBy?: string | null;
   currentVersionRestoredFromVersionId?: string | null;
+  evaluatorSlot1Id?: string | null;
+  evaluatorSlot2Id?: string | null;
+  evaluatorSlot3Id?: string | null;
+  evaluatorSlot4Id?: string | null;
+  evaluatorSlot5Id?: string | null;
+  evaluatorConfigs?: Record<number, DatasetEvaluatorConfig>;
 }
 
 export interface DatasetV2Item {
@@ -30,9 +61,25 @@ export interface DatasetV2Item {
   datasetId: string;
   input: string;
   groundTruth: string | null;
+  output: string | null;
   createdAt: string;
   updatedAt: string;
+  evaluatorResult1?: unknown | null;
+  evaluatorResult2?: unknown | null;
+  evaluatorResult3?: unknown | null;
+  evaluatorResult4?: unknown | null;
+  evaluatorResult5?: unknown | null;
 }
+
+export type DatasetEvaluatorConfig =
+  | {
+      type: "model-labeler";
+      passLabels: string[];
+    }
+  | {
+      type: "model-scorer";
+      threshold: number;
+    };
 
 export interface DatasetV2WithItems extends DatasetV2 {
   items: DatasetV2Item[];
@@ -57,9 +104,15 @@ export interface DatasetV2VersionItem {
   itemIndex: number;
   input: string;
   groundTruth: string | null;
+  output: string | null;
   sourceItemId: string | null;
   sourceCreatedAt: string | null;
   sourceUpdatedAt: string | null;
+  evaluatorResult1?: unknown | null;
+  evaluatorResult2?: unknown | null;
+  evaluatorResult3?: unknown | null;
+  evaluatorResult4?: unknown | null;
+  evaluatorResult5?: unknown | null;
 }
 
 export interface DatasetV2Input {
@@ -70,6 +123,7 @@ export interface DatasetV2Input {
 export interface DatasetV2ItemInput {
   input?: string;
   groundTruth?: string | null;
+  output?: string | null;
 }
 
 export interface DatasetImportPayload {
@@ -111,7 +165,7 @@ export function useDatasetsV2(options: DatasetListOptions = {}) {
     `/datasets-v2${queryString ? `?${queryString}` : ""}`;
 
   const {
-    data,
+    data: rawData,
     isLoading,
     isValidating,
     mutate,
@@ -160,8 +214,13 @@ export function useDatasetsV2(options: DatasetListOptions = {}) {
     [projectId, mutate],
   );
 
+  const datasets = useMemo(
+    () => (rawData ?? []).map((dataset) => normalizeDataset(dataset)),
+    [rawData],
+  );
+
   return {
-    datasets: data ?? [],
+    datasets,
     isLoading,
     isValidating,
     mutate,
@@ -223,13 +282,18 @@ export function useDatasetV2(datasetId?: string) {
   const { projectId } = useContext(ProjectContext);
 
   const {
-    data: dataset,
+    data: rawDataset,
     isLoading,
     isValidating,
     mutate,
     error,
   } = useProjectSWR<DatasetV2WithItems>(
     datasetId ? `/datasets-v2/${datasetId}` : null,
+  );
+
+  const dataset = useMemo(
+    () => (rawDataset ? normalizeDataset(rawDataset) : rawDataset),
+    [rawDataset],
   );
 
   const { trigger: updateDataset, isMutating: isUpdating } =
@@ -387,6 +451,95 @@ export function useDatasetV2(datasetId?: string) {
     [datasetId, projectId],
   );
 
+  const addEvaluator = useCallback(
+    async (evaluatorId: string, config?: DatasetEvaluatorConfig | null) => {
+      if (!datasetId || !projectId) {
+        return null;
+      }
+
+      const url = generateKey(
+        `/datasets-v2/${datasetId}/evaluators`,
+        projectId,
+      );
+
+      if (!url) {
+        return null;
+      }
+
+      const updated = await fetcher.post(url, {
+        arg: { evaluatorId, config: config ?? undefined },
+      });
+
+      if (updated) {
+        const normalized = normalizeDataset(updated);
+        mutate(
+          (current) =>
+            current
+              ? {
+                  ...current,
+                  ...normalized,
+                  items: current.items,
+                }
+              : normalized,
+          { revalidate: false },
+        );
+      }
+
+      return updated;
+    },
+    [datasetId, projectId, mutate],
+  );
+
+  const removeEvaluator = useCallback(
+    async (slot: number) => {
+      if (!datasetId || !projectId) {
+        return null;
+      }
+
+      const url = generateKey(
+        `/datasets-v2/${datasetId}/evaluators/${slot}`,
+        projectId,
+      );
+
+      if (!url) {
+        return null;
+      }
+
+      const updated = await fetcher.delete(url);
+
+      if (updated) {
+        const normalized = normalizeDataset(updated);
+        mutate(normalized, { revalidate: false });
+      }
+
+      return updated;
+    },
+    [datasetId, projectId, mutate],
+  );
+
+  const runEvaluators = useCallback(async () => {
+    if (!datasetId || !projectId) {
+      return null;
+    }
+
+    const url = generateKey(
+      `/datasets-v2/${datasetId}/evaluators/run`,
+      projectId,
+    );
+
+    if (!url) {
+      return null;
+    }
+
+    const response = await fetcher.post(url, { arg: {} });
+
+    if (response?.dataset) {
+      mutate(normalizeDataset(response.dataset), { revalidate: false });
+    }
+
+    return response;
+  }, [datasetId, projectId, mutate]);
+
   return {
     dataset,
     isLoading,
@@ -403,6 +556,9 @@ export function useDatasetV2(datasetId?: string) {
     deleteItem,
     importItems,
     generateOutput,
+    addEvaluator,
+    removeEvaluator,
+    runEvaluators,
   };
 }
 

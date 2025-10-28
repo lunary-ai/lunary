@@ -420,16 +420,62 @@ export async function runAImodel(
   orgId: string,
   projectId: string,
 ) {
-  const resolvedModel: Model =
-    typeof model === "string"
-      ? (MODELS.find((m) => m.id === model) ??
-          ({
-            id: model,
-            name: model,
-            provider: inferProvider(model),
-            isCustom: false,
-          } as Model))
-      : model;
+  let resolvedModel: Model;
+
+  if (typeof model === "string") {
+    const builtInModel = MODELS.find((m) => m.id === model);
+
+    if (builtInModel) {
+      resolvedModel = builtInModel;
+    } else {
+      const [customModel] = await sql<{
+        id: string;
+        name: string;
+        displayName: string | null;
+        provider: string;
+        providerConfigId: string;
+        orgId: string;
+        projectId: string;
+      }[]>`
+        select
+          pcm.id,
+          pcm.name,
+          pcm.display_name,
+          pc.provider_name as provider,
+          pc.id as provider_config_id,
+          pc.project_id,
+          p.org_id
+        from provider_config_model pcm
+        join provider_config pc on pc.id = pcm.provider_config_id
+        join project p on p.id = pc.project_id
+        where pcm.id = ${model}
+        ${projectId ? sql`and pc.project_id = ${projectId}` : sql``}
+        ${orgId ? sql`and p.org_id = ${orgId}` : sql``}
+      `;
+
+      if (customModel) {
+        resolvedModel = {
+          id: customModel.id,
+          name:
+            customModel.displayName ||
+            customModel.name ||
+            customModel.id,
+          provider: customModel.provider,
+          isCustom: true,
+          providerConfigId: customModel.providerConfigId,
+        };
+      } else {
+        resolvedModel = {
+          id: model,
+          name: model,
+          provider: inferProvider(model),
+          isCustom: false,
+        } as Model;
+      }
+    }
+  } else {
+    resolvedModel = model;
+  }
 
   const modelId = resolvedModel.id;
   const modelName = resolvedModel.name;
