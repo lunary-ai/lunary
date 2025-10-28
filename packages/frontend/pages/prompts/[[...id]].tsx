@@ -70,8 +70,13 @@ import {
   FIXED_TEMPERATURE_VALUE,
   getMaxTokenParam,
   hasAccess,
+  normalizeAnthropicThinking,
+  normalizeOpenAIReasoningEffort,
   normalizeTemperature,
   requiresFixedTemperature,
+  shouldUseMaxCompletionTokens,
+  supportsAnthropicThinking,
+  supportsOpenAIThinking,
 } from "shared";
 
 function NotepadButton({ value, onChange }) {
@@ -244,14 +249,32 @@ function Playground() {
         modelId,
         templateVersion.extra.temperature,
       );
+      const reasoningEffort = normalizeOpenAIReasoningEffort(
+        modelId,
+        templateVersion.extra.reasoning_effort as any,
+      );
+      const thinking = normalizeAnthropicThinking(
+        modelId,
+        templateVersion.extra.thinking as any,
+      );
 
-      protectedPayload.model_params = {
+      const modelParams: Record<string, any> = {
         ...getMaxTokenParam(modelId, templateVersion.extra.max_tokens),
         temperature: requiresFixedTemperature(modelId)
           ? FIXED_TEMPERATURE_VALUE
           : normalizedTemperature,
         model: modelId,
       };
+
+      if (reasoningEffort) {
+        modelParams.reasoning_effort = reasoningEffort;
+      }
+
+      if (thinking) {
+        modelParams.thinking = thinking;
+      }
+
+      protectedPayload.model_params = modelParams;
     }
 
     return protectedPayload;
@@ -571,7 +594,10 @@ function Playground() {
         normalizedExtra.temperature = FIXED_TEMPERATURE_VALUE;
       }
 
-      if (requiresFixedTemperature(model) || model?.includes("gpt-5")) {
+      if (
+        requiresFixedTemperature(model) ||
+        shouldUseMaxCompletionTokens(model)
+      ) {
         delete normalizedExtra.max_tokens;
       }
 
@@ -679,8 +705,39 @@ function Playground() {
           extra.temperature = FIXED_TEMPERATURE_VALUE;
         }
 
-        if (requiresFixedTemperature(modelId) || modelId?.includes("gpt-5")) {
+        if (
+          requiresFixedTemperature(modelId) ||
+          shouldUseMaxCompletionTokens(modelId)
+        ) {
           delete extra.max_tokens;
+        }
+
+        const reasoningEffort = normalizeOpenAIReasoningEffort(
+          modelId,
+          templateVersion?.extra?.reasoning_effort as any,
+        );
+        if (supportsOpenAIThinking(modelId)) {
+          if (reasoningEffort) {
+            extra.reasoning_effort = reasoningEffort;
+          } else {
+            delete extra.reasoning_effort;
+          }
+        } else {
+          delete extra.reasoning_effort;
+        }
+
+        const thinking = normalizeAnthropicThinking(
+          modelId,
+          templateVersion?.extra?.thinking as any,
+        );
+        if (supportsAnthropicThinking(modelId)) {
+          if (thinking) {
+            extra.thinking = thinking;
+          } else {
+            delete extra.thinking;
+          }
+        } else {
+          delete extra.thinking;
         }
 
         // Compile the content with variables

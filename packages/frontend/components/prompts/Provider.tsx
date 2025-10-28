@@ -26,12 +26,16 @@ import {
   IconTools,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  AnthropicThinkingConfig,
   FIXED_TEMPERATURE_VALUE,
   Model,
   OldProvider,
+  getOpenAIReasoningEfforts,
   requiresFixedTemperature,
+  supportsAnthropicThinking,
+  supportsOpenAIThinking,
 } from "shared";
 import ModelSelect from "./ModelSelect";
 
@@ -281,32 +285,88 @@ export default function ProviderEditor({
     },
   });
 
-  const selectedModelId =
-    typeof value?.model === "string" ? value?.model : value?.model?.id;
+  const selectedModelId = useMemo(() => {
+    const model = value?.model;
+    if (!model) return "";
+    if (typeof model === "string") return model;
+    if (typeof model === "object" && model !== null) {
+      if (typeof (model as any).id === "string") return (model as any).id;
+      if (typeof (model as any).model === "string") return (model as any).model;
+      if (typeof (model as any).name === "string") return (model as any).name;
+    }
+    return String(model);
+  }, [value?.model]);
+
   const fixedTemperature = requiresFixedTemperature(selectedModelId);
+  const openAIThinkingSupported = supportsOpenAIThinking(selectedModelId);
+  const anthropicThinkingSupported = supportsAnthropicThinking(selectedModelId);
+
+  const reasoningOptions = useMemo(
+    () =>
+      getOpenAIReasoningEfforts().map((option) => ({
+        value: option,
+        label: option === "none" ? "Default" : option,
+      })),
+    [],
+  );
+
+  const reasoningEffortValue = value?.config?.reasoning_effort ?? "none";
+  const thinkingConfig = (value?.config?.thinking || undefined) as
+    | AnthropicThinkingConfig
+    | undefined;
+  const thinkingEnabled = thinkingConfig?.type === "enabled";
+
+  const updateConfig = useCallback(
+    (partial: Record<string, any>) => {
+      const nextConfig: Record<string, any> = {
+        ...value.config,
+        ...partial,
+      };
+
+      Object.keys(partial).forEach((key) => {
+        if (partial[key] === undefined) {
+          delete nextConfig[key];
+        }
+      });
+
+      onChange({
+        ...value,
+        config: nextConfig,
+      });
+    },
+    [onChange, value],
+  );
 
   useEffect(() => {
     if (!fixedTemperature) return;
     if (value?.config?.temperature === FIXED_TEMPERATURE_VALUE) return;
 
-    onChange({
-      ...value,
-      config: {
-        ...value.config,
-        temperature: FIXED_TEMPERATURE_VALUE,
-      },
-    });
-  }, [fixedTemperature, value?.config?.temperature, onChange, value]);
+    updateConfig({ temperature: FIXED_TEMPERATURE_VALUE });
+  }, [fixedTemperature, updateConfig, value?.config?.temperature]);
+
+  useEffect(() => {
+    if (openAIThinkingSupported) return;
+    if (!value?.config?.reasoning_effort) return;
+    updateConfig({ reasoning_effort: undefined });
+  }, [openAIThinkingSupported, updateConfig, value?.config?.reasoning_effort]);
+
+  useEffect(() => {
+    if (anthropicThinkingSupported) return;
+    if (!value?.config?.thinking) return;
+    updateConfig({ thinking: undefined });
+  }, [anthropicThinkingSupported, updateConfig, value?.config?.thinking]);
 
   function handleModelSelectChange(model: Model) {
     const modelId = model.id;
+    const previousModelId = selectedModelId;
 
     const isPreviousProviderOpenAI =
-      modelId.startsWith("gpt") || modelId.includes("mistral");
+      previousModelId.startsWith("gpt") ||
+      previousModelId.includes("mistral");
     const isNewProviderOpenAI =
       modelId.startsWith("gpt") || modelId.includes("mistral");
 
-    const isPreviousProviderAnthropic = modelId.startsWith("claude");
+    const isPreviousProviderAnthropic = previousModelId.startsWith("claude");
     const isNewProviderAnthropic = modelId.startsWith("claude");
 
     let updatedTools = value.config.tools;
@@ -324,16 +384,26 @@ export default function ProviderEditor({
     ) {
       updatedTools = convertAnthropicToolsToOpenAI(value.config.tools);
     }
+    const nextConfig: Record<string, any> = {
+      ...value.config,
+      tools: updatedTools,
+      temperature: requiresFixedTemperature(modelId)
+        ? FIXED_TEMPERATURE_VALUE
+        : value.config.temperature,
+    };
+
+    if (!supportsOpenAIThinking(modelId)) {
+      delete nextConfig.reasoning_effort;
+    }
+
+    if (!supportsAnthropicThinking(modelId)) {
+      delete nextConfig.thinking;
+    }
+
     onChange({
       ...value,
-      model,
-      config: {
-        ...value.config,
-        tools: updatedTools,
-        temperature: requiresFixedTemperature(modelId)
-          ? FIXED_TEMPERATURE_VALUE
-          : value.config.temperature,
-      },
+      model: modelId,
+      config: nextConfig,
     });
   }
 
@@ -431,41 +501,36 @@ export default function ProviderEditor({
                           />
                         </Group>
                       )}
-                      <ParamItem
-                        name="Temperature"
-                        displayValue={
-                          fixedTemperature
-                            ? FIXED_TEMPERATURE_VALUE
-                            : value?.config?.temperature || 0
-                        }
-                        onValueChange={(val) => {
-                          if (fixedTemperature) return;
-                          onChange({
-                            ...value,
-                            config: {
-                              ...value.config,
-                              temperature: val,
-                            },
-                          });
-                        }}
-                        min={0}
-                        max={2}
-                        step={0.01}
-                        precision={2}
-                        disabled={fixedTemperature}
-                        value={
-                          <Slider
-                            min={0}
-                            max={2}
-                            step={0.01}
-                            precision={2}
-                            style={{ zIndex: 0 }}
-                            w="100%"
-                            disabled={fixedTemperature}
-                            {...configHandler("temperature")}
-                          />
-                        }
-                      />
+                      {!fixedTemperature && (
+                        <ParamItem
+                          name="Temperature"
+                          displayValue={value?.config?.temperature || 0}
+                          onValueChange={(val) => {
+                            onChange({
+                              ...value,
+                              config: {
+                                ...value.config,
+                                temperature: val,
+                              },
+                            });
+                          }}
+                          min={0}
+                          max={2}
+                          step={0.01}
+                          precision={2}
+                          value={
+                            <Slider
+                              min={0}
+                              max={2}
+                              step={0.01}
+                              precision={2}
+                              style={{ zIndex: 0 }}
+                              w="100%"
+                              {...configHandler("temperature")}
+                            />
+                          }
+                        />
+                      )}
                       <ParamItem
                         name="Max tokens"
                         displayValue={value?.config?.max_tokens || 1}
@@ -519,6 +584,84 @@ export default function ProviderEditor({
                             />
                           }
                         />
+                      )}
+                      {openAIThinkingSupported && (
+                        <Group justify="space-between" align="center" mt="sm">
+                          <Text size="sm" fw="bold">
+                            Reasoning effort
+                          </Text>
+                          <Select
+                            w={120}
+                            data={reasoningOptions}
+                            value={reasoningEffortValue}
+                            onChange={(val) => {
+                              const effort = (val ?? "none") as any;
+                              updateConfig({
+                                reasoning_effort:
+                                  effort === "none" ? undefined : effort,
+                              });
+                            }}
+                            size="xs"
+                            allowDeselect={false}
+                          />
+                        </Group>
+                      )}
+                      {anthropicThinkingSupported && (
+                        <Stack gap={4} mt="sm">
+                          <Group justify="space-between" align="center">
+                            <Text size="sm" fw="bold">
+                              Thinking
+                            </Text>
+                            <Checkbox
+                              size="xs"
+                              label="Enable"
+                              checked={thinkingEnabled}
+                              onChange={(event) => {
+                                const checked = event.currentTarget.checked;
+                                if (!checked) {
+                                  updateConfig({ thinking: undefined });
+                                  return;
+                                }
+                                const budget =
+                                  thinkingConfig?.budget_tokens ?? 2048;
+                                updateConfig({
+                                  thinking: {
+                                    type: "enabled",
+                                    budget_tokens: budget,
+                                  },
+                                });
+                              }}
+                            />
+                          </Group>
+                          {thinkingEnabled && (
+                            <NumberInput
+                              label="Budget tokens"
+                              withAsterisk
+                              min={1}
+                              value={thinkingConfig?.budget_tokens ?? 2048}
+                              onChange={(val) => {
+                                const numeric =
+                                  typeof val === "number" ? val : Number(val);
+                                if (Number.isNaN(numeric) || numeric <= 0) {
+                                  updateConfig({
+                                    thinking: {
+                                      type: "enabled",
+                                      budget_tokens: undefined,
+                                    },
+                                  });
+                                  return;
+                                }
+                                updateConfig({
+                                  thinking: {
+                                    type: "enabled",
+                                    budget_tokens: numeric,
+                                  },
+                                });
+                              }}
+                              size="xs"
+                            />
+                          )}
+                        </Stack>
                       )}
                       {!hideStream && (
                         <Group justify="space-between">
@@ -666,6 +809,24 @@ export default function ProviderEditor({
                 </Text>
               </Group>
             )}
+            {openAIThinkingSupported && (
+              <Group gap={4} wrap="nowrap" align="center">
+                <Text size="xs" c="dark.6" lh={1}>
+                  reasoning:
+                </Text>
+                <Text
+                  size="xs"
+                  c="blue.6"
+                  lh={1}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setParamsPopoverOpened(true)}
+                >
+                  {reasoningEffortValue === "none"
+                    ? "default"
+                    : reasoningEffortValue}
+                </Text>
+              </Group>
+            )}
             <Group gap={4} wrap="nowrap" align="center">
               <Text size="xs" c="dark.6" lh={1}>
                 temperature:
@@ -722,6 +883,24 @@ export default function ProviderEditor({
                 {value?.config?.stream ? "true" : "false"}
               </Text>
             </Group>
+            {anthropicThinkingSupported && (
+              <Group gap={4} wrap="nowrap" align="center">
+                <Text size="xs" c="dark.6" lh={1}>
+                  thinking:
+                </Text>
+                <Text
+                  size="xs"
+                  c="blue.6"
+                  lh={1}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setParamsPopoverOpened(true)}
+                >
+                  {thinkingEnabled
+                    ? `enabled${thinkingConfig?.budget_tokens ? ` (${thinkingConfig.budget_tokens})` : ""}`
+                    : "disabled"}
+                </Text>
+              </Group>
+            )}
           </Group>
         </Stack>
       )}

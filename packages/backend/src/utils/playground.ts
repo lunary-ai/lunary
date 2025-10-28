@@ -2,7 +2,14 @@ import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import Anthropic from "@anthropic-ai/sdk";
 import { generateText } from "ai";
 import OpenAI, { AzureOpenAI } from "openai";
-import { MODELS, Model, getMaxTokenParam, normalizeTemperature } from "shared";
+import {
+  MODELS,
+  Model,
+  getMaxTokenParam,
+  normalizeAnthropicThinking,
+  normalizeOpenAIReasoningEffort,
+  normalizeTemperature,
+} from "shared";
 import { ReadableStream } from "stream/web";
 import sql from "./db";
 import watsonxAi from "./ibm";
@@ -381,6 +388,10 @@ async function runAzureOpenAI(
   const temperature = normalizeTemperature(modelName, params?.temperature);
   const maxTokens =
     params?.max_tokens ?? params?.max_completion_tokens ?? undefined;
+  const reasoningEffort = normalizeOpenAIReasoningEffort(
+    modelName,
+    params?.reasoning_effort,
+  );
 
   const chatCompletion = await client.chat.completions.create({
     model: modelName,
@@ -394,6 +405,7 @@ async function runAzureOpenAI(
     seed: params?.seed,
     response_format: params?.response_format,
     ...getMaxTokenParam(modelName, maxTokens),
+    ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
   });
 
   return chatCompletion;
@@ -522,6 +534,11 @@ export async function runAImodel(
       completionsParams?.max_tokens ??
       completionsParams?.max_completion_tokens;
 
+    const thinking = normalizeAnthropicThinking(
+      modelId,
+      completionsParams?.thinking,
+    );
+
     const res = await anthropic.messages.create({
       model: modelId,
       messages: messages
@@ -535,6 +552,7 @@ export async function runAImodel(
       functions: completionsParams?.functions,
       tools: validateToolCalls(modelName, completionsParams?.tools),
       seed: completionsParams?.seed,
+      ...(thinking ? { thinking } : {}),
     });
 
     return getOpenAIMessage(res);
@@ -676,6 +694,10 @@ export async function runAImodel(
     const maxTokens =
       completionsParams?.max_tokens ??
       completionsParams?.max_completion_tokens;
+    const reasoningEffort = normalizeOpenAIReasoningEffort(
+      modelIdentifier,
+      completionsParams?.reasoning_effort,
+    );
 
     res = await openai.chat.completions.create({
       model: modelIdentifier || "gpt-5",
@@ -690,6 +712,7 @@ export async function runAImodel(
       response_format: completionsParams?.response_format,
       ...paramsOverwrite,
       ...getMaxTokenParam(modelIdentifier, maxTokens),
+      ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
     });
   }
 

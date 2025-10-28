@@ -1,4 +1,8 @@
 import type { EvaluationResult } from "./evaluator-types";
+import type {
+  AnthropicThinkingConfig,
+  OpenAIReasoningEffort,
+} from "shared";
 
 export interface PromptVersion {
   id: string;
@@ -9,6 +13,8 @@ export interface PromptVersion {
   temperature: number;
   max_tokens: number;
   top_p: number;
+  reasoning_effort?: OpenAIReasoningEffort | null;
+  thinking?: AnthropicThinkingConfig | null;
 }
 
 export interface ComparisonRow {
@@ -51,6 +57,8 @@ export type APIPromptVersion = {
     model: string;
     max_tokens: number;
     temperature: number;
+    reasoning_effort?: OpenAIReasoningEffort | null;
+    thinking?: AnthropicThinkingConfig | null;
     [key: string]: unknown;
   };
   content: PromptMessage[];
