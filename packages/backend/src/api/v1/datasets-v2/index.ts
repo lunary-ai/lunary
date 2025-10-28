@@ -143,6 +143,10 @@ const DatasetEvaluatorRunIdParamsSchema = z.object({
   runId: z.string().uuid(),
 });
 
+const DatasetEvaluatorRunUpdateSchema = z.object({
+  name: z.union([z.string().max(200), z.null()]),
+});
+
 function ensureProjectId(ctx: Context): string {
   const projectId = ctx.state.projectId as string | undefined;
 
@@ -621,6 +625,7 @@ async function fetchDatasetEvaluatorRunById(
       r.id,
       r.dataset_id as "datasetId",
       r.version_id as "versionId",
+      r.name as "name",
       r.created_by as "createdBy",
       r.created_at as "createdAt",
       r.updated_at as "updatedAt",
@@ -650,6 +655,7 @@ async function fetchDatasetEvaluatorRunsForDataset(
       r.id,
       r.dataset_id as "datasetId",
       r.version_id as "versionId",
+      r.name as "name",
       r.created_by as "createdBy",
       r.created_at as "createdAt",
       r.updated_at as "updatedAt",
@@ -1702,12 +1708,14 @@ datasetsV2.post(
         insert into dataset_v2_evaluator_run (
           dataset_id,
           version_id,
+          name,
           created_by,
           total_items,
           updated_item_count
         ) values (
           ${datasetId},
           ${version.id},
+          null,
           ${userId ?? null},
           ${summary.totalItems},
           ${updatedCount}
@@ -1715,7 +1723,7 @@ datasetsV2.post(
         returning *
       `;
 
-      if (slotEntries.length) {
+      for (const slot of slotEntries) {
         await sql`
           insert into dataset_v2_evaluator_run_slot (
             run_id,
@@ -1731,25 +1739,21 @@ datasetsV2.post(
             pass_rate,
             coverage,
             config
-          ) values ${sql(
-            slotEntries.map(
-              (slot) => sql`(
-                ${runRecord.id},
-                ${slot.slot},
-                ${slot.evaluatorId},
-                ${slot.evaluatorName},
-                ${slot.evaluatorKind},
-                ${slot.evaluatorType},
-                ${slot.pass},
-                ${slot.fail},
-                ${slot.unknown},
-                ${slot.evaluated},
-                ${slot.passRate},
-                ${slot.coverage},
-                ${slot.config ? sql.json(slot.config) : null}
-              )`,
-            ),
-          )}
+          ) values (
+            ${runRecord.id},
+            ${slot.slot},
+            ${slot.evaluatorId},
+            ${slot.evaluatorName},
+            ${slot.evaluatorKind},
+            ${slot.evaluatorType},
+            ${slot.pass},
+            ${slot.fail},
+            ${slot.unknown},
+            ${slot.evaluated},
+            ${slot.passRate},
+            ${slot.coverage},
+            ${slot.config ? sql.json(slot.config) : null}
+          )
         `;
       }
 
@@ -2044,6 +2048,70 @@ datasetsV2.get(
           config: slot.config ?? null,
         })),
       },
+    };
+  },
+);
+
+datasetsV2.patch(
+  "/:datasetId/evaluator-runs/:runId",
+  checkAccess("datasets", "update"),
+  async (ctx: Context) => {
+    const projectId = ensureProjectId(ctx);
+    const { datasetId, runId } = DatasetEvaluatorRunIdParamsSchema.parse(
+      ctx.params,
+    );
+
+    const dataset = await getDatasetForProject(datasetId, projectId);
+
+    if (!dataset) {
+      ctx.throw(404, "Dataset not found");
+      return;
+    }
+
+    const parsedBody = DatasetEvaluatorRunUpdateSchema.parse(
+      ctx.request.body ?? {},
+    );
+
+    const nextNameRaw = parsedBody.name;
+    const nextName =
+      typeof nextNameRaw === "string"
+        ? nextNameRaw.trim().length
+          ? nextNameRaw.trim()
+          : null
+        : null;
+
+    let updatedRow;
+    try {
+      [updatedRow] = await sql`
+        update dataset_v2_evaluator_run
+        set name = ${nextName},
+            updated_at = now()
+        where id = ${runId}
+          and dataset_id = ${datasetId}
+        returning id
+      `;
+    } catch (error) {
+      if (isRelationMissingError(error)) {
+        ctx.throw(404, "Evaluator run not found");
+        return;
+      }
+      throw error;
+    }
+
+    if (!updatedRow) {
+      ctx.throw(404, "Evaluator run not found");
+      return;
+    }
+
+    const updatedRun = await fetchDatasetEvaluatorRunById(sql, runId);
+
+    if (!updatedRun) {
+      ctx.throw(404, "Evaluator run not found");
+      return;
+    }
+
+    ctx.body = {
+      run: updatedRun,
     };
   },
 );
