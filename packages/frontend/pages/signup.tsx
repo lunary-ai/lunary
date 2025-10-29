@@ -84,8 +84,6 @@ function SignupPage() {
         val.length <= 3 ? "Can you pick something longer?" : null,
       orgName: (val) =>
         val.length <= 3 ? "Can you pick something longer?" : null,
-      // employeeCount: (val) =>
-      //   val.length <= 1 ? "Please select a value" : null,
       password: (val) => {
         if (val.length < 6) {
           return "Password must be at least 6 characters";
