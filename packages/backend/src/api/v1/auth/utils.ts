@@ -1,14 +1,13 @@
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
-import * as argon2 from "argon2";
 import * as jose from "jose";
 import { SignJWT } from "jose";
 import { Next } from "koa";
+import { password as bunPassword } from "bun";
 
 import { RESET_PASSWORD, sendEmail } from "@/src/emails";
 import config from "@/src/utils/config";
 import { validateUUID } from "@/src/utils/misc";
-import bcrypt from "bcrypt";
 import { JWSInvalid, JWTExpired } from "jose/errors";
 
 export function sanitizeEmail(email: string) {
@@ -19,21 +18,11 @@ export async function verifyPassword(
   password: string,
   hash: string,
 ): Promise<boolean> {
-  if (hash.startsWith("$argon2")) {
-    return argon2.verify(hash, password);
-  } else if (
-    hash.startsWith("$2a") ||
-    hash.startsWith("$2b") ||
-    hash.startsWith("$2y")
-  ) {
-    return bcrypt.compare(password, hash);
-  } else {
-    throw new Error("Unknown hash type");
-  }
+  return bunPassword.verify(password, hash);
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  return argon2.hash(password);
+  return bunPassword.hash(password, { algorithm: "argon2id" });
 }
 
 const ONE_MONTH = 60 * 60 * 24 * 30;

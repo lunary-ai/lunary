@@ -78,11 +78,11 @@ auth.post("/method", aggressiveRatelimit, async (ctx: Context) => {
 auth.post("/signup", aggressiveRatelimit, async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
-    password: z.string().min(6).optional(), // optional if SAML flow
-    name: z.string(),
-    orgName: z.string().optional(),
-    projectName: z.string().optional(),
-    employeeCount: z.string().optional(),
+    password: z.string().min(6).max(256).optional(), // optional if SAML flow
+    name: z.string().max(30),
+    orgName: z.string().max(30).optional(),
+    projectName: z.string().max(30).optional(),
+    employeeCount: z.string().max(30).optional(),
     orgId: z.string().optional(),
     token: z.string().optional(),
     whereFindUs: z.string().optional(),
@@ -482,39 +482,43 @@ auth.post("/login", aggressiveRatelimit, async (ctx: Context) => {
   ctx.body = { token };
 });
 
-auth.post("/request-password-reset", aggressiveRatelimit, async (ctx: Context) => {
-  const bodySchema = z.object({
-    email: z.string().email().transform(sanitizeEmail),
-  });
+auth.post(
+  "/request-password-reset",
+  aggressiveRatelimit,
+  async (ctx: Context) => {
+    const bodySchema = z.object({
+      email: z.string().email().transform(sanitizeEmail),
+    });
 
-  try {
-    const body = bodySchema.safeParse(ctx.request.body);
-    if (!body.success) {
-      ctx.status = 400;
-      ctx.body = { error: "Invalid email format" };
-      return;
-    }
-    const { email } = body.data;
+    try {
+      const body = bodySchema.safeParse(ctx.request.body);
+      if (!body.success) {
+        ctx.status = 400;
+        ctx.body = { error: "Invalid email format" };
+        return;
+      }
+      const { email } = body.data;
 
-    const [{ recoveryToken }] = await sql<
-      Db.Account[]
-    >`select * from account where email = ${email}`;
+      const [{ recoveryToken }] = await sql<
+        Db.Account[]
+      >`select * from account where email = ${email}`;
 
-    if (recoveryToken && !(await isJWTExpired(recoveryToken))) {
+      if (recoveryToken && !(await isJWTExpired(recoveryToken))) {
+        await requestPasswordReset(email);
+        ctx.body = { ok: true };
+        return;
+      }
+
       await requestPasswordReset(email);
       ctx.body = { ok: true };
-      return;
+    } catch (error) {
+      Sentry.captureException(error);
+      console.error(error);
+      // Do not send error message to client if email is not found
+      ctx.body = { ok: true };
     }
-
-    await requestPasswordReset(email);
-    ctx.body = { ok: true };
-  } catch (error) {
-    Sentry.captureException(error);
-    console.error(error);
-    // Do not send error message to client if email is not found
-    ctx.body = { ok: true };
-  }
-});
+  },
+);
 
 auth.post("/reset-password", async (ctx: Context) => {
   const bodySchema = z.object({

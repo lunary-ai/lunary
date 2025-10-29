@@ -11,7 +11,8 @@
     "dev": "bun --elide-lines 0 --filter '*' dev ",
     "dev:llm": "bun --filter '*' dev",
     "test": "bun --filter './packages/tests' test",
-    "clean": "rm -rf bun.lock & rm -rf ./**/node_modules && rm -rf packages/frontend/.next"
+    "clean": "zsh -c 'rm -rf bun.lock && rm -rf **/node_modules && rm -rf **/.next'",
+    "shell": "echo $SHELL"
   },
   "workspaces": [
     "packages/*"

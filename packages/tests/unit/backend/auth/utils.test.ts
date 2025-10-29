@@ -4,19 +4,15 @@ import { SignJWT } from "jose";
 import { IDs } from "../../_helpers/ids";
 import { resetSqlMock, setSqlResolver } from "../utils/mockSql";
 
-const argonVerifyMock = mock(async () => true);
-const argonHashMock = mock(async (password: string) => `$argon$${password}`);
+const bunPasswordVerifyMock = mock(async () => true);
+const bunPasswordHashMock = mock(
+  async (password: string) => `$argon$${password}`,
+);
 
-mock.module("argon2", () => ({
-  verify: argonVerifyMock,
-  hash: argonHashMock,
-}));
-
-const bcryptCompareMock = mock(async () => true);
-
-mock.module("bcrypt", () => ({
-  default: {
-    compare: bcryptCompareMock,
+mock.module("bun", () => ({
+  password: {
+    verify: bunPasswordVerifyMock,
+    hash: bunPasswordHashMock,
   },
 }));
 
@@ -58,9 +54,8 @@ beforeAll(async () => {
 
 beforeEach(() => {
   resetSqlMock();
-  argonVerifyMock.mockReset();
-  argonHashMock.mockReset();
-  bcryptCompareMock.mockReset();
+  bunPasswordVerifyMock.mockReset();
+  bunPasswordHashMock.mockReset();
   sendEmailMock.mockReset();
   resetPasswordTemplateMock.mockReset();
 });
@@ -90,24 +85,24 @@ function createMockCtx(overrides: Partial<any> = {}) {
 
 describe("verifyPassword / hashPassword", () => {
   test("delegates Argon2 verification when hash prefix matches", async () => {
-    argonVerifyMock.mockResolvedValueOnce(true);
+    bunPasswordVerifyMock.mockResolvedValueOnce(true);
     const result = await verifyPassword("super-secret", "$argon2id$hash");
 
     expect(result).toBe(true);
-    expect(argonVerifyMock.mock.calls.length).toBe(1);
-    expect(argonVerifyMock.mock.calls[0]).toEqual([
-      "$argon2id$hash",
+    expect(bunPasswordVerifyMock.mock.calls.length).toBe(1);
+    expect(bunPasswordVerifyMock.mock.calls[0]).toEqual([
       "super-secret",
+      "$argon2id$hash",
     ]);
   });
 
   test("delegates bcrypt verification when hash prefix matches", async () => {
-    bcryptCompareMock.mockResolvedValueOnce(true);
+    bunPasswordVerifyMock.mockResolvedValueOnce(true);
     const result = await verifyPassword("hunter2", "$2b$something");
 
     expect(result).toBe(true);
-    expect(bcryptCompareMock.mock.calls.length).toBe(1);
-    expect(bcryptCompareMock.mock.calls[0]).toEqual([
+    expect(bunPasswordVerifyMock.mock.calls.length).toBe(1);
+    expect(bunPasswordVerifyMock.mock.calls[0]).toEqual([
       "hunter2",
       "$2b$something",
     ]);
@@ -126,12 +121,15 @@ describe("verifyPassword / hashPassword", () => {
   });
 
   test("hashPassword uses Argon2 hashing", async () => {
-    argonHashMock.mockResolvedValueOnce("computed-hash");
+    bunPasswordHashMock.mockResolvedValueOnce("computed-hash");
     const result = await hashPassword("super-secret");
 
     expect(result).toBe("computed-hash");
-    expect(argonHashMock.mock.calls.length).toBe(1);
-    expect(argonHashMock.mock.calls[0][0]).toBe("super-secret");
+    expect(bunPasswordHashMock.mock.calls.length).toBe(1);
+    expect(bunPasswordHashMock.mock.calls[0]).toEqual([
+      "super-secret",
+      { algorithm: "argon2id" },
+    ]);
   });
 });
 
