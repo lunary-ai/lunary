@@ -680,7 +680,7 @@ export default function Dashboard() {
                             checks={
                               Array.isArray(chart.checks) &&
                               chart.checks.length > 0
-                                ? ["OR", chart.checks, checks]
+                                ? ["AND", ...chart.checks, ...checks]
                                 : checks
                             }
                             color={chart.color}
