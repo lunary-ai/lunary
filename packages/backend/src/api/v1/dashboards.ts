@@ -28,7 +28,7 @@ dashboards.get("/", async (ctx: Context) => {
           owner_id: userId,
           name: "Default dashboard",
           description: null,
-          checks: ["and"],
+          checks: ["AND"],
           start_date: null,
           end_date: null,
           granularity: "daily",
