@@ -1265,11 +1265,10 @@ analytics.get("/agents/top", async (ctx: Context) => {
         r.completion_tokens
       from
         run r
-        inner join chat_runs on r.parent_run_id = chat_runs.id
       where
         project_id = ${projectId} 
         and r.type in ('chain', 'agent')
-        and (parent_run_id is null or chat_runs.id is not null)
+        and (parent_run_id is null or parent_run_id in (select id from chat_runs))
         and  r.created_at >= ${startUtc}::timestamptz     
         and  r.created_at <  ${endUtc}  ::timestamptz  
     ),
@@ -1293,7 +1292,11 @@ analytics.get("/agents/top", async (ctx: Context) => {
         child.completion_tokens
       from
         run child
-            inner join agents_tree at on child.parent_run_id = at.id
+        inner join agents_tree at on child.parent_run_id = at.id
+      where
+        child.project_id = ${projectId}
+        and child.created_at >= ${startUtc}::timestamptz
+        and child.created_at < ${endUtc}::timestamptz
     )
     select 
       agent_name as name,
