@@ -78,7 +78,7 @@ export function parseQuery(projectId: string, queryString: string, query: any) {
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
       ? convertChecksToSQL(mainChecks)
-      : sql`r.type = 'llm'`; // default to type llm
+      : sql`true`;
 
   const evaluatorFiltersQuery =
     evaluatorChecks?.length && evaluatorChecks.length > 1
