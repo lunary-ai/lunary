@@ -44,7 +44,8 @@ function BarList({
   const scheme = useComputedColorScheme();
 
   const columnCount = columns.length;
-  const firstColumnWidth = columnCount > 1 ? 45 : 100; // reserve a bit less than half the table for the bar column when other columns exist
+  const isTwoColumnTopChart = columnCount === 2;
+  const firstColumnWidth = columnCount > 1 ? (isTwoColumnTopChart ? 65 : 45) : 100; // reserve more width when showing two-column top charts
   const remainingWidth = Math.max(100 - firstColumnWidth, 0);
   const otherColumnWidth =
     columnCount > 1 ? `${remainingWidth / (columnCount - 1)}%` : "0%";

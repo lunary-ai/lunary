@@ -4,6 +4,7 @@ import {
   IconAt,
   IconBadge,
   IconBiohazard,
+  IconCategory,
   IconBraces,
   IconTarget,
   IconBracketsContainStart,
@@ -42,9 +43,11 @@ import {
   IconUser,
   IconUserCheck,
   IconWorldWww,
+  IconTerminal2,
 } from "@tabler/icons-react";
 import AppUserAvatar from "../blocks/AppUserAvatar";
 import Feedback from "../blocks/OldFeedback";
+import { RUN_TYPE_LABELS, RunTypeFilterValue } from "shared/checks";
 
 type CheckUI = {
   icon: React.FC<any>;
@@ -70,6 +73,37 @@ const CHECKS_UI_DATA: ChecksUIData = {
   retrievers: {
     icon: IconCloudDownload,
     color: "teal",
+  },
+  type: {
+    icon: IconTerminal2,
+    color: "violet",
+    renderLabel: (value) => {
+      const resolved =
+        typeof value === "object" && value !== null
+          ? "value" in value && typeof value.value === "string"
+            ? value.value
+            : "label" in value && typeof value.label === "string"
+              ? value.label
+              : undefined
+          : typeof value === "string"
+            ? value
+            : undefined;
+
+      if (!resolved) {
+        return "";
+      }
+
+      if (resolved in RUN_TYPE_LABELS) {
+        return RUN_TYPE_LABELS[resolved as RunTypeFilterValue];
+      }
+
+      return resolved
+        .replace(/[-_]+/g, " ")
+        .split(" ")
+        .filter(Boolean)
+        .map((part) => capitalize(part))
+        .join(" ");
+    },
   },
   tags: {
     icon: IconTag,

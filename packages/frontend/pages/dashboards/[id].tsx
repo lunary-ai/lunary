@@ -24,6 +24,7 @@ import {
   Group,
   Loader,
   Menu,
+  Select,
   SegmentedControl,
   Stack,
   TextInput,
@@ -345,6 +346,12 @@ export default function Dashboard() {
     setChartsWithSortOrder(newCharts);
   }
 
+  function handleChartSplitByChange(index: number, splitBy: string) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].primaryDimension = splitBy;
+    setChartsWithSortOrder(newCharts);
+  }
+
   function handleFilter(index: number) {
     setFilterIndex((prev) => (prev === index ? null : index));
   }
@@ -483,6 +490,7 @@ export default function Dashboard() {
                       "models",
                       "tags",
                       "users",
+                      "type",
                       "metadata",
                       "status",
                       "metadata",
@@ -573,7 +581,8 @@ export default function Dashboard() {
                               }
                               mb="md"
                             />
-                            {chart.type !== "Top" && (
+                            {(chart.dataKey === "run-types" ||
+                              chart.type !== "Top") && (
                               <>
                                 <Title order={5} mb="xs">
                                   Chart Type
@@ -584,10 +593,40 @@ export default function Dashboard() {
                                   onChange={(value) =>
                                     handleChartTypeChange(index, value)
                                   }
+                                  data={
+                                    chart.dataKey === "run-types"
+                                      ? [
+                                          { label: "Bar", value: "Bar" },
+                                          { label: "Area", value: "Area" },
+                                          { label: "Top", value: "Top" },
+                                        ]
+                                      : [
+                                          { label: "Bar", value: "Bar" },
+                                          { label: "Area", value: "Area" },
+                                        ]
+                                  }
+                                  mb="md"
+                                />
+                              </>
+                            )}
+                            {chart.dataKey === "run-types" && (
+                              <>
+                                <Title order={5} mb="xs">
+                                  Split By
+                                </Title>
+                                <Select
                                   data={[
-                                    { label: "Bar", value: "Bar" },
-                                    { label: "Area", value: "Area" },
+                                    { label: "Type", value: "type" },
+                                    { label: "Tags", value: "tags" },
                                   ]}
+                                  value={chart.primaryDimension || "type"}
+                                  onChange={(value) => {
+                                    if (value) {
+                                      handleChartSplitByChange(index, value);
+                                    }
+                                  }}
+                                  maw={240}
+                                  size="sm"
                                   mb="md"
                                 />
                               </>
@@ -611,6 +650,7 @@ export default function Dashboard() {
                                   "models",
                                   "tags",
                                   "users",
+                                  "type",
                                   "metadata",
                                   "status",
                                   "feedback",
