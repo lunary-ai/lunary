@@ -939,7 +939,7 @@ analytics.get("/run-types", async (ctx: Context) => {
           from
             filtered_runs r
             left join lateral (
-              select distinct lower(btrim(tag)) as tag
+              select distinct tag 
               from unnest(r.tags) as u(tag)
             ) as tag_details on true
         )
@@ -1012,7 +1012,7 @@ analytics.get("/run-types", async (ctx: Context) => {
           from
             filtered_runs r
             left join lateral (
-              select distinct lower(btrim(tag)) as tag
+              select distinct tag 
               from unnest(r.tags) as u(tag)
             ) as tag_details on true
         )

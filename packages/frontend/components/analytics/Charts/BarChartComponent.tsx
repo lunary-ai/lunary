@@ -180,6 +180,9 @@ export default function BarChartComponent({
     dataKey,
   );
 
+  const showLegend =
+    ["latency", "run-types"].includes(dataKey ?? "") && series.length <= 8;
+
   return (
     <>
       <Text
@@ -213,7 +216,7 @@ export default function BarChartComponent({
             opacity: 0.8,
           },
         }}
-        withLegend={["latency", "run-types"].includes(dataKey ?? "")}
+        withLegend={showLegend}
         tooltipProps={{
           content: ({ label, payload }) => {
             const filteredPayload = (payload || [])
