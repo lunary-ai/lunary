@@ -99,11 +99,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ type }) => {
       if (type === "trace") {
         return sql`(r.type in ('agent','chain') and (pr.id is not null or r.parent_run_id is null))`;
-      } else if (type == "chat") {
-        return sql`(r.type = 'chat' or r.type = 'custom-event')`;
-      } else {
-        return sql`(r.type = ${type})`;
       }
+
+      return sql`(r.type = ${type})`;
     },
   },
   {

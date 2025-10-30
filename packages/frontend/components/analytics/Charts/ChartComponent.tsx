@@ -12,6 +12,7 @@ import AreaChartComponent from "./AreaChartComponent";
 import TopModels from "./TopModels";
 import TopAgents from "./TopAgents";
 import BarChartComponent from "./BarChartComponent";
+import RunTypesTop from "./run-types-top";
 
 interface ChartProps {
   id: string;
@@ -42,25 +43,29 @@ export default function ChartComponent({
   isCustom = false,
   chart,
 }: ChartProps) {
+  const appliedPrimaryDimension =
+    primaryDimension ?? (dataKey === "run-types" ? "type" : null);
+
   let { data, stat, isLoading } = useAnalyticsChartData<any>(
     dataKey,
     startDate,
     endDate,
     granularity,
     checks,
-    primaryDimension,
+    appliedPrimaryDimension,
     secondaryDimension,
   );
 
   const series = useMemo(() => {
-    if (!data || !data.data || data.data.length === 0) {
+    const source = Array.isArray(data) ? data : data?.data || [];
+    if (!source || source.length === 0) {
       return [];
     }
 
     const seriesSet = new Set<string>();
-    data.data.forEach((item) => {
+    source.forEach((item: Record<string, any>) => {
       Object.keys(item).forEach((key) => {
-        if (key !== "value") {
+        if (key !== "value" && key !== "date") {
           seriesSet.add(key);
         }
       });
@@ -90,6 +95,12 @@ export default function ChartComponent({
         <Text>No data available for this period</Text>
       </Center>
     );
+  }
+
+  if (dataKey === "run-types" && chart.type === "Top") {
+    const splitBy =
+      chart.primaryDimension === "tags" ? "tags" : ("type" as "type" | "tags");
+    return <RunTypesTop data={data} splitBy={splitBy} />;
   }
 
   if (isCustom && chart.type === "bar") {

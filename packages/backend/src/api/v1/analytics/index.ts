@@ -914,7 +914,56 @@ analytics.get("/run-types", async (ctx: Context) => {
     ctx.query,
   );
 
+  const firstDimensionRaw = Array.isArray(ctx.query?.firstDimension)
+    ? ctx.query.firstDimension[0]
+    : ctx.query?.firstDimension;
+  const splitBy =
+    typeof firstDimensionRaw === "string" &&
+    firstDimensionRaw.toLowerCase() === "tags"
+      ? "tags"
+      : "type";
+
   if (granularity === "weekly") {
+    if (splitBy === "tags") {
+      const res = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        ),
+        runs_with_tags as (
+          select
+            r.local_created_at,
+            tag_details.tag
+          from
+            filtered_runs r
+            left join lateral (
+              select distinct lower(btrim(tag)) as tag
+              from unnest(r.tags) as u(tag)
+            ) as tag_details on true
+        )
+        select
+          d.date,
+          coalesce(count(rwt.tag)::int, 0) as value,
+          rwt.tag as name
+        from
+          dates d
+          left join runs_with_tags rwt
+            on rwt.local_created_at >= d.date
+            and rwt.local_created_at < d.date + interval '7 days'
+        group by 
+          d.date,
+          rwt.tag
+        order by
+          d.date,
+          rwt.tag;
+      `;
+
+      ctx.body = { data: res };
+      return;
+    }
+
     const res = await sql`
         with dates as (
           ${datesQuery}
@@ -948,6 +997,44 @@ analytics.get("/run-types", async (ctx: Context) => {
     ctx.body = { data: res };
     return;
   } else {
+    if (splitBy === "tags") {
+      const res = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        ),
+        runs_with_tags as (
+          select
+            r.local_created_at,
+            tag_details.tag
+          from
+            filtered_runs r
+            left join lateral (
+              select distinct lower(btrim(tag)) as tag
+              from unnest(r.tags) as u(tag)
+            ) as tag_details on true
+        )
+        select
+          d.date,
+          coalesce(count(rwt.tag)::int, 0) as value,
+          rwt.tag as name
+        from
+          dates d
+          left join runs_with_tags rwt on d.date = rwt.local_created_at
+        group by 
+          d.date,
+          rwt.tag
+        order by
+          d.date,
+          rwt.tag;
+      `;
+
+      ctx.body = { data: res };
+      return;
+    }
+
     const res = await sql`
         with dates as (
           ${datesQuery}

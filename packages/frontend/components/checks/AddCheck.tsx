@@ -1,24 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
   Box,
   Button,
   Combobox,
   Group,
-  Loader,
   ScrollArea,
   Stack,
   Text,
   TextInput,
   useCombobox,
 } from "@mantine/core";
-import CHECKS_UI_DATA from "./ChecksUIData";
 import {
   IconChevronRight,
   IconFilter2,
   IconSparkles,
 } from "@tabler/icons-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check } from "shared";
+import CHECKS_UI_DATA from "./ChecksUIData";
 
 const DEFAULT_AI_EXAMPLES = [
   "runs from the last 24 hours",
@@ -121,7 +120,7 @@ export function AddCheckButton({
       <Combobox
         store={combobox}
         position="bottom-start"
-        withinPortal={false}
+        zIndex={10}
         width="max-content"
         styles={{
           dropdown: {

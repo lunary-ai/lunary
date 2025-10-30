@@ -12,6 +12,33 @@ import type { Check } from "./types";
 export * from "./serialize";
 export * from "./types";
 
+export const RUN_TYPES = [
+  "llm",
+  "thread",
+  "agent",
+  "chain",
+  "chat",
+  "custom-event",
+  "tool",
+] as const;
+
+export type RunTypeFilterValue = (typeof RUN_TYPES)[number];
+
+export const RUN_TYPE_LABELS: Record<RunTypeFilterValue, string> = {
+  llm: "LLM Call",
+  thread: "Conversation",
+  agent: "Agent",
+  chain: "Chain",
+  chat: "Chat",
+  "custom-event": "Custom Event",
+  tool: "Tool Call",
+};
+
+export const RUN_TYPE_OPTIONS = RUN_TYPES.map((value) => ({
+  value,
+  label: RUN_TYPE_LABELS[value],
+}));
+
 const ALL_LANGUAGES = [
   "en", // English
   "zh", // Chinese
@@ -115,32 +142,7 @@ export const CHECKS: Check[] = [
         width: 100,
         defaultValue: "llm",
         searchable: false,
-        options: [
-          {
-            label: "LLM Logs",
-            value: "llm",
-          },
-          {
-            label: "Agent",
-            value: "agent",
-          },
-          {
-            label: "Tool",
-            value: "tool",
-          },
-          {
-            label: "Conversation",
-            value: "thread",
-          },
-          {
-            label: "Chat Message",
-            value: "chat",
-          },
-          {
-            label: "Trace",
-            value: "trace",
-          },
-        ],
+        options: RUN_TYPE_OPTIONS,
       },
     ],
   },
