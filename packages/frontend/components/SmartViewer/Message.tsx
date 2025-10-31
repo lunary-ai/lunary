@@ -32,7 +32,7 @@ import ProtectedText from "../blocks/ProtectedText";
 import { RenderJson } from "./RenderJson";
 import classes from "./index.module.css";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type CSSProperties } from "react";
 
 import { SentimentEnrichment2 } from "@/utils/enrichment";
 import { getFlagEmoji, getLanguageName } from "@/utils/format";
@@ -352,16 +352,32 @@ function TextMessage({
   }
 }
 
-function VariableHighlightTextarea({
+export function VariableHighlightTextarea({
   value,
   onChange,
   placeholder,
   dataTestId,
+  minHeight,
+  id,
+  onFocus,
+  onBlur,
+  spellCheck,
+  className,
+  padding,
+  name,
 }: {
   value?: string;
   onChange: (value: string) => void;
   placeholder?: string;
   dataTestId?: string;
+  minHeight?: number;
+  id?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  spellCheck?: boolean;
+  className?: string;
+  padding?: number | string;
+  name?: string;
 }) {
   const textValue = typeof value === "string" ? value : "";
 
@@ -380,18 +396,47 @@ function VariableHighlightTextarea({
     return highlighted.length > 0 ? highlighted : "&nbsp;";
   }, [textValue]);
 
+  const textareaStyles = minHeight
+    ? {
+        input: {
+          minHeight,
+        },
+      }
+    : undefined;
+
+  const highlightStyle = minHeight ? { minHeight } : undefined;
+
+  const wrapperStyle = {
+    ...(padding != null
+      ? {
+          "--variable-textarea-padding":
+            typeof padding === "number" ? `${padding}px` : padding,
+        }
+      : null),
+  } as CSSProperties;
+
   return (
-    <Box className={classes.variableTextareaWrapper}>
+    <Box
+      className={`${classes.variableTextareaWrapper}${className ? ` ${className}` : ""}`}
+      style={wrapperStyle}
+    >
       <div
         className={classes.variableTextareaHighlight}
         aria-hidden="true"
+        style={highlightStyle}
         dangerouslySetInnerHTML={{ __html: formattedHtml }}
       />
       <Textarea
         {...ghostTextAreaStyles}
+        styles={textareaStyles}
+        id={id}
+        name={name}
         value={textValue}
         placeholder={placeholder}
         data-testid={dataTestId}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        spellCheck={spellCheck}
         onChange={(e) => onChange(e.currentTarget.value)}
         classNames={{
           ...ghostTextAreaStyles.classNames,

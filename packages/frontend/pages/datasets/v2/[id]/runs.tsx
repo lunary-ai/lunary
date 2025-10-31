@@ -17,7 +17,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useMantineTheme } from "@mantine/core";
+import { useMantineTheme, rgba } from "@mantine/core";
 import {
   IconChevronLeft,
   IconRefresh,
@@ -40,10 +40,7 @@ export default function DatasetV2RunsPage() {
   const datasetId =
     typeof router.query.id === "string" ? router.query.id : undefined;
 
-  const {
-    dataset,
-    isLoading: isDatasetLoading,
-  } = useDatasetV2(datasetId);
+  const { dataset, isLoading: isDatasetLoading } = useDatasetV2(datasetId);
 
   const {
     runs,
@@ -78,12 +75,12 @@ export default function DatasetV2RunsPage() {
             : theme.colors.red;
 
       const foreground = palette[isDark ? 3 : 7];
-      const background = theme.fn.rgba(palette[isDark ? 4 : 3], isDark ? 0.28 : 0.14);
-      const border = theme.fn.rgba(palette[isDark ? 5 : 5], isDark ? 0.5 : 0.28);
+      const background = rgba(palette[isDark ? 4 : 3], isDark ? 0.28 : 0.14);
+      const border = rgba(palette[isDark ? 5 : 5], isDark ? 0.5 : 0.28);
 
       return { foreground, background, border };
     },
-    [isDark, theme.colors, theme.fn],
+    [isDark, theme],
   );
 
   const formatPercentage = useCallback((value: number | null) => {
@@ -136,28 +133,22 @@ export default function DatasetV2RunsPage() {
     return Number(((passed / evaluated) * 100).toFixed(1));
   }, []);
 
-  const getRunDisplayName = useCallback(
-    (run: DatasetEvaluatorRun) => {
-      if (typeof run.name === "string" && run.name.trim()) {
-        return run.name.trim();
-      }
+  const getRunDisplayName = useCallback((run: DatasetEvaluatorRun) => {
+    if (typeof run.name === "string" && run.name.trim()) {
+      return run.name.trim();
+    }
 
-      if (run.versionNumber) {
-        return `Dataset version v${run.versionNumber}`;
-      }
+    if (run.versionNumber) {
+      return `Dataset version v${run.versionNumber}`;
+    }
 
-      return formatDateTime(run.createdAt);
-    },
-    [],
-  );
+    return formatDateTime(run.createdAt);
+  }, []);
 
-  const handleStartEditingRun = useCallback(
-    (run: DatasetEvaluatorRun) => {
-      setEditingRunId(run.id);
-      setRunNameDraft(run.name ?? "");
-    },
-    [],
-  );
+  const handleStartEditingRun = useCallback((run: DatasetEvaluatorRun) => {
+    setEditingRunId(run.id);
+    setRunNameDraft(run.name ?? "");
+  }, []);
 
   const handleCancelEditingRun = useCallback(() => {
     setEditingRunId(null);
@@ -221,7 +212,9 @@ export default function DatasetV2RunsPage() {
 
       return (
         <HoverCard withArrow withinPortal>
-          <HoverCard.Target>{renderPassRatePill(slot.passRate)}</HoverCard.Target>
+          <HoverCard.Target>
+            {renderPassRatePill(slot.passRate)}
+          </HoverCard.Target>
           <HoverCard.Dropdown>
             <Stack gap={4}>
               <Text size="sm">{slot.passCount} passed</Text>
@@ -305,12 +298,12 @@ export default function DatasetV2RunsPage() {
             >
               <IconChevronLeft size={18} />
             </ActionIcon>
-            <Stack gap={2}>
-              <Title order={2}>{datasetName}</Title>
+            <Group gap="md" align="baseline">
+              <Title order={2}>Test Runs</Title>
               <Text size="sm" c="dimmed">
-                Evaluator runs
+                {datasetName}
               </Text>
-            </Stack>
+            </Group>
           </Group>
           <Group gap="sm">
             <ActionIcon
@@ -349,12 +342,8 @@ export default function DatasetV2RunsPage() {
             </Stack>
           </Card>
         ) : (
-          <Card withBorder>
+          <Card withBorder p="0">
             <Stack gap="sm">
-              <Group justify="space-between" align="center">
-                <Text fw={600}>Runs</Text>
-                {isValidating && runs.length > 0 && <Loader size="xs" />}
-              </Group>
               <Table withColumnBorders highlightOnHover verticalSpacing="sm">
                 <Table.Thead>
                   <Table.Tr>
@@ -389,12 +378,15 @@ export default function DatasetV2RunsPage() {
                     const displayName = getRunDisplayName(run);
                     const tooltipContent = (
                       <Stack gap={4} maw={280}>
-                        <Text size="sm">Started: {formatDateTime(run.createdAt)}</Text>
+                        <Text size="sm">
+                          Started: {formatDateTime(run.createdAt)}
+                        </Text>
                         {run.versionNumber ? (
                           <Text size="sm">Version: v{run.versionNumber}</Text>
                         ) : null}
                         <Text size="sm">
-                          Items updated: {run.updatedItemCount} / {run.totalItems}
+                          Items updated: {run.updatedItemCount} /{" "}
+                          {run.totalItems}
                         </Text>
                         {run.createdByName || run.createdByEmail ? (
                           <Text size="sm">
@@ -416,7 +408,9 @@ export default function DatasetV2RunsPage() {
                         onClick={handleRowClick}
                         style={{
                           cursor:
-                            editingRunId || !canNavigate ? "default" : "pointer",
+                            editingRunId || !canNavigate
+                              ? "default"
+                              : "pointer",
                         }}
                       >
                         <Table.Td>
@@ -471,7 +465,11 @@ export default function DatasetV2RunsPage() {
                                 >
                                   <IconX size={16} />
                                 </ActionIcon>
-                                <Tooltip label={tooltipContent} withArrow withinPortal>
+                                <Tooltip
+                                  label={tooltipContent}
+                                  withArrow
+                                  withinPortal
+                                >
                                   <ActionIcon
                                     variant="subtle"
                                     size="sm"
@@ -488,7 +486,11 @@ export default function DatasetV2RunsPage() {
                                 <Text size="sm" fw={600}>
                                   {displayName}
                                 </Text>
-                                <Tooltip label="Edit run name" withArrow withinPortal>
+                                <Tooltip
+                                  label="Edit run name"
+                                  withArrow
+                                  withinPortal
+                                >
                                   <ActionIcon
                                     variant="subtle"
                                     size="sm"
@@ -502,7 +504,11 @@ export default function DatasetV2RunsPage() {
                                     <IconPencil size={16} />
                                   </ActionIcon>
                                 </Tooltip>
-                                <Tooltip label={tooltipContent} withArrow withinPortal>
+                                <Tooltip
+                                  label={tooltipContent}
+                                  withArrow
+                                  withinPortal
+                                >
                                   <ActionIcon
                                     variant="subtle"
                                     size="sm"
@@ -529,7 +535,9 @@ export default function DatasetV2RunsPage() {
                             </Group>
                           </Stack>
                         </Table.Td>
-                        <Table.Td>{renderPassRatePill(averagePassRate)}</Table.Td>
+                        <Table.Td>
+                          {renderPassRatePill(averagePassRate)}
+                        </Table.Td>
                         {runEvaluatorColumns.map((column) => (
                           <Table.Td key={`${run.id}-slot-${column.slot}`}>
                             {renderRunSlotCell(slotMap.get(column.slot))}
