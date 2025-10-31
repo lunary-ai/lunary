@@ -38,6 +38,7 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckLogic } from "shared";
 import ProviderEditor from "@/components/prompts/Provider";
+import PromptTextarea from "@/components/evaluators/prompt-textarea";
 import { useIntentReclusterJob } from "@/utils/dataHooks/jobs";
 
 const DEFAULT_INTENT_MAX = 10;
@@ -563,7 +564,7 @@ export default function NewEvaluator() {
         <Group align="center">
           <Title order={3}>
             {isEditing
-              ? `Edit ${evaluatorName ?? name ?? "Evaluator"}`
+              ? evaluatorName ?? name ?? "Evaluator"
               : "New Evaluator"}
           </Title>
         </Group>
@@ -658,15 +659,15 @@ export default function NewEvaluator() {
                   })
                 }
               />
-              <Textarea
+              <PromptTextarea
                 label="Evaluation Prompt"
                 placeholder="Provide instructions for assigning labels"
-                minRows={12}
                 value={params.params.prompt}
-                onChange={(e) =>
+                minHeight={300}
+                onChange={(promptValue) =>
                   setParams({
                     id: "model-labeler",
-                    params: { ...params.params, prompt: e.currentTarget.value },
+                    params: { ...params.params, prompt: promptValue },
                   })
                 }
               />
@@ -728,15 +729,15 @@ export default function NewEvaluator() {
                   })
                 }
               />
-              <Textarea
+              <PromptTextarea
                 label="Evaluation Prompt"
                 placeholder="Provide instructions for scoring the response"
-                minRows={12}
                 value={params.params.prompt}
-                onChange={(e) =>
+                minHeight={300}
+                onChange={(promptValue) =>
                   setParams({
                     id: "model-scorer",
-                    params: { ...params.params, prompt: e.currentTarget.value },
+                    params: { ...params.params, prompt: promptValue },
                   })
                 }
               />
@@ -913,17 +914,10 @@ export default function NewEvaluator() {
           <Button
             disabled={!selectedEvaluator}
             onClick={createEvaluator}
-            leftSection={IconComponent && <IconComponent size={16} />}
             size="md"
             variant="default"
           >
-            {selectedEvaluator
-              ? isEditing
-                ? `Save ${selectedEvaluator.name} Evaluator`
-                : `Create ${selectedEvaluator.name} Evaluator`
-              : isEditing
-                ? "Save"
-                : "Create"}
+            {isEditing ? "Save Evaluator" : "Create Evaluator"}
           </Button>
         </Group>
       </Stack>

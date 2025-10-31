@@ -146,10 +146,7 @@ function computeEvaluatorPass(
       candidates.push(record.output.trim());
     }
 
-    if (
-      typeof record.primaryLabel === "string" &&
-      record.primaryLabel.trim()
-    ) {
+    if (typeof record.primaryLabel === "string" && record.primaryLabel.trim()) {
       candidates.push(record.primaryLabel.trim());
     }
 
@@ -210,7 +207,10 @@ type AddEvaluatorModalProps = {
   evaluators: Evaluator[];
   isLoading: boolean;
   loading: boolean;
-  onConfirm: (evaluatorId: string, config: DatasetEvaluatorConfigInput | null) => void;
+  onConfirm: (
+    evaluatorId: string,
+    config: DatasetEvaluatorConfigInput | null,
+  ) => void;
 };
 
 function AddEvaluatorModal({
@@ -381,8 +381,6 @@ function AddEvaluatorModal({
                       </Badge>
                       <Switch
                         size="sm"
-                        onLabel="Pass"
-                        offLabel="Fail"
                         checked={Boolean(labelPassMap[label])}
                         onChange={(event) =>
                           setLabelPassMap((prev) => ({
@@ -461,7 +459,8 @@ function summarizeEvaluatorResult(value: unknown): EvaluatorResultSummary {
     if (!trimmed) {
       return { display: "—", tone: "muted" };
     }
-    const truncated = trimmed.length > 60 ? `${trimmed.slice(0, 57)}…` : trimmed;
+    const truncated =
+      trimmed.length > 60 ? `${trimmed.slice(0, 57)}…` : trimmed;
     return {
       display: truncated,
       tooltip: trimmed.length > 60 ? trimmed : null,
@@ -564,7 +563,9 @@ function summarizeEvaluatorResult(value: unknown): EvaluatorResultSummary {
     }
 
     if (Array.isArray(record.matches) && record.matches.length) {
-      const joined = record.matches.map((entry: any) => String(entry)).join(", ");
+      const joined = record.matches
+        .map((entry: any) => String(entry))
+        .join(", ");
       const truncated = joined.length > 60 ? `${joined.slice(0, 57)}…` : joined;
       return {
         display: truncated,
@@ -592,7 +593,8 @@ function summarizeEvaluatorResult(value: unknown): EvaluatorResultSummary {
   if (!fallback.trim()) {
     return { display: "—", tone: "muted" };
   }
-  const truncated = fallback.length > 60 ? `${fallback.slice(0, 57)}…` : fallback;
+  const truncated =
+    fallback.length > 60 ? `${fallback.slice(0, 57)}…` : fallback;
   return {
     display: truncated,
     tooltip: fallback.length > 60 ? fallback : null,
@@ -616,7 +618,9 @@ function useEditableItems(items: DatasetV2Item[] | undefined) {
       updatedAt: item.updatedAt,
       isNew: false,
       isDirty: false,
-      evaluatorResults: extractEvaluatorResults(item as unknown as Record<string, any>),
+      evaluatorResults: extractEvaluatorResults(
+        item as unknown as Record<string, any>,
+      ),
     }));
 
     setLocalItems(baseItems);
@@ -693,7 +697,9 @@ function useEditableItems(items: DatasetV2Item[] | undefined) {
         updatedAt: item.updatedAt,
         isNew: false,
         isDirty: false,
-        evaluatorResults: extractEvaluatorResults(item as unknown as Record<string, any>),
+        evaluatorResults: extractEvaluatorResults(
+          item as unknown as Record<string, any>,
+        ),
       }));
       setLocalItems(baseItems);
       setDeletedIds(new Set());
@@ -1026,36 +1032,34 @@ export default function DatasetV2DetailPage() {
     setLocalItems,
   } = useEditableItems(dataset?.items);
 
-  const evaluatorSlots = useMemo(
-    () => {
-      if (!dataset) return [] as Array<{
+  const evaluatorSlots = useMemo(() => {
+    if (!dataset)
+      return [] as Array<{
         slot: number;
         evaluatorId: string;
         name: string;
       }>;
 
-      return DATASET_EVALUATOR_SLOTS.map((slot) => {
-        const key = `evaluatorSlot${slot}Id` as keyof DatasetV2WithItems;
-        const evaluatorId = dataset[key] as string | null | undefined;
-        if (!evaluatorId) {
-          return null;
-        }
-        const evaluator = customEvaluators.find((ev) => ev.id === evaluatorId);
-        return {
-          slot,
-          evaluatorId,
-          name: evaluator?.name ?? "Evaluator",
-        };
-      }).filter(Boolean) as Array<{
-        slot: number;
-        evaluatorId: string;
-        name: string;
-      }>;
-    },
-    [dataset, customEvaluators],
-  );
+    return DATASET_EVALUATOR_SLOTS.map((slot) => {
+      const key = `evaluatorSlot${slot}Id` as keyof DatasetV2WithItems;
+      const evaluatorId = dataset[key] as string | null | undefined;
+      if (!evaluatorId) {
+        return null;
+      }
+      const evaluator = customEvaluators.find((ev) => ev.id === evaluatorId);
+      return {
+        slot,
+        evaluatorId,
+        name: evaluator?.name ?? "Evaluator",
+      };
+    }).filter(Boolean) as Array<{
+      slot: number;
+      evaluatorId: string;
+      name: string;
+    }>;
+  }, [dataset, customEvaluators]);
 
-const availableEvaluators = useMemo(
+  const availableEvaluators = useMemo(
     () =>
       customEvaluators.filter(
         (evaluator) =>
@@ -1079,11 +1083,7 @@ const availableEvaluators = useMemo(
     const topicsIndex = findIndexByName((name) => name.includes("topic"));
     const piiIndex = findIndexByName((name) => name.includes("pii"));
 
-    if (
-      topicsIndex !== -1 &&
-      piiIndex !== -1 &&
-      piiIndex !== topicsIndex + 1
-    ) {
+    if (topicsIndex !== -1 && piiIndex !== -1 && piiIndex !== topicsIndex + 1) {
       const [piiSlot] = slots.splice(piiIndex, 1);
       slots.splice(Math.min(topicsIndex + 1, slots.length), 0, piiSlot);
     }
@@ -1193,7 +1193,9 @@ const availableEvaluators = useMemo(
       updatedAt: item.sourceUpdatedAt ?? undefined,
       isNew: false,
       isDirty: false,
-      evaluatorResults: extractEvaluatorResults(item as unknown as Record<string, any>),
+      evaluatorResults: extractEvaluatorResults(
+        item as unknown as Record<string, any>,
+      ),
     }));
   }, [selectedVersionItems]);
 
@@ -1264,7 +1266,8 @@ const availableEvaluators = useMemo(
       const stats = evaluatorStats[slot];
       if (!stats) return null;
       const total = stats.pass + stats.fail;
-      const percentage = total > 0 ? Math.round((stats.pass / total) * 100) : null;
+      const percentage =
+        total > 0 ? Math.round((stats.pass / total) * 100) : null;
       const color = getSuccessColor(percentage);
       const displayValue = percentage === null ? "—" : `${percentage}%`;
 
@@ -1322,8 +1325,7 @@ const availableEvaluators = useMemo(
         const inputMatch = item.input?.toLowerCase().includes(term);
         const expectedMatch =
           item.groundTruth?.toLowerCase().includes(term) ?? false;
-        const outputMatch =
-          item.output?.toLowerCase().includes(term) ?? false;
+        const outputMatch = item.output?.toLowerCase().includes(term) ?? false;
         return inputMatch || expectedMatch || outputMatch;
       });
     }
@@ -1832,7 +1834,8 @@ const availableEvaluators = useMemo(
     if (hasPendingChanges) {
       notifications.show({
         title: "Save changes first",
-        message: "Save or discard your unsaved edits before running evaluators.",
+        message:
+          "Save or discard your unsaved edits before running evaluators.",
         color: "yellow",
       });
       return;
@@ -1901,10 +1904,7 @@ const availableEvaluators = useMemo(
   ]);
 
   const handleConfirmAddEvaluator = useCallback(
-    async (
-      evaluatorId: string,
-      config: DatasetEvaluatorConfigInput | null,
-    ) => {
+    async (evaluatorId: string, config: DatasetEvaluatorConfigInput | null) => {
       if (!evaluatorId) return;
 
       if (evaluatorSlots.some((slot) => slot.evaluatorId === evaluatorId)) {
@@ -2349,7 +2349,10 @@ const availableEvaluators = useMemo(
     (item: EditableItem, slot: number) => {
       const config = dataset?.evaluatorConfigs?.[slot];
       const summary = summarizeEvaluatorResult(item.evaluatorResults?.[slot]);
-      const passInfo = computeEvaluatorPass(item.evaluatorResults?.[slot], config);
+      const passInfo = computeEvaluatorPass(
+        item.evaluatorResults?.[slot],
+        config,
+      );
 
       if (passInfo.pass !== null) {
         const badge = (
@@ -2737,15 +2740,15 @@ const availableEvaluators = useMemo(
               <IconChevronLeft size={18} />
             </ActionIcon>
             <Title order={2}>{dataset.name}</Title>
-            <Tooltip label="View evaluator runs" withArrow>
+            <Tooltip label="View Tests runs" withArrow>
               <ActionIcon
                 variant="subtle"
-                aria-label="View evaluator runs"
+                aria-label="View View Tests runs"
                 onClick={() =>
                   navigateWithGuard(`/datasets/v2/${datasetId}/runs`)
                 }
               >
-                <IconTimelineEvent size={18} />
+                <IconFlask size={18} />
               </ActionIcon>
             </Tooltip>
             <ActionIcon
@@ -2817,10 +2820,7 @@ const availableEvaluators = useMemo(
             <Menu withinPortal>
               <Menu.Target>
                 <Tooltip label="Download dataset" withArrow>
-                  <ActionIcon
-                    variant="subtle"
-                    aria-label="Download dataset"
-                  >
+                  <ActionIcon variant="subtle" aria-label="Download dataset">
                     <IconDownload size={16} />
                   </ActionIcon>
                 </Tooltip>
@@ -2864,7 +2864,7 @@ const availableEvaluators = useMemo(
                       disabled={!isViewingLatest}
                       loading={isRunningEvaluators}
                     >
-                      Test
+                      Tests
                     </Button>
                   </Menu.Target>
                   <Menu.Dropdown>
@@ -2956,301 +2956,319 @@ const availableEvaluators = useMemo(
               verticalSpacing="sm"
               horizontalSpacing="md"
               style={{ tableLayout: "fixed" }}
-                styles={(theme) => ({
-                  thead: {
-                    backgroundColor:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.dark[6]
-                        : theme.colors.gray[1],
-                  },
-                  th: {
-                    fontWeight: 600,
-                    backgroundColor:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.dark[6]
-                        : theme.colors.gray[1],
-                    borderColor:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.dark[5]
-                        : theme.colors.gray[3],
-                    color:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.gray[4]
-                        : theme.colors.dark[5],
-                  },
-                  td: {
-                    backgroundColor:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.dark[7]
-                        : theme.white,
-                    borderColor:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.dark[5]
-                        : theme.colors.gray[3],
-                    fontSize: 14,
-                    color:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.gray[2]
-                        : theme.colors.dark[6],
-                  },
-                  tbody: {
-                    backgroundColor:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.dark[7]
-                        : theme.white,
-                  },
-                })}
-              >
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th w={46}>
-                      <Checkbox
-                        aria-label="Select all visible rows"
-                        size="xs"
-                        radius="sm"
-                        styles={checkboxStyles}
-                        checked={allVisibleSelected}
-                        indeterminate={!allVisibleSelected && someVisibleSelected}
-                        disabled={!isViewingLatest}
-                        onChange={(event) => {
-                          event.stopPropagation();
-                          toggleSelectAllVisible();
-                        }}
-                        onClick={(event) => event.stopPropagation()}
-                      />
-                    </Table.Th>
+              styles={(theme) => ({
+                thead: {
+                  backgroundColor:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[6]
+                      : theme.colors.gray[1],
+                },
+                th: {
+                  fontWeight: 600,
+                  backgroundColor:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[6]
+                      : theme.colors.gray[1],
+                  borderColor:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[5]
+                      : theme.colors.gray[3],
+                  color:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.gray[4]
+                      : theme.colors.dark[5],
+                },
+                td: {
+                  backgroundColor:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[7]
+                      : theme.white,
+                  borderColor:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[5]
+                      : theme.colors.gray[3],
+                  fontSize: 14,
+                  color:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.gray[2]
+                      : theme.colors.dark[6],
+                },
+                tbody: {
+                  backgroundColor:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[7]
+                      : theme.white,
+                },
+              })}
+            >
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th w={46}>
+                    <Checkbox
+                      aria-label="Select all visible rows"
+                      size="xs"
+                      radius="sm"
+                      styles={checkboxStyles}
+                      checked={allVisibleSelected}
+                      indeterminate={!allVisibleSelected && someVisibleSelected}
+                      disabled={!isViewingLatest}
+                      onChange={(event) => {
+                        event.stopPropagation();
+                        toggleSelectAllVisible();
+                      }}
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Table.Th>
+                  <Table.Th
+                    style={{
+                      width: equalColumnWidth,
+                      minWidth: equalColumnWidth,
+                      maxWidth: equalColumnWidth,
+                    }}
+                  >
+                    Input
+                  </Table.Th>
+                  <Table.Th
+                    style={{
+                      width: equalColumnWidth,
+                      minWidth: equalColumnWidth,
+                      maxWidth: equalColumnWidth,
+                    }}
+                  >
+                    Ground Truth
+                  </Table.Th>
+                  <Table.Th
+                    style={{
+                      width: equalColumnWidth,
+                      minWidth: equalColumnWidth,
+                      maxWidth: equalColumnWidth,
+                    }}
+                  >
+                    Output
+                  </Table.Th>
+                  {displayEvaluatorSlots.map(({ slot, name }) => (
                     <Table.Th
+                      key={`eval-header-${slot}`}
                       style={{
                         width: equalColumnWidth,
                         minWidth: equalColumnWidth,
                         maxWidth: equalColumnWidth,
                       }}
                     >
-                      Input
-                    </Table.Th>
-                    <Table.Th
-                      style={{
-                        width: equalColumnWidth,
-                        minWidth: equalColumnWidth,
-                        maxWidth: equalColumnWidth,
-                      }}
-                    >
-                      Ground Truth
-                    </Table.Th>
-                    <Table.Th
-                      style={{
-                        width: equalColumnWidth,
-                        minWidth: equalColumnWidth,
-                        maxWidth: equalColumnWidth,
-                      }}
-                    >
-                      Output
-                    </Table.Th>
-                    {displayEvaluatorSlots.map(({ slot, name }) => (
-                      <Table.Th
-                        key={`eval-header-${slot}`}
-                        style={{
-                          width: equalColumnWidth,
-                          minWidth: equalColumnWidth,
-                          maxWidth: equalColumnWidth,
-                        }}
-                      >
-                        <Group gap="xs" justify="space-between" align="center">
-                          <Group
-                            gap={6}
-                            align="center"
-                            style={{ flex: 1, minWidth: 0 }}
+                      <Group gap="xs" justify="space-between" align="center">
+                        <Group
+                          gap={6}
+                          align="center"
+                          style={{ flex: 1, minWidth: 0 }}
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                            title={typeof name === "string" ? name : undefined}
+                            style={{
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              display: "block",
+                            }}
                           >
-                            <Text
+                            {name}
+                          </Text>
+                          {renderEvaluatorSuccess(slot)}
+                        </Group>
+                        <Menu withinPortal position="bottom-end">
+                          <Menu.Target>
+                            <ActionIcon
                               size="sm"
-                              fw={600}
-                              title={typeof name === "string" ? name : undefined}
-                              style={{
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                display: "block",
-                              }}
+                              variant="subtle"
+                              color={
+                                evaluatorFilters[slot] &&
+                                evaluatorFilters[slot] !== "all"
+                                  ? "blue"
+                                  : undefined
+                              }
+                              aria-label={`Filter evaluator ${name}`}
                             >
-                              {name}
-                            </Text>
-                            {renderEvaluatorSuccess(slot)}
-                          </Group>
+                              <IconFilter size={14} />
+                            </ActionIcon>
+                          </Menu.Target>
+                          <Menu.Dropdown>
+                            <Menu.Item
+                              onClick={() =>
+                                handleSetEvaluatorFilter(slot, "all")
+                              }
+                              disabled={
+                                !evaluatorFilters[slot] ||
+                                evaluatorFilters[slot] === "all"
+                              }
+                            >
+                              Show all
+                            </Menu.Item>
+                            <Menu.Item
+                              onClick={() =>
+                                handleSetEvaluatorFilter(slot, "pass")
+                              }
+                              color="green"
+                              disabled={evaluatorFilters[slot] === "pass"}
+                            >
+                              Show pass
+                            </Menu.Item>
+                            <Menu.Item
+                              onClick={() =>
+                                handleSetEvaluatorFilter(slot, "fail")
+                              }
+                              color="red"
+                              disabled={evaluatorFilters[slot] === "fail"}
+                            >
+                              Show fail
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                        {isViewingLatest && (
                           <Menu withinPortal position="bottom-end">
                             <Menu.Target>
                               <ActionIcon
                                 size="sm"
                                 variant="subtle"
-                                color={
-                                  evaluatorFilters[slot] &&
-                                  evaluatorFilters[slot] !== "all"
-                                    ? "blue"
-                                    : undefined
-                                }
-                                aria-label={`Filter evaluator ${name}`}
+                                aria-label={`Evaluator ${name} actions`}
                               >
-                                <IconFilter size={14} />
+                                <IconSettings size={14} />
                               </ActionIcon>
                             </Menu.Target>
                             <Menu.Dropdown>
                               <Menu.Item
-                                onClick={() => handleSetEvaluatorFilter(slot, "all")}
-                                disabled={
-                                  !evaluatorFilters[slot] ||
-                                  evaluatorFilters[slot] === "all"
-                                }
-                              >
-                                Show all
-                              </Menu.Item>
-                              <Menu.Item
-                                onClick={() => handleSetEvaluatorFilter(slot, "pass")}
-                                color="green"
-                                disabled={evaluatorFilters[slot] === "pass"}
-                              >
-                                Show pass
-                              </Menu.Item>
-                              <Menu.Item
-                                onClick={() => handleSetEvaluatorFilter(slot, "fail")}
                                 color="red"
-                                disabled={evaluatorFilters[slot] === "fail"}
+                                leftSection={<IconTrash size={14} />}
+                                onClick={() => handleRemoveEvaluator(slot)}
                               >
-                                Show fail
+                                Remove evaluator
                               </Menu.Item>
                             </Menu.Dropdown>
                           </Menu>
-                          {isViewingLatest && (
-                            <Menu withinPortal position="bottom-end">
-                              <Menu.Target>
-                                <ActionIcon
-                                  size="sm"
-                                  variant="subtle"
-                                  aria-label={`Evaluator ${name} actions`}
-                                >
-                                  <IconSettings size={14} />
-                                </ActionIcon>
-                              </Menu.Target>
-                              <Menu.Dropdown>
-                                <Menu.Item
-                                  color="red"
-                                  leftSection={<IconTrash size={14} />}
-                                  onClick={() => handleRemoveEvaluator(slot)}
-                                >
-                                  Remove evaluator
-                                </Menu.Item>
-                              </Menu.Dropdown>
-                            </Menu>
-                          )}
-                        </Group>
-                      </Table.Th>
-                    ))}
-                    <Table.Th style={{ width: 62 }} />
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {filteredItems.map((item) =>
-                    item.localId === "__add_row__" ? (
-                      <Table.Tr key={item.localId}>
-                        <Table.Td colSpan={2 + dataColumnCount}>
-                          <Button
-                            variant="subtle"
-                            h={20}
-                            onClick={handleAddRow}
-                            fullWidth
-                            styles={{
-                              root: {
-                                justifyContent: "flex-start",
-                                color: isDark
-                                  ? theme.colors.gray[4]
-                                  : theme.colors.gray[6],
-                                backgroundColor: "transparent",
-                                fontWeight: 500,
-                                "&:hover": {
-                                  backgroundColor: isDark
-                                    ? theme.colors.dark[6]
-                                    : theme.colors.gray[0],
-                                },
+                        )}
+                      </Group>
+                    </Table.Th>
+                  ))}
+                  <Table.Th style={{ width: 62 }} />
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {filteredItems.map((item) =>
+                  item.localId === "__add_row__" ? (
+                    <Table.Tr key={item.localId}>
+                      <Table.Td colSpan={2 + dataColumnCount}>
+                        <Button
+                          variant="subtle"
+                          h={20}
+                          onClick={handleAddRow}
+                          fullWidth
+                          styles={{
+                            root: {
+                              justifyContent: "flex-start",
+                              color: isDark
+                                ? theme.colors.gray[4]
+                                : theme.colors.gray[6],
+                              backgroundColor: "transparent",
+                              fontWeight: 500,
+                              "&:hover": {
+                                backgroundColor: isDark
+                                  ? theme.colors.dark[6]
+                                  : theme.colors.gray[0],
                               },
-                            }}
-                          >
-                            + Add row
-                          </Button>
-                        </Table.Td>
-                      </Table.Tr>
-                    ) : (
-                      <Table.Tr key={item.localId}>
-                        <Table.Td
-                          w={46}
+                            },
+                          }}
+                        >
+                          + Add row
+                        </Button>
+                      </Table.Td>
+                    </Table.Tr>
+                  ) : (
+                    <Table.Tr key={item.localId}>
+                      <Table.Td
+                        w={46}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <Checkbox
+                          aria-label="Select row"
+                          size="xs"
+                          radius="sm"
+                          styles={checkboxStyles}
+                          checked={selectedIds.has(item.localId)}
+                          disabled={!isViewingLatest}
+                          onChange={(event) => {
+                            event.stopPropagation();
+                            const nativeEvent = event.nativeEvent as
+                              | MouseEvent
+                              | PointerEvent
+                              | KeyboardEvent;
+                            const isShift =
+                              typeof nativeEvent?.shiftKey === "boolean"
+                                ? nativeEvent.shiftKey
+                                : false;
+                            updateRowSelection(
+                              item.localId,
+                              event.currentTarget.checked,
+                              isShift,
+                            );
+                          }}
                           onClick={(event) => event.stopPropagation()}
+                        />
+                      </Table.Td>
+                      <Table.Td
+                        className="dataset-table-editable"
+                        onClick={() => openCellEditor(item.localId, "input")}
+                        style={{
+                          cursor: isViewingLatest ? "pointer" : "default",
+                          width: equalColumnWidth,
+                          minWidth: equalColumnWidth,
+                          maxWidth: equalColumnWidth,
+                        }}
+                      >
+                        <Tooltip
+                          label={item.input}
+                          disabled={!item.input || item.input.length < 60}
                         >
-                          <Checkbox
-                            aria-label="Select row"
-                            size="xs"
-                            radius="sm"
-                            styles={checkboxStyles}
-                            checked={selectedIds.has(item.localId)}
-                            disabled={!isViewingLatest}
-                            onChange={(event) => {
-                              event.stopPropagation();
-                              const nativeEvent = event.nativeEvent as
-                                | MouseEvent
-                                | PointerEvent
-                                | KeyboardEvent;
-                              const isShift =
-                                typeof nativeEvent?.shiftKey === "boolean"
-                                  ? nativeEvent.shiftKey
-                                  : false;
-                              updateRowSelection(
-                                item.localId,
-                                event.currentTarget.checked,
-                                isShift,
-                              );
-                            }}
-                            onClick={(event) => event.stopPropagation()}
-                          />
-                        </Table.Td>
-                        <Table.Td
-                          className="dataset-table-editable"
-                          onClick={() => openCellEditor(item.localId, "input")}
-                          style={{
-                            cursor: isViewingLatest ? "pointer" : "default",
-                            width: equalColumnWidth,
-                            minWidth: equalColumnWidth,
-                            maxWidth: equalColumnWidth,
-                          }}
-                        >
-                          <Tooltip
-                            label={item.input}
-                            disabled={!item.input || item.input.length < 60}
-                          >
-                            <Text size="sm" lineClamp={2}>
-                              {item.input ?? ""}
-                            </Text>
-                          </Tooltip>
-                        </Table.Td>
-                        <Table.Td
-                          className="dataset-table-editable"
-                          onClick={() =>
-                            openCellEditor(item.localId, "groundTruth")
+                          <Text size="sm" lineClamp={2}>
+                            {item.input ?? ""}
+                          </Text>
+                        </Tooltip>
+                      </Table.Td>
+                      <Table.Td
+                        className="dataset-table-editable"
+                        onClick={() =>
+                          openCellEditor(item.localId, "groundTruth")
+                        }
+                        style={{
+                          cursor: isViewingLatest ? "pointer" : "default",
+                          width: equalColumnWidth,
+                          minWidth: equalColumnWidth,
+                          maxWidth: equalColumnWidth,
+                        }}
+                      >
+                        <Tooltip
+                          label={item.groundTruth ?? ""}
+                          disabled={
+                            !item.groundTruth || item.groundTruth.length < 60
                           }
-                          style={{
-                            cursor: isViewingLatest ? "pointer" : "default",
-                            width: equalColumnWidth,
-                            minWidth: equalColumnWidth,
-                            maxWidth: equalColumnWidth,
-                          }}
                         >
-                          <Tooltip
-                            label={item.groundTruth ?? ""}
-                            disabled={
-                              !item.groundTruth || item.groundTruth.length < 60
-                            }
-                          >
-                            <Text size="sm" lineClamp={2}>
-                              {item.groundTruth ?? ""}
-                            </Text>
-                          </Tooltip>
-                        </Table.Td>
+                          <Text size="sm" lineClamp={2}>
+                            {item.groundTruth ?? ""}
+                          </Text>
+                        </Tooltip>
+                      </Table.Td>
+                      <Table.Td
+                        style={{
+                          cursor: "default",
+                          width: equalColumnWidth,
+                          minWidth: equalColumnWidth,
+                          maxWidth: equalColumnWidth,
+                        }}
+                      >
+                        {renderGeneratedOutput(item)}
+                      </Table.Td>
+                      {displayEvaluatorSlots.map(({ slot }) => (
                         <Table.Td
+                          key={`${item.localId}-evaluator-${slot}`}
                           style={{
                             cursor: "default",
                             width: equalColumnWidth,
@@ -3258,160 +3276,148 @@ const availableEvaluators = useMemo(
                             maxWidth: equalColumnWidth,
                           }}
                         >
-                          {renderGeneratedOutput(item)}
+                          {renderEvaluatorResult(item, slot)}
                         </Table.Td>
-                        {displayEvaluatorSlots.map(({ slot }) => (
-                          <Table.Td
-                            key={`${item.localId}-evaluator-${slot}`}
-                            style={{
-                              cursor: "default",
-                              width: equalColumnWidth,
-                              minWidth: equalColumnWidth,
-                              maxWidth: equalColumnWidth,
-                            }}
-                          >
-                            {renderEvaluatorResult(item, slot)}
-                          </Table.Td>
-                        ))}
-                        <Table.Td style={{ cursor: "default", width: 62 }}>
-                          {isViewingLatest ? (
-                            <Group justify="flex-end">
-                              <Menu withinPortal>
-                                <Menu.Target>
-                                  <ActionIcon variant="subtle">
-                                    <IconDotsVertical size={16} />
-                                  </ActionIcon>
-                                </Menu.Target>
-                                <Menu.Dropdown>
-                                  <Menu.Item
-                                    leftSection={<IconCopy size={14} />}
-                                    onClick={() => handleDuplicateRow(item)}
-                                  >
-                                    Duplicate
-                                  </Menu.Item>
-                                  <Menu.Item
-                                    color="red"
-                                    leftSection={<IconTrash size={14} />}
-                                    onClick={() => handleDeleteRow(item)}
-                                  >
-                                    Delete
-                                  </Menu.Item>
-                                </Menu.Dropdown>
-                              </Menu>
-                            </Group>
-                          ) : (
-                            <Text size="xs" c="dimmed">
-                              Read-only
-                            </Text>
-                          )}
-                        </Table.Td>
-                      </Table.Tr>
-                    ),
-              )}
-            </Table.Tbody>
-          </Table>
+                      ))}
+                      <Table.Td style={{ cursor: "default", width: 62 }}>
+                        {isViewingLatest ? (
+                          <Group justify="flex-end">
+                            <Menu withinPortal>
+                              <Menu.Target>
+                                <ActionIcon variant="subtle">
+                                  <IconDotsVertical size={16} />
+                                </ActionIcon>
+                              </Menu.Target>
+                              <Menu.Dropdown>
+                                <Menu.Item
+                                  leftSection={<IconCopy size={14} />}
+                                  onClick={() => handleDuplicateRow(item)}
+                                >
+                                  Duplicate
+                                </Menu.Item>
+                                <Menu.Item
+                                  color="red"
+                                  leftSection={<IconTrash size={14} />}
+                                  onClick={() => handleDeleteRow(item)}
+                                >
+                                  Delete
+                                </Menu.Item>
+                              </Menu.Dropdown>
+                            </Menu>
+                          </Group>
+                        ) : (
+                          <Text size="xs" c="dimmed">
+                            Read-only
+                          </Text>
+                        )}
+                      </Table.Td>
+                    </Table.Tr>
+                  ),
+                )}
+              </Table.Tbody>
+            </Table>
           </Box>
         </Card>
-    </Stack>
+      </Stack>
 
-    <input
-      type="file"
-      ref={fileInputRef}
-      hidden
-      accept=".csv,.jsonl"
-      onChange={handleFileInputChange}
-    />
+      <input
+        type="file"
+        ref={fileInputRef}
+        hidden
+        accept=".csv,.jsonl"
+        onChange={handleFileInputChange}
+      />
 
-    <AddEvaluatorModal
-      opened={addEvaluatorModalOpened}
-      onClose={closeAddEvaluatorModal}
-      evaluators={availableEvaluators}
-      isLoading={isLoadingEvaluators}
-      loading={isAttachingEvaluator}
-      onConfirm={handleConfirmAddEvaluator}
-    />
+      <AddEvaluatorModal
+        opened={addEvaluatorModalOpened}
+        onClose={closeAddEvaluatorModal}
+        evaluators={availableEvaluators}
+        isLoading={isLoadingEvaluators}
+        loading={isAttachingEvaluator}
+        onConfirm={handleConfirmAddEvaluator}
+      />
 
-    <CellEditorModal
-      opened={Boolean(editingCell)}
-      onClose={closeEditor}
-      field={editingCell?.field ?? "input"}
-      value={
-        editingCell
-          ? (filteredItems[editingCell.index]?.[editingCell.field] ?? "") || ""
-          : ""
-      }
-      rowIndex={
-        editingCell
-          ? filteredItems
-              .slice(0, editingCell.index)
-              .filter((item) => item.localId !== "__add_row__").length
-          : 0
-      }
-      rowCount={Math.max(rowCountExcludingAdd, 1)}
-      onChange={(newValue) => {
-        if (!editingCell) return;
-        const item = filteredItems[editingCell.index];
-        if (!item) return;
-        updateItemValue(item.localId, editingCell.field, newValue);
-      }}
-      onNavigate={handleNavigateEditor}
-      onDuplicate={() => {
-        if (!editingCell) return;
-        const item = filteredItems[editingCell.index];
-        if (!item) return;
-        addDuplicate(item);
-      }}
-      filteredIndex={editingCell?.index ?? 0}
-      onPasteTable={handleSpreadsheetPaste}
-    />
+      <CellEditorModal
+        opened={Boolean(editingCell)}
+        onClose={closeEditor}
+        field={editingCell?.field ?? "input"}
+        value={
+          editingCell
+            ? (filteredItems[editingCell.index]?.[editingCell.field] ?? "") ||
+              ""
+            : ""
+        }
+        rowIndex={
+          editingCell
+            ? filteredItems
+                .slice(0, editingCell.index)
+                .filter((item) => item.localId !== "__add_row__").length
+            : 0
+        }
+        rowCount={Math.max(rowCountExcludingAdd, 1)}
+        onChange={(newValue) => {
+          if (!editingCell) return;
+          const item = filteredItems[editingCell.index];
+          if (!item) return;
+          updateItemValue(item.localId, editingCell.field, newValue);
+        }}
+        onNavigate={handleNavigateEditor}
+        onDuplicate={() => {
+          if (!editingCell) return;
+          const item = filteredItems[editingCell.index];
+          if (!item) return;
+          addDuplicate(item);
+        }}
+        filteredIndex={editingCell?.index ?? 0}
+        onPasteTable={handleSpreadsheetPaste}
+      />
 
-    <UpdateDatasetModal
-      opened={updateModalOpened}
-      onClose={closeUpdateModal}
-      initialName={dataset.name}
-      initialDescription={dataset.description}
-      onSubmit={handleUpdateDataset}
-      loading={isUpdating}
-    />
+      <UpdateDatasetModal
+        opened={updateModalOpened}
+        onClose={closeUpdateModal}
+        initialName={dataset.name}
+        initialDescription={dataset.description}
+        onSubmit={handleUpdateDataset}
+        loading={isUpdating}
+      />
 
-    <Modal
-      opened={leaveModalOpened}
-      onClose={closeLeaveModal}
-      title="Leave without saving?"
-    >
-      <Stack gap="sm">
-        <Text size="sm">
-          You have unsaved changes in your dataset. If you leave now, they will
-          be lost.
-        </Text>
-        <Group justify="space-between" mt="sm">
-          <Button
-            color="red"
-            onClick={handleLeaveWithoutSaving}
-            disabled={isSaving}
-          >
-            Leave
-          </Button>
-          <Group>
+      <Modal
+        opened={leaveModalOpened}
+        onClose={closeLeaveModal}
+        title="Leave without saving?"
+      >
+        <Stack gap="sm">
+          <Text size="sm">
+            You have unsaved changes in your dataset. If you leave now, they
+            will be lost.
+          </Text>
+          <Group justify="space-between" mt="sm">
             <Button
-              variant="default"
-              onClick={handleCancelLeave}
+              color="red"
+              onClick={handleLeaveWithoutSaving}
               disabled={isSaving}
             >
-              Cancel
+              Leave
             </Button>
-            <Button
-              onClick={handleSaveAndLeave}
-              loading={isSaving}
-              disabled={!isDirty || isSaving}
-            >
-              Save and Leave
-            </Button>
+            <Group>
+              <Button
+                variant="default"
+                onClick={handleCancelLeave}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveAndLeave}
+                loading={isSaving}
+                disabled={!isDirty || isSaving}
+              >
+                Save and Leave
+              </Button>
+            </Group>
           </Group>
-        </Group>
-      </Stack>
-    </Modal>
-
+        </Stack>
+      </Modal>
 
       <style jsx global>{`
         .dataset-table-editable {

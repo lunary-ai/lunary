@@ -13,11 +13,13 @@
 .ghostTextAreaRoot {
   font-family: inherit;
   font-size: inherit;
-  padding: var(--mantine-spacing-xs) !important;
+  padding: var(--variable-textarea-padding, var(--mantine-spacing-xs)) !important;
 }
 
 .variableTextareaWrapper {
   position: relative;
+  --variable-textarea-padding: var(--mantine-spacing-xs);
+  --variable-textarea-min-height: auto;
 }
 
 .variableTextareaRoot {
@@ -42,7 +44,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  padding: var(--mantine-spacing-xs);
+  padding: var(--variable-textarea-padding, var(--mantine-spacing-xs));
   pointer-events: none;
   white-space: pre-wrap;
   word-break: break-word;

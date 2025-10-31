@@ -109,6 +109,12 @@ export default function EvaluatorsPage() {
   const { evaluators, isLoading } = useEvaluators();
   const evaluatorsList = (evaluators as any[]) || [];
   const { org } = useOrg();
+  const builtinEvaluators = evaluatorsList.filter(
+    (evaluator) => evaluator?.kind === "builtin",
+  );
+  const customEvaluators = evaluatorsList.filter(
+    (evaluator) => evaluator?.kind !== "builtin",
+  );
 
   if (isLoading) {
     return <Loader />;
@@ -180,11 +186,33 @@ export default function EvaluatorsPage() {
             </Button>
           </Group>
 
-          <SimpleGrid cols={2} spacing={24}>
-            {evaluatorsList.map((ev) => (
-              <EvaluatorCard key={ev.id} id={ev.id} initialData={ev} />
-            ))}
-          </SimpleGrid>
+          <Stack gap="xl">
+            {builtinEvaluators.length > 0 && (
+              <Stack gap="sm">
+                <Title order={4}>Built-in Evaluators</Title>
+                <SimpleGrid cols={2} spacing={24}>
+                  {builtinEvaluators.map((ev) => (
+                    <EvaluatorCard key={ev.id} id={ev.id} initialData={ev} />
+                  ))}
+                </SimpleGrid>
+              </Stack>
+            )}
+
+            <Stack gap="sm">
+              <Title order={4}>Custom Evaluators</Title>
+              {customEvaluators.length > 0 ? (
+                <SimpleGrid cols={2} spacing={24}>
+                  {customEvaluators.map((ev) => (
+                    <EvaluatorCard key={ev.id} id={ev.id} initialData={ev} />
+                  ))}
+                </SimpleGrid>
+              ) : (
+                <Text c="dimmed" size="sm">
+                  No custom evaluators yet. Create one to get started.
+                </Text>
+              )}
+            </Stack>
+          </Stack>
         </Stack>
       </Container>
     </Empty>

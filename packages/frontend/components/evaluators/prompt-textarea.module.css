@@ -1,0 +1,60 @@
+.wrapper {
+  width: 100%;
+}
+
+.container {
+  position: relative;
+}
+
+.textareaRoot {
+  position: relative;
+}
+
+.textareaInput {
+  position: relative;
+  z-index: 1;
+  background-color: transparent !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  caret-color: var(--mantine-color-text);
+  min-height: var(--prompt-textarea-min-height, 300px);
+  padding: var(--prompt-textarea-padding, var(--mantine-spacing-sm)) !important;
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  resize: vertical;
+}
+
+.textareaInput::placeholder {
+  color: transparent;
+}
+
+.highlight {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--mantine-radius-sm);
+  background-color: var(--mantine-color-default, var(--mantine-color-body));
+}
+
+.highlightContent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: var(--prompt-textarea-padding, var(--mantine-spacing-sm));
+  min-height: var(--prompt-textarea-min-height, 300px);
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.55;
+  color: var(--mantine-color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  will-change: transform;
+}
+
+.variable {
+  color: var(--mantine-color-blue-6);
+  font-weight: 600;
+}
